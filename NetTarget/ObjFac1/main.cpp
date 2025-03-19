@@ -25,7 +25,7 @@
 #include "DefaultSurface.h"
 #include "WoodSurface.h"
 #include "BallElement.h"
-#include "BabeElement.h"
+//#include "BabeElement.h"  // missing file
 #include "TestElement.h"
 #include "GenericRenderer.h"
 #include "FuelSource.h"
@@ -105,25 +105,27 @@ MR_ObjectFromFactory* MR_GetObject( MR_UInt16 pClassId )
          lReturnValue = new MR_WoodSurface( lId );
          break;
 
-      case 3:
-         lReturnValue = new MR_BitmapSurface( lId, gObjectFactoryData->mResourceLib.GetBitmap( MR_FIRE ) );
-         break;
+      // missing types 
+      //case 3:
+      //   lReturnValue = new MR_BitmapSurface( lId, gObjectFactoryData->mResourceLib.GetBitmap( MR_FIRE ) );
+      //   break;
 
-      case 4:
-         lReturnValue = new MR_BitmapSurface( lId, gObjectFactoryData->mResourceLib.GetBitmap( MR_BIG_BRICK ) );
-         break;
+      //case 4:
+      //   lReturnValue = new MR_BitmapSurface( lId, gObjectFactoryData->mResourceLib.GetBitmap( MR_BIG_BRICK ) );
+      //   break;
 
-      case 5:
-         lReturnValue = new MR_BitmapSurface( lId, gObjectFactoryData->mResourceLib.GetBitmap( MR_RED_BRICK ) );
-         break;
+      //case 5:
+      //   lReturnValue = new MR_BitmapSurface( lId, gObjectFactoryData->mResourceLib.GetBitmap( MR_RED_BRICK ) );
+      //   break;
 
       case 10:
          lReturnValue = new MR_TestElement( lId, MR_DEMO_FIGHTER );
          break;
 
-      case 11:
-         lReturnValue = new MR_BabeElement( lId );
-         break;
+         // missing type 
+      //case 11:
+      //   lReturnValue = new MR_BabeElement( lId );
+      //  break;
 
       case 12:
          lReturnValue = new MR_BallElement( lId );
