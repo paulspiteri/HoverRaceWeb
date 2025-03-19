@@ -133,6 +133,12 @@
     <ClCompile Include="StdAfx.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Model\Model.vcxproj">
+      <Project>{c0254587-da7d-4338-9ecb-b614b05e5e1a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Util\Util.vcxproj">
+      <Project>{402cde5a-4540-4dfe-a4e0-6950c0f2ca57}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\VideoServices\VideoServices.vcxproj">
       <Project>{158869e8-53e8-4dc1-b41f-b1c996211e2b}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
