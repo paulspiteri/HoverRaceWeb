@@ -73,7 +73,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>\gdk\sdk\lib\ddraw.lib;\gdk\sdk\lib\dsound.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>"$(WindowsSDK_LibraryPath)\x86\ddraw.lib";"$(WindowsSDK_LibraryPath)\x86\dsound.lib";"$(WindowsSDK_LibraryPath)\x86\winmm.lib";%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\..\Debug/VideoServices.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -165,6 +165,9 @@
     <ProjectReference Include="..\ColorTools\ColorTools.vcxproj">
       <Project>{f589ca0c-83c4-4f07-a3c7-f1684df88369}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Util\Util.vcxproj">
+      <Project>{402cde5a-4540-4dfe-a4e0-6950c0f2ca57}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
