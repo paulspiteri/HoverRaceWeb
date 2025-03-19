@@ -25,7 +25,7 @@
 #include "resource.h"
 #include "License.h"
 #include "io.h"
-#include "../MazeCompiler/TrackCommonStuff.h"
+#include "TrackCommonStuff.h"
 #include "../Util/StrRes.h"
 
 

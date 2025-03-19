@@ -72,7 +72,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>\msdev\lib\Vfw32.lib;vfw32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>"$(WindowsSDK_LibraryPath)\x86\vfw32.lib";"$(WindowsSDK_LibraryPath)\x86\wsock32.lib";"$(WindowsSDK_LibraryPath)\x86\winmm.lib";%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\..\Debug/Game2.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -157,9 +157,21 @@
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MainCharacter\MainCharacter.vcxproj">
+      <Project>{a55bc265-cfb8-46a7-958b-d3a48d9477a0}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Model\Model.vcxproj">
+      <Project>{c0254587-da7d-4338-9ecb-b614b05e5e1a}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\ObjFacTools\ObjFacTools.vcxproj">
       <Project>{9a391771-faff-4d9d-9f6a-8ad3a9f73ca3}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\Util\Util.vcxproj">
+      <Project>{402cde5a-4540-4dfe-a4e0-6950c0f2ca57}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\VideoServices\VideoServices.vcxproj">
+      <Project>{158869e8-53e8-4dc1-b41f-b1c996211e2b}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

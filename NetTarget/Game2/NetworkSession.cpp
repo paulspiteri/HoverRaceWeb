@@ -838,7 +838,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
 
    // First broadcast to near clients
 
-   for( lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
@@ -855,7 +855,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
 
 
    // Now to far clients
-   for( lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] < 5 )
       {
@@ -871,7 +871,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
    }
    
    // Now to near clients( the second broadcast bring security)
-   for( lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
@@ -935,7 +935,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
 
    // First broadcast to near clients
 
-   for( lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
@@ -952,7 +952,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
 
 
    // Now to far clients
-   for( lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] < 5 )
       {
@@ -968,7 +968,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
    }
    
    // Now to near clients( the second broadcast bring security)
-   for( lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
