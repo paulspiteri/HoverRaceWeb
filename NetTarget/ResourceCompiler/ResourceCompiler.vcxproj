@@ -93,6 +93,15 @@
     <ClCompile Include="TextParsing.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ColorTools\ColorTools.vcxproj">
+      <Project>{f589ca0c-83c4-4f07-a3c7-f1684df88369}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\ObjFacTools\ObjFacTools.vcxproj">
+      <Project>{9a391771-faff-4d9d-9f6a-8ad3a9f73ca3}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Util\Util.vcxproj">
+      <Project>{402cde5a-4540-4dfe-a4e0-6950c0f2ca57}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\VideoServices\VideoServices.vcxproj">
       <Project>{158869e8-53e8-4dc1-b41f-b1c996211e2b}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

@@ -41,7 +41,7 @@ MR_UInt8* LoadBitmap( const char* lFileName, int& pXRes, int& pYRes, BOOL pRever
    }
    else
    {
-      char *lExtension = strrchr( lFileName, '.' );
+      const char *lExtension = strrchr( lFileName, '.' );
 
       if( !strcmpi( lExtension, ".PCX" ))
       {

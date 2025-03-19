@@ -28,7 +28,7 @@
 
 
 // Local prototypes
-BOOL ParseFile( const char* pFile, const char*& pData, int& pDataLen );
+BOOL ParseFile( const char* pFile, char*& pData, int& pDataLen );
 BOOL DSParseWaveResource(void *pvRes, WAVEFORMATEX **ppWaveHeader, BYTE **ppbWaveData,DWORD *pcbWaveSize);
 
 
@@ -61,7 +61,7 @@ BOOL MR_ResContinuousSoundBuilder::BuildFromFile( const char* pFile, int pNbCopy
 }
 
 
-BOOL ParseFile( const char* pFile, const char*& pData, int& pDataLen )
+BOOL ParseFile( const char* pFile, char*& pData, int& pDataLen )
 {
    static char lFileBuffer[ 1000000 ];
 
