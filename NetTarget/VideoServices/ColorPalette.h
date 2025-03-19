@@ -41,6 +41,7 @@
 #define MR_NB_COLORS                  256
 #define MR_RESERVED_COLORS_BEGINNING   10
 #define MR_RESERVED_COLORS_END         15
+constexpr int MR_RESERVED_COLORS = MR_RESERVED_COLORS_END - MR_RESERVED_COLORS_BEGINNING + 1;    // this was strangely missing from the src so has been guessed as to the meaning
 #define MR_BASIC_COLORS               100 // Includes some extra space          
 #define MR_BACK_COLORS                128
 
