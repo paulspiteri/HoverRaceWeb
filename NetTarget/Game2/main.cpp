@@ -45,7 +45,7 @@ int WINAPI WinMain( HINSTANCE pInstance, HINSTANCE pPrevInstance, LPSTR /*pCmdLi
     if( lReturnValue )
     {
        // lReturnValue = lGame.DisplayNotice();
-       lReturnValue = lGame.DisplayLoginWindow();
+       // lReturnValue = lGame.DisplayLoginWindow();    // disabled demo mode
     }    
 
     GetAsyncKeyState( VK_CAPITAL ); // Reset the function

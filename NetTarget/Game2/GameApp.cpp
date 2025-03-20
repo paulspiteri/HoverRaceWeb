@@ -42,7 +42,7 @@
 
 // global registration variables
 static BOOL         gKeyEncriptFilled = FALSE;
-static BOOL         gKeyFilled        = FALSE;
+static BOOL         gKeyFilled        = TRUE;   // disabled demo mode
 static KeyStructure gKeyEncript;
 static KeyStructure gKey;
 static char         gKeyPassword[20];
