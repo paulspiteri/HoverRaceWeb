@@ -42,21 +42,16 @@ class MR_VideoBuffer
 
    private:
       HWND                 mWindow;
-      BOOL                 mFullScreen;
       LPDIRECTDRAW         mDirectDraw;
       LPDIRECTDRAWSURFACE  mFrontBuffer;
       LPDIRECTDRAWSURFACE  mBackBuffer;
-      LPDIRECTDRAWPALETTE  mPalette;
       LPDIRECTDRAWCLIPPER  mClipper;    // To use in windows only
                                         // remove if too slow
+      PALETTEENTRY         mPaletteEntries[256];
 
       BOOL                 mSpecialWindowMode; // Use a 256 color mode when switching to window mode
       int                  mSpecialModeXRes;
       int                  mSpecialModeYRes;
-
-      LONG                 mOriginalExStyle; // Only valid if mFullScreen
-      LONG                 mOriginalStyle;   // Only valid if mFullScreen
-      RECT                 mOriginalPos;     // Only valid if mFullScreen
 
       BOOL                 mModeSettingInProgress;
 
@@ -86,8 +81,6 @@ class MR_VideoBuffer
 
       BOOL  InitDirectDraw();
       void  DeleteInternalSurfaces();
-      void  ReturnToWindowsResolution(); //Automaticly call DeleteInternalSurfaces
-
       void Flip();
 
 
@@ -99,13 +92,8 @@ class MR_VideoBuffer
 
       // Video mode selection
       MR_DllDeclare BOOL SetVideoMode( );     // In a window mode
-      MR_DllDeclare BOOL SetVideoMode( int pXRes, int pYRes ); // Full screen mode
-      MR_DllDeclare BOOL SetMenuVideoMode( );                  // slow full screen mode for menus
       MR_DllDeclare void EnterIconMode();
       MR_DllDeclare void ExitIconMode();
-      MR_DllDeclare void AssignPalette();
-
-      MR_DllDeclare BOOL TryToSet256ColorMode();
 
       MR_DllDeclare BOOL IsWindowMode()const;
       MR_DllDeclare BOOL IsIconMode()const;

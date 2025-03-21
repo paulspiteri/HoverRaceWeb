@@ -434,8 +434,6 @@ MR_GameApp::MR_GameApp( HINSTANCE pInstance )
 
    mClrScrTodo = 2;
 
-   mPaletteChangeAllowed = TRUE;
-
    LoadRegistry();
 
 }
@@ -474,7 +472,7 @@ void MR_GameApp::Clean()
 void MR_GameApp::LoadRegistry()
 {
 
-   mDisplayFirstScreen = TRUE;
+   mDisplayFirstScreen = FALSE; // disabled by default now
 
    // Built-in defaults
    // Controls
@@ -1006,7 +1004,6 @@ void MR_GameApp::DisplayAbout()
 {
    SetVideoMode( 0, 0 );
    DialogBox( mInstance, MAKEINTRESOURCE( IDD_ABOUT ), mMainWindow, AboutDlgFunc );
-   AssignPalette();
 }
 
 int MR_GameApp::MainLoop()
@@ -1218,41 +1215,7 @@ BOOL MR_GameApp::InitGame()
 
    if( lReturnValue )
    {
-      
-      if( !mVideoBuffer->SetVideoMode() )
-      {
-   
-         BOOL lSwitchTo256 = FALSE;
-
-         if( MessageBox( mMainWindow, MR_LoadString( IDS_MODE_SWITCH_TRY ), MR_LoadString( IDS_GAME_NAME ), MB_ICONINFORMATION|MB_OKCANCEL ) == IDOK )
-         {
-            if( mVideoBuffer->TryToSet256ColorMode() )
-            {
-               if( mVideoBuffer->SetVideoMode() )
-               {
-                  lSwitchTo256 = TRUE;
-               }
-            }
-            if( !lSwitchTo256 )
-            {
-               MessageBox( mMainWindow, MR_LoadString( IDS_CANT_SWITCH_MODE ), MR_LoadString( IDS_GAME_NAME ), MB_OK );
-            }
-         }
-         else
-         {
-            MessageBox( mMainWindow, MR_LoadString( IDS_BAD_MODE ), MR_LoadString( IDS_GAME_NAME ), MB_OK );
-         }
-
-         if( !lSwitchTo256 )
-         {
-
-            mBadVideoModeDlg = CreateDialog( mInstance,
-                                             MAKEINTRESOURCE( IDD_BAD_MODE ),
-                                             mMainWindow,
-                                             BadModeDialogFunc );
-         }
-      }
-      
+       mVideoBuffer->SetVideoMode();
    }
 
    if( lReturnValue )
@@ -1279,10 +1242,10 @@ BOOL MR_GameApp::InitGame()
    }
 
 
-   if( lReturnValue )
-   {
-      OnDisplayChange();
-   }
+   //if( lReturnValue )
+   //{
+   //   OnDisplayChange();
+   //}
 
    if( lReturnValue )
    {
@@ -1557,17 +1520,13 @@ void MR_GameApp::SetVideoMode( int pX, int pY )
 
       mClrScrTodo = 2;
 
-      if( pX == 0 )
+      //if( pX == 0 )
       {
          lSuccess = mVideoBuffer->SetVideoMode();
 
-         SetTimer( mMainWindow, MRM_RETURN2WINDOWMODE, 3000, NULL ); 
+         //SetTimer( mMainWindow, MRM_RETURN2WINDOWMODE, 3000, NULL ); 
       }
-      else
-      {
-         lSuccess = mVideoBuffer->SetVideoMode( pX, pY );
-         AssignPalette();
-      }
+     
 
       RestartGameThread();
 
@@ -1686,30 +1645,6 @@ void MR_GameApp::OnDisplayChange()
    }
 }
 
-void MR_GameApp::AssignPalette()
-{
-   if( mPaletteChangeAllowed )
-   {
-      if( This->mGameThread == NULL )
-      {
-         if( mMovieWnd != NULL )
-         {
-            MCIWndRealize( mMovieWnd, FALSE );
-         }
-      }
-      else
-      {
-         if( This->mVideoBuffer != NULL )
-         {
-            This->mVideoBuffer->AssignPalette();
-         }      
-      }
-   }
-}
-
-
-
-
 //void MR_GameApp::EnterMenuLoop()
 //{
 //   mMenuStack++;
@@ -1821,9 +1756,6 @@ void MR_GameApp::NewLocalSession()
          }
       }
    }
-
-
-   AssignPalette();
 }
 
 
@@ -1906,8 +1838,6 @@ void MR_GameApp::NewSplitSession()
          }
       }
    }
-
-   AssignPalette();
 }
 
 
@@ -2059,9 +1989,6 @@ void MR_GameApp::NewNetworkSession( BOOL pServer )
          delete lCurrentSession;
       }
    }
-   
-   AssignPalette();
-
 }
 
 void MR_GameApp::NewInternetSessionCall()
@@ -2139,7 +2066,6 @@ void MR_GameApp::NewInternetSession( )
          delete lCurrentSession;
       }
    }   
-   AssignPalette();
  
 }
 
@@ -2240,7 +2166,6 @@ LRESULT CALLBACK MR_GameApp::DispatchFunc( HWND pWindow, UINT  pMsgId, WPARAM  p
          break;
       
       case WM_QUERYNEWPALETTE:
-         This->AssignPalette();
          return TRUE;
 
       case WM_PALETTECHANGED:
@@ -2252,7 +2177,7 @@ LRESULT CALLBACK MR_GameApp::DispatchFunc( HWND pWindow, UINT  pMsgId, WPARAM  p
 
       
       case WM_ENTERMENULOOP:
-         This->SetVideoMode( 0,0 );
+         //This->SetVideoMode( 0,0 );
          break;
 
       /*
@@ -2274,10 +2199,7 @@ LRESULT CALLBACK MR_GameApp::DispatchFunc( HWND pWindow, UINT  pMsgId, WPARAM  p
                             SWP_NOSIZE|SWP_NOMOVE|SWP_NOACTIVATE );
 
                // Patch, sometime the palette is lost??
-               if( GetFocus() != NULL )
-               {
-                  This->AssignPalette();
-               }
+    
                
                
                return 0;
@@ -2348,8 +2270,8 @@ LRESULT CALLBACK MR_GameApp::DispatchFunc( HWND pWindow, UINT  pMsgId, WPARAM  p
                { 
                   TRACE( "SetMode\n" );         
 
-                  This->SetVideoMode( 0, 0 );
-                  This->AssignPalette();
+                 This->SetVideoMode( 0, 0 );
+                 // This->AssignPalette();
                   return 0;
                }
             }
@@ -2394,7 +2316,7 @@ LRESULT CALLBACK MR_GameApp::DispatchFunc( HWND pWindow, UINT  pMsgId, WPARAM  p
                break;
 
             case ID_GAME_NEW:
-               This->SetVideoMode(0,0);
+             //  This->SetVideoMode(0,0);
                This->NewLocalSession();
                return 0;
 
@@ -2429,10 +2351,6 @@ LRESULT CALLBACK MR_GameApp::DispatchFunc( HWND pWindow, UINT  pMsgId, WPARAM  p
                return 0;
          
             case ID_SETTING_REFRESHCOLORS:
-               if( GetFocus() != NULL )
-               {
-                  This->AssignPalette();
-               }
                break;
 
             // Video mode setting
@@ -2739,7 +2657,6 @@ BOOL CALLBACK MR_GameApp::DisplayIntensityDialogFunc( HWND pWindow, UINT  pMsgId
             SendDlgItemMessage( pWindow, IDC_CONTRAST_SLIDER, TBM_GETPOS, 0, 0 )/100.0,
             SendDlgItemMessage( pWindow, IDC_BRIGHTNESS_SLIDER, TBM_GETPOS, 0, 0 )/100.0
          );
-         This->AssignPalette();
          break;         
 
       case TB_ENDTRACK:
@@ -2782,7 +2699,6 @@ BOOL CALLBACK MR_GameApp::DisplayIntensityDialogFunc( HWND pWindow, UINT  pMsgId
          {
             case PSN_RESET:
                This->mVideoBuffer->CreatePalette( lOriginalGamma, lOriginalContrast, lOriginalBrightness );
-               This->AssignPalette();
                break;
 
             case PSN_APPLY:
@@ -2998,8 +2914,6 @@ BOOL CALLBACK MR_GameApp::AboutDlgFunc( HWND pWindow, UINT  pMsgId, WPARAM  pWPa
 
       case WM_INITDIALOG:
          {
-            This->mPaletteChangeAllowed = FALSE;
-
             HWND lBitmapCtl = GetDlgItem( pWindow, IDC_BITMAP );
 
             if( lBitmapCtl != NULL )
@@ -3041,7 +2955,6 @@ BOOL CALLBACK MR_GameApp::AboutDlgFunc( HWND pWindow, UINT  pMsgId, WPARAM  pWPa
             DeleteObject( lPalette );
             lPalette = NULL;
          }
-         This->mPaletteChangeAllowed = TRUE;
          break;
 
 

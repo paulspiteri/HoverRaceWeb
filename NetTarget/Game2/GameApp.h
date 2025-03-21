@@ -80,8 +80,6 @@ class MR_GameApp
 
       int                      mClrScrTodo;
 
-      BOOL                     mPaletteChangeAllowed;
-
       // Keyboard configuration
       int mMotorOn1;
       int mRight1;
@@ -152,7 +150,6 @@ class MR_GameApp
       void Clean();
 
       void OnDisplayChange();
-      void AssignPalette();
 
       void PauseGameThread();
       void RestartGameThread();

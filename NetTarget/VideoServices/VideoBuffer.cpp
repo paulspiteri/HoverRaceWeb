@@ -266,14 +266,12 @@ MR_VideoBuffer::MR_VideoBuffer( HWND pWindow, double pGamma, double pContrast, d
    mDirectDraw  = NULL;
    mFrontBuffer = NULL;
    mBackBuffer  = NULL;
-   mPalette     = NULL;
    mZBuffer     = NULL;
    mBuffer      = NULL;
    mClipper     = NULL;
    mBackPalette = NULL;
 
    mModeSettingInProgress = FALSE;
-   mFullScreen            = FALSE;
 
    mIconMode       = IsIconic( pWindow );
 
@@ -294,16 +292,6 @@ MR_VideoBuffer::MR_VideoBuffer( HWND pWindow, double pGamma, double pContrast, d
 
 MR_VideoBuffer::~MR_VideoBuffer()
 {
-//   mFullScreen        = TRUE;
-//   mSpecialWindowMode = FALSE;   // force real windows resolution
-   ReturnToWindowsResolution();
-
-   if( mPalette != NULL )
-   {
-      mPalette->Release();
-      mPalette = NULL;
-   }
-
    if( mDirectDraw != NULL )
    {
       mDirectDraw->Release();
@@ -325,6 +313,8 @@ BOOL MR_VideoBuffer::InitDirectDraw()
 
    if( mDirectDraw == NULL )
    {
+       TRACE("InitDirectDraw\n");
+
       if( DD_CALL(DirectDrawCreate( /*(LPGUID) DDCREATE_EMULATIONONLY*/NULL, &mDirectDraw, NULL )) != DD_OK )
       {
          ASSERT( FALSE );
@@ -338,63 +328,18 @@ BOOL MR_VideoBuffer::InitDirectDraw()
             lReturnValue = FALSE;
          }
       }
-   }
 
-   if( mPalette == NULL )
-   {
       // Create a palette
-      CreatePalette( mGamma, mContrast, mBrightness );
+      CreatePalette(mGamma, mContrast, mBrightness);
    }
 
    return lReturnValue;
 }
 
-BOOL MR_VideoBuffer::TryToSet256ColorMode()
-{
-
-   // do it only if it is safe
-   if( !mSpecialWindowMode && !mFullScreen && !mModeSettingInProgress && (mDirectDraw!=NULL) )
-   {
-      // Retrieve current mode info 
-      mSpecialModeXRes = GetSystemMetrics( SM_CXSCREEN );
-      mSpecialModeYRes = GetSystemMetrics( SM_CYSCREEN );
-
-      GetWindowRect( mWindow, &mOriginalPos );
-
-      if( DD_CALL(mDirectDraw->SetCooperativeLevel( mWindow, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN| DDSCL_ALLOWMODEX |DDSCL_ALLOWREBOOT|DDSCL_NOWINDOWCHANGES )) == DD_OK )
-      {
-         if( DD_CALL(mDirectDraw->SetDisplayMode( mSpecialModeXRes, mSpecialModeYRes, 8 )) == DD_OK )
-         {
-            mSpecialWindowMode = TRUE;
-
-            // Resize window to it's original position
-            SetWindowPos( mWindow,
-                          HWND_NOTOPMOST,     // This parameter have no effect when used here(I dont know why?? ask Bill)
-                          mOriginalPos.left,
-                          mOriginalPos.top,
-                          mOriginalPos.right-mOriginalPos.left,
-                          mOriginalPos.bottom-mOriginalPos.top,
-                          SWP_SHOWWINDOW /*SWP_NOACTIVATE*/    );
-         }
-         else
-         {
-            DD_CALL( mDirectDraw->SetCooperativeLevel( mWindow, DDSCL_NORMAL  ));
-
-            // It failled BOF
-            ASSERT( FALSE );
-         }
-      }
-
-   }
-
-   return mSpecialWindowMode;
-}
-
-
 void MR_VideoBuffer::DeleteInternalSurfaces()
 {
    PRINT_LOG( "DeleteInternalSurfaces" );
-
+   TRACE("DeleteInternalSurfaces\n");
 
    ASSERT( mBuffer == NULL ); // should be unlock
 
@@ -426,6 +371,7 @@ void MR_VideoBuffer::DeleteInternalSurfaces()
 void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBrightness )
 {
    PRINT_LOG( "CreatePalette" );
+   TRACE("CreatePalette\n");
 
    PALETTEENTRY lPalette[256];
 
@@ -463,13 +409,6 @@ void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBri
    if( mBrightness < 0.3 )
    {
       mBrightness = 0.3;
-   }
-
-   // Clean existing pallette
-   if( mPalette != NULL )
-   {
-      mPalette->Release();
-      mPalette = NULL;
    }
 
    if( mDirectDraw != NULL )
@@ -517,16 +456,7 @@ void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBri
       }
       
 
-
-      // Create the palette
-      if( DD_CALL( mDirectDraw->CreatePalette(DDPCAPS_8BIT /*|DDPCAPS_ALLOW256*/, lPalette, &mPalette, NULL)) != DD_OK )
-      {
-         ASSERT( FALSE );
-         mPalette = NULL;
-      }
-
-      // Assign the palette to the existing buffers
-      // AssignPalette();
+      memcpy(mPaletteEntries, lPalette, sizeof(mPaletteEntries));
    }
 }
 
@@ -545,112 +475,9 @@ void MR_VideoBuffer::SetBackPalette( MR_UInt8* pPalette )
    CreatePalette( mGamma, mContrast, mBrightness );
 }
 
-
-void MR_VideoBuffer::AssignPalette()
-{
-   PRINT_LOG( "AssignPalette" );
-
-   // Currently only work in 8bit mode   
-   if( (mFrontBuffer != NULL)&&(mPalette!=NULL) )
-   {
-      DD_CALL( mFrontBuffer->SetPalette( mPalette ) );
-
-   }
-
-   /*
-   if( (mBackBuffer != NULL)&&( mPalette!=NULL)&&!mFullScreen )
-   {
-      HRESULT lErrorCode = mBackBuffer->SetPalette( mPalette );
-   }
-   */
-   
-   
-}
-
-
-void MR_VideoBuffer::ReturnToWindowsResolution()
-{
-   PRINT_LOG( "ReturnToWindowsResolution" );
-
-   DeleteInternalSurfaces();
-
-   /*
-   if( mSpecialMode && (GetActiveWindow()==mWindow ))
-   {
-      mFullScreen = TRUE;
-   }
-   */
-
-   if( mDirectDraw && mFullScreen )
-   {
-      mFullScreen = FALSE;
-
-      if( !mSpecialWindowMode )
-      {
-         DD_CALL( mDirectDraw->RestoreDisplayMode() );
-      
-         if( DD_CALL( mDirectDraw->SetCooperativeLevel( mWindow, DDSCL_NORMAL  )) != DD_OK )
-         {
-            ASSERT( FALSE );
-         }             
-      }
-      else
-      {
-         DD_CALL( mDirectDraw->SetCooperativeLevel( mWindow, DDSCL_EXCLUSIVE|DDSCL_FULLSCREEN | DDSCL_ALLOWMODEX|DDSCL_ALLOWREBOOT|DDSCL_NOWINDOWCHANGES ));
-
-         if( DD_CALL(mDirectDraw->SetDisplayMode( mSpecialModeXRes, mSpecialModeYRes, 8 )) == DD_OK )
-         {
-            /*
-            if( DD_CALL( mDirectDraw->SetCooperativeLevel( mWindow, DDSCL_EXCLUSIVE|DDSCL_FULLSCREEN | DDSCL_ALLOWMODEX|DDSCL_ALLOWREBOOT|DDSCL_NOWINDOWCHANGES )) != DD_OK )
-            {
-               ASSERT( FALSE );
-            } 
-            */
-         }
-         else
-         {
-            // ASSERT( FALSE );
-
-            mSpecialWindowMode = FALSE;
-
-            DD_CALL( mDirectDraw->RestoreDisplayMode() );
-      
-            if( DD_CALL( mDirectDraw->SetCooperativeLevel( mWindow, DDSCL_NORMAL  )) != DD_OK )
-            {
-               ASSERT( FALSE );
-            }             
-         }
-
-      }
-   
-      // if( mFullScreen )
-      {
-      // Adjust the window position
-      SetWindowLong( mWindow, GWL_EXSTYLE, mOriginalExStyle );
-      SetWindowLong( mWindow, GWL_STYLE, mOriginalStyle );
-
-      // SetForegroundWindow( mWindow );
-
-   
-   
-      SetWindowPos( mWindow,
-                    HWND_NOTOPMOST,     // This parameter have no effect when used here(I dont know why?? ask Bill)
-                    mOriginalPos.left,
-                    mOriginalPos.top,
-                    mOriginalPos.right-mOriginalPos.left,
-                    mOriginalPos.bottom-mOriginalPos.top,
-                    SWP_SHOWWINDOW /*SWP_NOACTIVATE*/    );
-   
-      CreatePalette( mGamma, mContrast, mBrightness );      
-      }
-   }       
-}
-
-
 BOOL MR_VideoBuffer::SetVideoMode()
 {
    PRINT_LOG( "SetVideoMode(Window)" );
-
    BOOL            lReturnValue;
    DDSURFACEDESC   lSurfaceDesc;
 
@@ -660,9 +487,9 @@ BOOL MR_VideoBuffer::SetVideoMode()
 
    lReturnValue = InitDirectDraw();
 
-   if( lReturnValue )
+   if( lReturnValue ) 
    {
-      ReturnToWindowsResolution();      
+       DeleteInternalSurfaces();
    }
 
    // Retrieve the window size
@@ -690,49 +517,19 @@ BOOL MR_VideoBuffer::SetVideoMode()
 
       ASSERT( lReturnValue );
    }
-
-
-
+   TRACE("SetVideoMode Create front buffer\n");
    // Create a front buffer
    if( lReturnValue )
    {
-      // Ask specificcly for a 8 bit per pixel mode
       memset( &lSurfaceDesc, 0, sizeof( lSurfaceDesc ) );
       lSurfaceDesc.dwSize = sizeof( lSurfaceDesc );
-      lSurfaceDesc.dwFlags = DDSD_CAPS /*|DDSD_PIXELFORMAT*/;
-
+      lSurfaceDesc.dwFlags = DDSD_CAPS;
       lSurfaceDesc.ddsCaps.dwCaps         = DDSCAPS_PRIMARYSURFACE;
-
-      /*
-      lSurfaceDesc.ddpfPixelFormat.dwSize  = sizeof( lSurfaceDesc.ddpfPixelFormat );
-      lSurfaceDesc.ddpfPixelFormat.dwFlags = DDPF_PALETTEINDEXED8|DDPF_RGB;
-      lSurfaceDesc.ddpfPixelFormat.dwRGBBitCount = 8;      
-      */
-
 
       if( DD_CALL( mDirectDraw->CreateSurface( &lSurfaceDesc, &mFrontBuffer, NULL )) != DD_OK )
       {
          // ASSERT( FALSE );
          lReturnValue =FALSE;
-      }
-      else
-      {
-         // Verify that the surface is a 8 bit surface
-         DDPIXELFORMAT lFormat;
-
-         memset( &lFormat, 0, sizeof( lFormat ) );
-
-         lFormat.dwSize = sizeof( lFormat );
-
-         if( DD_CALL( mFrontBuffer->GetPixelFormat( &lFormat )) != DD_OK )
-         {
-            lReturnValue = FALSE;
-         }
-         else if( !( lFormat.dwFlags&DDPF_PALETTEINDEXED8) )
-         {
-            PRINT_LOG( "BadPixelFormat %d", (int)lFormat.dwFlags );
-            lReturnValue = FALSE;
-         }
       }
    }
 
@@ -821,142 +618,9 @@ BOOL MR_VideoBuffer::SetVideoMode()
    return lReturnValue;
 }
 
-
-BOOL MR_VideoBuffer::SetVideoMode( int pXRes, int pYRes )
-{
-   PRINT_LOG( "SetVideoMode %dx%d", pXRes, pYRes );
-
-   // Set afull screen video mode
-   HRESULT         lErrorCode;
-   BOOL            lReturnValue;
-   DDSURFACEDESC   lSurfaceDesc;
-   // DDCAPS          lDDCaps;
-
-
-   ASSERT( !mModeSettingInProgress );
-
-   mModeSettingInProgress = TRUE;
-
-   lReturnValue = InitDirectDraw();
-
-
-   if( lReturnValue )
-   {
-      DeleteInternalSurfaces();
-
-      if( !mFullScreen )
-      {
-         // Save current position and style to be able to restore the current mode
-         mOriginalExStyle = GetWindowLong( mWindow, GWL_EXSTYLE );
-         mOriginalStyle   = GetWindowLong( mWindow, GWL_STYLE );
-         GetWindowRect( mWindow, &mOriginalPos );
-
-      }
-      // Make the window a non-borderwindow      
-      // SetWindowLong( mWindow, GWL_STYLE, mOriginalStyle & ~(WS_THICKFRAME ) );
-      
-
-      if( DD_CALL(mDirectDraw->SetCooperativeLevel( mWindow, DDSCL_EXCLUSIVE|DDSCL_FULLSCREEN | DDSCL_ALLOWMODEX|DDSCL_ALLOWREBOOT/*|DDSCL_NOWINDOWCHANGES*/)) != DD_OK )
-      {
-         ASSERT( FALSE );
-         lReturnValue = FALSE;
-      }
-   }
-
-
-  
-   // Retrieve the window size
-   if( lReturnValue ) 
-   {
-      mXRes = pXRes;
-      mYRes = pYRes;
-      mLineLen = mXRes;
-
-      mFullScreen = TRUE;
-   }
-
-   if( lReturnValue )
-   {
-      // ASSERT( FALSE );
-
-      if( DD_CALL(mDirectDraw->SetDisplayMode( pXRes, pYRes, 8 )) != DD_OK )
-      {
-         lReturnValue = FALSE;
-         ASSERT( FALSE );
-      }
-   }
-
-   if( lReturnValue )
-   {
-      // Resize to full screen
-      ShowWindow( mWindow, SW_MAXIMIZE );
-
-   }
-
-   // Create a front buffer
-   if( lReturnValue )
-   {
-      memset( &lSurfaceDesc, 0, sizeof( lSurfaceDesc ) );
-      lSurfaceDesc.dwSize = sizeof( lSurfaceDesc );
-
-      lSurfaceDesc.dwFlags = DDSD_CAPS | DDSD_BACKBUFFERCOUNT;
-      lSurfaceDesc.dwBackBufferCount = 1;
-      lSurfaceDesc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_FLIP | DDSCAPS_COMPLEX |DDSCAPS_SYSTEMMEMORY;
-
-
-      if( (lErrorCode = DD_CALL(mDirectDraw->CreateSurface( &lSurfaceDesc, &mFrontBuffer, NULL ))) != DD_OK )
-      {
-         ASSERT( FALSE );
-
-         lSurfaceDesc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_FLIP | DDSCAPS_COMPLEX /*|DDSCAPS_SYSTEMMEMORY*/;
-
-         if( (lErrorCode = DD_CALL(mDirectDraw->CreateSurface( &lSurfaceDesc, &mFrontBuffer, NULL ))) != DD_OK )
-         {
-            ASSERT( FALSE );
-            lReturnValue =FALSE;
-         }
-      }
-      
-      if( lReturnValue )
-      {
-         // Create (retrieve already created) the working surface
-         DDSCAPS lDDSCaps;
-         
-         lDDSCaps.dwCaps = DDSCAPS_BACKBUFFER;
-
-         if( DD_CALL(mFrontBuffer->GetAttachedSurface( &lDDSCaps, &mBackBuffer )) != DD_OK )
-         {
-            ASSERT( FALSE );
-            lReturnValue = FALSE;
-         }
-      }
-   }
-
-
-   if( lReturnValue )
-   {
-      // Create a local memory ZBuffer
-      // We do not use DirectDrawZBuffer for now
-
-      mZBuffer = new MR_UInt16[ mXRes*mYRes ];
-
-   }
-
-   if( !lReturnValue )
-   {
-      ReturnToWindowsResolution();
-   }
-
-   // AssignPalette();
-
-   mModeSettingInProgress = FALSE;
-
-   return lReturnValue;
-}
-
 BOOL MR_VideoBuffer::IsWindowMode()const
 {
-   return !mFullScreen;
+   return TRUE;
 }
 
 BOOL MR_VideoBuffer::IsIconMode()const
@@ -1002,11 +666,6 @@ MR_UInt16* MR_VideoBuffer::GetZBuffer()
 
 int MR_VideoBuffer::GetXPixelMeter()const
 {
-   if( mFullScreen )
-   {
-      return mXRes*3;
-   }
-   else
    {
       return 3*GetSystemMetrics( SM_CXSCREEN );
    }
@@ -1014,11 +673,6 @@ int MR_VideoBuffer::GetXPixelMeter()const
 
 int MR_VideoBuffer::GetYPixelMeter()const
 {
-   if( mFullScreen )
-   {
-      return mYRes*4;
-   }
-   else
    {
       return 4*GetSystemMetrics( SM_CYSCREEN );
    }
@@ -1148,15 +802,20 @@ void MR_VideoBuffer::Unlock()
       }
       else
       {
-         int       lLineLen = lSurfaceDesc.lPitch;
-         MR_UInt8* lDest    = (MR_UInt8*)lSurfaceDesc.lpSurface;
+         int lLineLen = lSurfaceDesc.lPitch / 4;
+         DWORD* lDest    = (DWORD*)lSurfaceDesc.lpSurface;
          MR_UInt8* lSrc     = mBuffer;
 
          MR_SAMPLE_START( CopyVideoBuffer, "CopyVideoBuffer" );
 
          for( int lCounter = 0; lCounter < mYRes; lCounter++ )
          {
-            memcpy( lDest, lSrc, mXRes );
+             for (int x = 0; x < mXRes; x++) {
+                 MR_UInt8 colorIndex = lSrc[x];
+                 PALETTEENTRY paletteEntry = mPaletteEntries[colorIndex];
+                 DWORD color = (paletteEntry.peRed << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peBlue;
+                 lDest[x] = color;
+             }
             lDest += lLineLen;
             lSrc  += mLineLen;
          }
@@ -1188,33 +847,15 @@ void MR_VideoBuffer::Flip()
    ASSERT( mDirectDraw != NULL );
    ASSERT( mFrontBuffer != NULL );
 
+    RECT lDestRectangle  = { mX0, mY0, mX0+mXRes, mY0+mYRes };
+    RECT lSrcRectangle  = { 0, 0, mXRes, mYRes };
 
-   if( mFullScreen )
-   {
-      if( DD_CALL(mFrontBuffer->Flip( NULL, DDFLIP_WAIT )) != DD_OK )
-      {
-         // ASSERT( FALSE );
-      }
+    lErrorCode = DD_CALL(mFrontBuffer->Blt( &lDestRectangle, mBackBuffer, &lSrcRectangle, DDBLT_WAIT, NULL ));
 
-   }
-   else
-   {
-      // We are in a window, use normal blitting
-      int lX0 = mFullScreen?0:mX0;
-      int lY0 = mFullScreen?0:mY0;
-
-
-      RECT lDestRectangle  = { lX0, lY0, lX0+mXRes, lY0+mYRes };
-      RECT lSrcRectangle  = { 0, 0, mXRes, mYRes };
-
-
-      lErrorCode = DD_CALL(mFrontBuffer->Blt( &lDestRectangle, mBackBuffer, &lSrcRectangle, DDBLT_WAIT, NULL ));
-
-      if( lErrorCode != DD_OK )
-      {
-         // ASSERT( FALSE );
-      }
-   }
+    if( lErrorCode != DD_OK )
+    {
+        // ASSERT( FALSE );
+    }
 }
 
 void MR_VideoBuffer::Clear( MR_UInt8 pColor )
