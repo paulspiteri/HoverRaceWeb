@@ -33,7 +33,7 @@
 #ifdef _DEBUG
 static const BOOL gDebugMode = TRUE;
 #else
-static const BOOL gDebugMode = FALSE;
+static const BOOL gDebugMode = TRUE;    // DEBUG rendering in RELEASE build to work around 8-bit expectation
 #endif
 
 

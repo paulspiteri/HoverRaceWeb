@@ -110,7 +110,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>vfw32.lib;wsock32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>"$(WindowsSDK_LibraryPath)\x86\vfw32.lib";"$(WindowsSDK_LibraryPath)\x86\wsock32.lib";"$(WindowsSDK_LibraryPath)\x86\winmm.lib";%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\..\Release/Game2.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\..\Release/Game2.pdb</ProgramDatabaseFile>

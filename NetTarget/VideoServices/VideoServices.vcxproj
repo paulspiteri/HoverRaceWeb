@@ -112,7 +112,7 @@
     </ClCompile>
     <Link>
       <AdditionalOptions>/MACHINE:I386 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>\gdk\sdk\lib\ddraw.lib;\gdk\sdk\lib\dsound.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>"$(WindowsSDK_LibraryPath)\x86\ddraw.lib";"$(WindowsSDK_LibraryPath)\x86\dsound.lib";"$(WindowsSDK_LibraryPath)\x86\winmm.lib";%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\..\Release/VideoServices.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\..\Release/VideoServices.pdb</ProgramDatabaseFile>
