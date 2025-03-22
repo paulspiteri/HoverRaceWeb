@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35913.81 d17.13
+VisualStudioVersion = 17.13.35913.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Util", "NetTarget\Util\Util.vcxproj", "{402CDE5A-4540-4DFE-A4E0-6950C0F2CA57}"
 EndProject
@@ -14,13 +14,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoServices", "NetTarget\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Game2", "NetTarget\Game2\Game2.vcxproj", "{CDE9F9FA-DD28-46A6-811E-EFA85A111289}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PaletteCreator", "NetTarget\PaletteCreator\PaletteCreator.vcxproj", "{A1D799D7-76E9-4760-88FD-13CE6B257017}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ColorTools", "NetTarget\ColorTools\ColorTools.vcxproj", "{F589CA0C-83C4-4F07-A3C7-F1684DF88369}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ObjFacTools", "NetTarget\ObjFacTools\ObjFacTools.vcxproj", "{9A391771-FAFF-4D9D-9F6A-8AD3A9F73CA3}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ResourceCompiler", "NetTarget\ResourceCompiler\ResourceCompiler.vcxproj", "{DDC913AD-31C6-481A-BD31-3949CBF06FE3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,10 +48,6 @@ Global
 		{CDE9F9FA-DD28-46A6-811E-EFA85A111289}.Debug|x86.Build.0 = Debug|Win32
 		{CDE9F9FA-DD28-46A6-811E-EFA85A111289}.Release|x86.ActiveCfg = Release|Win32
 		{CDE9F9FA-DD28-46A6-811E-EFA85A111289}.Release|x86.Build.0 = Release|Win32
-		{A1D799D7-76E9-4760-88FD-13CE6B257017}.Debug|x86.ActiveCfg = Debug|Win32
-		{A1D799D7-76E9-4760-88FD-13CE6B257017}.Debug|x86.Build.0 = Debug|Win32
-		{A1D799D7-76E9-4760-88FD-13CE6B257017}.Release|x86.ActiveCfg = Release|Win32
-		{A1D799D7-76E9-4760-88FD-13CE6B257017}.Release|x86.Build.0 = Release|Win32
 		{F589CA0C-83C4-4F07-A3C7-F1684DF88369}.Debug|x86.ActiveCfg = Debug|Win32
 		{F589CA0C-83C4-4F07-A3C7-F1684DF88369}.Debug|x86.Build.0 = Debug|Win32
 		{F589CA0C-83C4-4F07-A3C7-F1684DF88369}.Release|x86.ActiveCfg = Release|Win32
@@ -64,10 +56,6 @@ Global
 		{9A391771-FAFF-4D9D-9F6A-8AD3A9F73CA3}.Debug|x86.Build.0 = Debug|Win32
 		{9A391771-FAFF-4D9D-9F6A-8AD3A9F73CA3}.Release|x86.ActiveCfg = Release|Win32
 		{9A391771-FAFF-4D9D-9F6A-8AD3A9F73CA3}.Release|x86.Build.0 = Release|Win32
-		{DDC913AD-31C6-481A-BD31-3949CBF06FE3}.Debug|x86.ActiveCfg = Debug|Win32
-		{DDC913AD-31C6-481A-BD31-3949CBF06FE3}.Debug|x86.Build.0 = Debug|Win32
-		{DDC913AD-31C6-481A-BD31-3949CBF06FE3}.Release|x86.ActiveCfg = Release|Win32
-		{DDC913AD-31C6-481A-BD31-3949CBF06FE3}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
