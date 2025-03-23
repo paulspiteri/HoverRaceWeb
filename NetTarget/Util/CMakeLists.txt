@@ -14,10 +14,6 @@ target_compile_definitions(Util PRIVATE
     MR_UTIL
 )
 
-target_compile_options(Util PRIVATE
-    /permissive-         # Enable strict standards compliance
-    /Zc:__cplusplus       # Correctly defines the `__cplusplus` macro for Clang
-)
 target_link_libraries(Util
     winmm.lib
 )
