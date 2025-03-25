@@ -483,7 +483,8 @@ void MR_Level::GetRoomContact(   int                      pRoom,
 {
 
    // Verify if the current room contains the requires shape
-   MR_DetectRoomContact( pShape, &SectionShape( &(mRoomList[ pRoom ]) ), pAnswer );
+   SectionShape shape = SectionShape(&(mRoomList[pRoom]));
+   MR_DetectRoomContact( pShape, &shape, pAnswer );
 }
 
 BOOL MR_Level::GetRoomWallContactOrientation( int                      pRoom,
@@ -491,7 +492,8 @@ BOOL MR_Level::GetRoomWallContactOrientation( int                      pRoom,
                                               const MR_ShapeInterface* pShape,
                                               MR_Angle&                pAnswer   )
 {
-   return MR_GetWallForceLongitude( pShape, &SectionShape( &(mRoomList[ pRoom ]) ), pWall, pAnswer );
+   SectionShape shape = SectionShape(&(mRoomList[pRoom]));
+   return MR_GetWallForceLongitude( pShape, &shape, pWall, pAnswer );
 }
 
 
@@ -502,14 +504,16 @@ BOOL MR_Level::GetFeatureContact( int                      pFeature,
 {
 
    // Verify if the current room contains the requires shape
-   return MR_DetectFeatureContact( pShape, &SectionShape( &(mFeatureList[ pFeature ]) ), pAnswer );
+    SectionShape shape = SectionShape(&(mFeatureList[pFeature]));
+   return MR_DetectFeatureContact( pShape, &shape, pAnswer );
 }
 
 BOOL MR_Level::GetFeatureContactOrientation( int                      pFeature,
                                              const MR_ShapeInterface* pShape,
                                              MR_Angle&                pAnswer              )
 {
-   return MR_GetFeatureForceLongitude( pShape, &SectionShape( &(mFeatureList[ pFeature ]) ), pAnswer );
+    SectionShape shape = SectionShape(&(mFeatureList[pFeature]));
+   return MR_GetFeatureForceLongitude( pShape, &shape, pAnswer );
 }
 
 

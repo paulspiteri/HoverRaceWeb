@@ -33,7 +33,7 @@
 #ifndef SHAPES_H
 #define SHAPES_H
 
-#include "../util/WorldCoordinates.h"
+#include "../Util/WorldCoordinates.h"
 
 #ifdef MR_MODEL
    #define MR_DllDeclare   __declspec( dllexport )

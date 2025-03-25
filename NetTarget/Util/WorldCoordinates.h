@@ -78,7 +78,7 @@ typedef MR_Int16 MR_Angle;
 
 #define MR_NORMALIZE_ANGLE( pAngle ) ( (MR_Angle) (( 2*MR_2PI+(pAngle) )%MR_2PI) )
 
-#define RAD_2_MR_ANGLE( pAngle ) ((MR_Angle)( ((unsigned int)(pAngle*MR_2PI.0*0.5/3.1415926536)+MR_2PI)%(unsigned int)MR_2PI ))
+#define RAD_2_MR_ANGLE( pAngle ) ((MR_Angle)( ((unsigned int)(pAngle*(double)MR_2PI*0.5/3.1415926536)+MR_2PI)%(unsigned int)MR_2PI ))
 
 // Temporal unities
 typedef MR_Int32  MR_SimulationTime; // In 1/1000th of seconds
@@ -88,6 +88,7 @@ typedef MR_Int32  MR_SimulationTime; // In 1/1000th of seconds
 // Sin and Cos tables
 MR_DllDeclare extern MR_Int16 MR_Sin[ MR_2PI ];
 MR_DllDeclare extern MR_Int16 MR_Cos[ MR_2PI ];
+
 
 #define MR_TRIGO_FRACT   16384 // unity of the trigo tables
 #define MR_TRIGO_SHIFT      14
