@@ -7,7 +7,7 @@ add_library(VideoServices SHARED
     ColorTab.cpp                      
     SoundServer.cpp          
     Sprite.cpp               
-    StdAfx.cpp               
+    stdafx.cpp               
     VideoBuffer.cpp          
     VideoBuffer2DDraw.cpp    
 )

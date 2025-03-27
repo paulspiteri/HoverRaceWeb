@@ -19,7 +19,7 @@
 // and limitations under the License.
 //
 
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "ResSprite.h"
 
 #define new DEBUG_NEW
