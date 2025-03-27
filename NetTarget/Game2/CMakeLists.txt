@@ -13,6 +13,7 @@ add_executable(Game2
     Sponsor.cpp
     StdAfx.cpp
     TrackSelect.cpp
+    Game2.rc
 )
 
 target_compile_definitions(Game2 PRIVATE
