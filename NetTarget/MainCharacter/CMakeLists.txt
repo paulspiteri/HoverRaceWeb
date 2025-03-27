@@ -1,7 +1,7 @@
 add_library(MainCharacter SHARED
     MainCharacter.cpp
     MainCharacterRenderer.cpp
-    StdAfx.cpp                  
+    stdafx.cpp                  
 )
 
 target_compile_definitions(MainCharacter PRIVATE
