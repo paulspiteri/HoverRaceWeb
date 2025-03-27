@@ -23,7 +23,7 @@
 #ifndef MR_SPRITE_H
 #define MR_SPRITE_H
 
-#include "2DViewPort.h"
+#include "2DViewport.h"
 #include "../Util/DllObjectFactory.h"
 
 #ifdef MR_VIDEO_SERVICES
