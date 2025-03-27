@@ -25,7 +25,7 @@
 
 
 
-#include "../VideoServices/3DViewPort.h"
+#include "../VideoServices/3DViewport.h"
 #include "../VideoServices/SoundServer.h"
 #include "../Util/DllObjectFactory.h"
 
