@@ -422,7 +422,6 @@ MR_GameApp::MR_GameApp( HINSTANCE pInstance )
    mInstance        = pInstance;
    mMainWindow      = NULL;
    mBadVideoModeDlg = NULL;
-   mMovieWnd        = NULL;
    mAccelerators    = NULL;
    mVideoBuffer     = NULL;
    mObserver1       = NULL;
@@ -1218,29 +1217,6 @@ BOOL MR_GameApp::InitGame()
        mVideoBuffer->SetVideoMode();
    }
 
-   if( lReturnValue )
-   {  
-      
-      mMovieWnd = MCIWndCreate( mMainWindow, 
-                                mInstance,
-                                WS_CHILD
-                                |MCIWNDF_NOMENU|MCIWNDF_NOPLAYBAR,
-                                "Intro.avi"                       );
-      
-
-      
-      MCIWndPlay( mMovieWnd );   
-
-
-      /*
-      CreateDialog( mInstance,
-                    MAKEINTRESOURCE( IDD_BACK_ANIM ),
-                    mMainWindow,
-                    MovieDialogFunc );
-                    */
-      
-   }
-
 
    //if( lReturnValue )
    //{
@@ -1588,18 +1564,6 @@ void MR_GameApp::OnDisplayChange()
                              SWP_NOSIZE|SWP_SHOWWINDOW );
             }
          }
-
-         if( GetWindowRect( mMovieWnd, &lMovieRect ) )
-         {
-            SetWindowPos( mMovieWnd,
-                          HWND_TOP, 
-                          (lClientRect.right-(lMovieRect.right-lMovieRect.left))/2,
-                          (lClientRect.bottom-(lMovieRect.bottom-lMovieRect.top))/2,
-                          0,
-                          0,
-                          SWP_NOSIZE|SWP_SHOWWINDOW );
-
-         }
       }
    }
 
@@ -1672,19 +1636,6 @@ void MR_GameApp::OnDisplayChange()
 //   }
 //}
 
-void MR_GameApp::DeleteMovieWnd()
-{
-   if( mMovieWnd != NULL )
-   {
-      
-      MCIWndClose( mMovieWnd );      
-      Sleep( 1000 );
-      MCIWndDestroy( mMovieWnd );      
-      // DestroyWindow( mMovieWnd );
-      mMovieWnd = NULL;
-   }
-   // MR_SoundServer::Init( mMainWindow );
-}
 
 void MR_GameApp::NewLocalSession()
 {   
@@ -1710,7 +1661,6 @@ void MR_GameApp::NewLocalSession()
 
    if( lSuccess )
    {
-      DeleteMovieWnd();
       MR_SoundServer::Init( mMainWindow );
       mObserver1 = MR_Observer::New();
 
@@ -1784,7 +1734,6 @@ void MR_GameApp::NewSplitSession()
    if( lSuccess )
    {
       // Create the new session
-      DeleteMovieWnd();
       MR_SoundServer::Init( mMainWindow );
 
       mObserver1 = MR_Observer::New();
@@ -1865,14 +1814,12 @@ void MR_GameApp::NewNetworkSession( BOOL pServer )
 
       lSuccess = MR_SelectTrack( mMainWindow, lCurrentTrack, lNbLap, lAllowWeapons, gKeyFilled );
 
-      DeleteMovieWnd();
       MR_SoundServer::Init( mMainWindow );
 
       lCurrentSession = new MR_NetworkSession( FALSE, gKeyFilled?mMajorID:-1, gKeyFilled?mMinorID:-1, mMainWindow );
    }
    else
    {
-      DeleteMovieWnd();
       MR_SoundServer::Init( mMainWindow );
 
       lCurrentSession = new MR_NetworkSession( FALSE, gKeyFilled?mMajorID:-1, gKeyFilled?mMinorID:-1, mMainWindow );
@@ -2018,7 +1965,6 @@ void MR_GameApp::NewInternetSession( )
 
    // Delete the current session
    Clean();
-   DeleteMovieWnd();
    MR_SoundServer::Init( mMainWindow );
 
    lCurrentSession = new MR_NetworkSession( TRUE, gKeyFilled?mMajorID:-1, gKeyFilled?mMinorID:-1, mMainWindow );
@@ -2169,10 +2115,6 @@ LRESULT CALLBACK MR_GameApp::DispatchFunc( HWND pWindow, UINT  pMsgId, WPARAM  p
          return TRUE;
 
       case WM_PALETTECHANGED:
-         if( This->mMovieWnd != NULL )
-         {
-            MCIWndRealize( This->mMovieWnd, TRUE );
-         }
          break;
 
       

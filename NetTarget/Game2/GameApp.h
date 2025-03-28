@@ -67,7 +67,6 @@ class MR_GameApp
       HINSTANCE                mInstance;
       HWND                     mMainWindow;
       HWND                     mBadVideoModeDlg;
-      HWND                     mMovieWnd;
       HACCEL                   mAccelerators;
       MR_VideoBuffer*          mVideoBuffer;
       MR_Observer*             mObserver1;
@@ -157,7 +156,6 @@ class MR_GameApp
       // void EnterMenuLoop();
       // void EndMenuLoop();
 
-      void DeleteMovieWnd();
 
       void DrawBackground( );
 
