@@ -1,4 +1,4 @@
-add_library(Model SHARED
+add_library(Model STATIC
     ConcreteShape.cpp          
     ContactEffect.cpp          
     FreeElementMovingHelper.cpp

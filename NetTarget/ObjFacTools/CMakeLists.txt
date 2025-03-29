@@ -1,4 +1,4 @@
-add_library(ObjFacTools SHARED
+add_library(ObjFacTools STATIC
     BitmapSurface.cpp           
     FreeElementBase.cpp         
     FreeElementBaseRenderer.cpp 

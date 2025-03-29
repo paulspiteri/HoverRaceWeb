@@ -35,9 +35,9 @@
 #include "MR_Types.h"
 
 #ifdef MR_UTIL
-   #define MR_DllDeclare   __declspec( dllexport )
+   #define MR_DllDeclare //   __declspec( dllexport )
 #else
-   #define MR_DllDeclare   __declspec( dllimport )
+   #define MR_DllDeclare //   __declspec( dllimport )
 #endif
 
 // Class decalration

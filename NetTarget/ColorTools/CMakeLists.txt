@@ -1,4 +1,4 @@
-add_library(ColorTools SHARED
+add_library(ColorTools STATIC
     ColorTools.cpp
     stdafx.cpp
 )

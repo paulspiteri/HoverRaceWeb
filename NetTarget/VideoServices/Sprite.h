@@ -27,9 +27,9 @@
 #include "../Util/DllObjectFactory.h"
 
 #ifdef MR_VIDEO_SERVICES
-   #define MR_DllDeclare   __declspec( dllexport )
+   #define MR_DllDeclare //   __declspec( dllexport )
 #else
-   #define MR_DllDeclare   __declspec( dllimport )
+   #define MR_DllDeclare //   __declspec( dllimport )
 #endif
 
 

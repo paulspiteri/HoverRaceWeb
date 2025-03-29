@@ -1,4 +1,4 @@
-add_library(ObjFac1 SHARED
+add_library(ObjFac1 STATIC
     BallElement.cpp
     BumperGate.cpp
     DefaultSurface.cpp

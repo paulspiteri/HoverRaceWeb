@@ -1,4 +1,4 @@
-add_library(Util SHARED
+add_library(Util STATIC
     DllObjectFactory.cpp
     FuzzyLogic.cpp
     Profiler.cpp

@@ -1,4 +1,4 @@
-add_library(VideoServices SHARED
+add_library(VideoServices STATIC
     2DViewPort.cpp           
     3DViewport.cpp           
     3DViewportRendering.cpp  

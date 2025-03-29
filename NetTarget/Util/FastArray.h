@@ -24,9 +24,9 @@
 #define FAST_ARRAY_H
 
 #ifdef MR_UTIL
-   #define MR_DllDeclare   __declspec( dllexport )
+   #define MR_DllDeclare //   __declspec( dllexport )
 #else
-   #define MR_DllDeclare   __declspec( dllimport )
+   #define MR_DllDeclare //   __declspec( dllimport )
 #endif
 
 template <class pType> class MR_FastArrayBase

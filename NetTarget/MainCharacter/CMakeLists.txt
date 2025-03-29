@@ -1,4 +1,4 @@
-add_library(MainCharacter SHARED
+add_library(MainCharacter STATIC
     MainCharacter.cpp
     MainCharacterRenderer.cpp
     stdafx.cpp                  

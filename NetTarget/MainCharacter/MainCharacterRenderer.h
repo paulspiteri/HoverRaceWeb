@@ -31,9 +31,9 @@
 
 
 #ifdef MR_MAIN_CHARACTER
-   #define MR_DllDeclare   __declspec( dllexport )
+   #define MR_DllDeclare //   __declspec( dllexport )
 #else
-   #define MR_DllDeclare   __declspec( dllimport )
+   #define MR_DllDeclare //   __declspec( dllimport )
 #endif
 
 

@@ -52,9 +52,9 @@
 #include "../VideoServices/3DViewport.h"
 
 #ifdef MR_MODEL
-   #define MR_DllDeclare   __declspec( dllexport )
+   #define MR_DllDeclare //   __declspec( dllexport )
 #else
-   #define MR_DllDeclare   __declspec( dllimport )
+   #define MR_DllDeclare //   __declspec( dllimport )
 #endif
 
 
