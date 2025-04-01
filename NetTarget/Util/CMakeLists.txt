@@ -15,5 +15,4 @@ target_compile_definitions(Util PRIVATE
 )
 
 target_link_libraries(Util
-    winmm.lib
 )
