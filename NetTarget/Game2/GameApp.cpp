@@ -37,7 +37,7 @@
 #include "Security.h"
 
 #include <vfw.h>
-
+#include "../ObjFac1/ObjFac1.h"
 
 
 // global registration variables
@@ -1200,6 +1200,7 @@ BOOL MR_GameApp::InitGame()
    MR_InitTrigoTables();
    MR_InitFuzzyModule();
    MR_DllObjectFactory::Init();
+   MR_InitModule(NULL); // added for statically linked ObjFac1 to open .dat
    MR_MainCharacter::RegisterFactory();
 
    // Load accelerators

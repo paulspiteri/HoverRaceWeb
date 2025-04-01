@@ -59,11 +59,8 @@ class MR_DllDeclare MR_ObjectFromFactory: public CObject
 {   
    // Base class for object created with a Dll Factory
 
-   private:
-      
-      MR_ObjectFromFactoryId mId;
-
    public:
+      MR_ObjectFromFactoryId mId;
 
       // Construction and destruction
       MR_ObjectFromFactory( const MR_ObjectFromFactoryId& pId );

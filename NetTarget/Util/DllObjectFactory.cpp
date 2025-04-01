@@ -128,7 +128,8 @@ void MR_DllObjectFactory::IncrementReferenceCount( MR_UInt16 pDllId )
    }
    else
    {
-      ASSERT( FALSE ); // Dll not loaded
+      // disabled due to new static linking
+     // ASSERT( FALSE ); // Dll not loaded
    }
 
 }
@@ -143,7 +144,8 @@ void MR_DllObjectFactory::DecrementReferenceCount( MR_UInt16 pDllId )
    }
    else
    {
-      ASSERT( FALSE ); // Dll discarted
+      // disabled due to new static linking
+      // ASSERT( FALSE ); // Dll discarted
    }
 }
 

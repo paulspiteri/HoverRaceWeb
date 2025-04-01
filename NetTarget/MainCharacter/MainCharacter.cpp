@@ -28,6 +28,8 @@
 #include "../Model/FreeElementMovingHelper.h"
 #include "../Util/FuzzyLogic.h"
 
+#include "../ObjFac1/ObjFac1.h"
+
 #define MR_NB_HOVER_MODEL 8
 
 // Local types
@@ -244,7 +246,7 @@ void MR_MainCharacter::AddRenderer()
    {
       MR_ObjectFromFactoryId lId = { 1, 100 };
 
-      mRenderer = (MR_MainCharacterRenderer*) MR_DllObjectFactory::CreateObject( lId );
+      mRenderer = (MR_MainCharacterRenderer*) MR_GetObject( lId.mClassId );
    }
 }
 

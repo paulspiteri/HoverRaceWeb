@@ -22,6 +22,7 @@
 #include "stdafx.h"
 
 #include "Level.h"
+#include "../Util/ObjectFromStaticFactory.h"
 
 #define new DEBUG_NEW
 
@@ -761,8 +762,8 @@ void MR_Level::Section::SerializeStructure( CArchive& pArchive )
    }
 
    // Serialize the textures
-   MR_ObjectFromFactory::SerializePtr( pArchive, (MR_ObjectFromFactory*&) mFloorTexture );
-   MR_ObjectFromFactory::SerializePtr( pArchive, (MR_ObjectFromFactory*&)mCeilingTexture );
+   MR_ObjectFromStaticFactory::SerializePtr( pArchive, (MR_ObjectFromFactory*&) mFloorTexture );
+   MR_ObjectFromStaticFactory::SerializePtr( pArchive, (MR_ObjectFromFactory*&)mCeilingTexture );
 
    if( !pArchive.IsStoring() )
    {
@@ -771,7 +772,7 @@ void MR_Level::Section::SerializeStructure( CArchive& pArchive )
 
    for( lCounter = 0; lCounter < mNbVertex; lCounter++ )
    {
-      MR_ObjectFromFactory::SerializePtr( pArchive, (MR_ObjectFromFactory*&)mWallTexture[ lCounter ] );
+      MR_ObjectFromStaticFactory::SerializePtr( pArchive, (MR_ObjectFromFactory*&)mWallTexture[ lCounter ] );
    }
 }
 
@@ -1015,7 +1016,7 @@ void MR_Level::FreeElement::SerializeList( CArchive& pArchive, FreeElement** pLi
 
       do
       {
-         MR_ObjectFromFactory::SerializePtr( pArchive, (MR_ObjectFromFactory*&)lCurrentElement );
+         MR_ObjectFromStaticFactory::SerializePtr( pArchive, (MR_ObjectFromFactory*&)lCurrentElement );
 
          if( lCurrentElement != NULL )
          {

@@ -21,5 +21,5 @@ target_compile_definitions(ObjFac1 PRIVATE
     _AFXDLL
 )
 
-target_link_libraries(ObjFac1 PRIVATE MainCharacter Model ObjFacTools Util VideoServices
+target_link_libraries(ObjFac1 PRIVATE Model Util
 )
