@@ -1,5 +1,5 @@
 add_library(VideoServices STATIC
-    2DViewPort.cpp           
+    2DViewport.cpp           
     3DViewport.cpp           
     3DViewportRendering.cpp  
     Bitmap.cpp               

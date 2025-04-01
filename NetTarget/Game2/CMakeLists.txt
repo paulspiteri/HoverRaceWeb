@@ -11,7 +11,7 @@ add_executable(Game2
     NetworkSession.cpp
     Observer.cpp
     Sponsor.cpp
-    StdAfx.cpp
+    stdafx.cpp
     TrackSelect.cpp
     Game2.rc
 )
