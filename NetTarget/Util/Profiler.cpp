@@ -21,7 +21,7 @@
 
 #include "stdafx.h"
 
-#include <Mmsystem.h>
+// #include <Mmsystem.h>
 
 
 #include "Profiler.h"

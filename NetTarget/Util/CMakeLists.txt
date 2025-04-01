@@ -3,7 +3,6 @@ add_library(Util STATIC
     FuzzyLogic.cpp
     Profiler.cpp
     RecordFile.cpp
-    stdafx.cpp
     StrRes.cpp
     WorldCoordinates.cpp
 )

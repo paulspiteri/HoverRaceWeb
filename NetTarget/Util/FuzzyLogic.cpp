@@ -23,6 +23,8 @@
 #include "FuzzyLogic.h"
 // Local variables
 
+#include <cstdlib>  // For rand()
+
 #define MR_RAND_TABLE_SIZE  4096
 
 static int gRandTable[ MR_RAND_TABLE_SIZE ];
