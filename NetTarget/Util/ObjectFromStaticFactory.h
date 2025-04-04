@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "MR_Types.h"
 #include "DllObjectFactory.h"
+#include "RecordFile.h"
 
 class MR_ObjectFromStaticFactory: public CObject
 {   
@@ -18,5 +19,6 @@ class MR_ObjectFromStaticFactory: public CObject
       const MR_ObjectFromFactoryId& GetTypeId()const;
 
       static  void SerializePtr( CArchive& pArchive, MR_ObjectFromFactory*& pPtr );
+      static  void SerializePtr( NoMFC::CArchive& pArchive, MR_ObjectFromFactory*& pPtr );
       virtual void Serialize( CArchive& pArchive );
 };

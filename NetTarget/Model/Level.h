@@ -49,7 +49,7 @@ class MR_SectionId
       eSectionType mType;
       int          mId;
 
-      void Serialize(  CArchive& pArchive );
+      void Serialize(  NoMFC::CArchive& pArchive );
 };
 
 class MR_DllDeclare  MR_Level
@@ -125,8 +125,8 @@ class MR_DllDeclare  MR_Level
             Section();
             ~Section();
 
-            void SerializeStructure( CArchive& pArchive );
-            void SerializeSurfacesLogicState( CArchive& pArchive );
+            void SerializeStructure( NoMFC::CArchive& pArchive );
+            void SerializeSurfacesLogicState( NoMFC::CArchive& pArchive );
 
       };
 
@@ -137,7 +137,7 @@ class MR_DllDeclare  MR_Level
             // Connectivity
             int  mParentSectionIndex;
 
-            void SerializeStructure(  CArchive& pArchive );
+            void SerializeStructure(  NoMFC::CArchive& pArchive );
       };
 
       class MR_DllDeclare Room: public Section
@@ -159,7 +159,7 @@ class MR_DllDeclare  MR_Level
                AudibleRoom();
                ~AudibleRoom();
 
-               void Serialize(  CArchive& pArchive );
+               void Serialize(  NoMFC::CArchive& pArchive );
 
             };
 
@@ -191,7 +191,7 @@ class MR_DllDeclare  MR_Level
             Room();
             ~Room();
             
-            void SerializeStructure(  CArchive& pArchive );
+            void SerializeStructure(  NoMFC::CArchive& pArchive );
 
       };
 
@@ -208,7 +208,7 @@ class MR_DllDeclare  MR_Level
             void Unlink();
             void LinkTo( FreeElement**  pPrevLink );
 
-            static void SerializeList( CArchive& pArchive, FreeElement** pListHead );
+            static void SerializeList( NoMFC::CArchive& pArchive, FreeElement** pListHead );
       };
 
 
@@ -261,7 +261,7 @@ class MR_DllDeclare  MR_Level
 
 
       // Serialisation functions
-      void Serialize( CArchive& pArchive );
+      void Serialize( NoMFC::CArchive& pArchive );
 
 
       // Strucre Interrocation functions

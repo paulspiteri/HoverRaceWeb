@@ -21,6 +21,7 @@
 //
 
 #include "MR_Types.h"
+#include "RecordFile.h"
 
 #ifndef WORLD_COORDINATES_H
 #define WORLD_COORDINATES_H
@@ -42,7 +43,7 @@ class MR_DllDeclare MR_2DCoordinate
       MR_Int32  mX;
       MR_Int32  mY;
 
-      void Serialize( CArchive& pArchive );
+      void Serialize( NoMFC::CArchive& pArchive );
 
       // Comparaison operator
       BOOL operator ==( const MR_2DCoordinate& pCoordinate )const;
@@ -58,7 +59,7 @@ class MR_DllDeclare MR_3DCoordinate : public MR_2DCoordinate
    public:
       MR_Int32  mZ;
    
-      void Serialize( CArchive& pArchive );
+      void Serialize( NoMFC::CArchive& pArchive );
 
       // Comparaison operator
 

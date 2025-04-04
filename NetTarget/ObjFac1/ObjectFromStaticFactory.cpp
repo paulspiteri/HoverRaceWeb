@@ -54,6 +54,12 @@ void MR_ObjectFromStaticFactory::SerializePtr( CArchive& pArchive, MR_ObjectFrom
    }
 }
 
+void MR_ObjectFromStaticFactory::SerializePtr( NoMFC::CArchive& pArchive, MR_ObjectFromFactory*& pPtr )
+{
+   ASSERT( FALSE );
+   throw std::runtime_error("Not implemented");
+}
+
 void MR_ObjectFromStaticFactory::Serialize( CArchive& pArchive )
 {
    CObject::Serialize( pArchive );

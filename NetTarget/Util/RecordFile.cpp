@@ -20,18 +20,19 @@
 //
 
 
-#include "stdafx.h" // standar include at the beginning of each cpp file
-
 #include "RecordFile.h"
+#include <stdio.h>
+#include <string>
+#include <stdexcept>
 
-#define new DEBUG_NEW
+using namespace NoMFC;
 
 // MR_RecordFileTableStuff
 
 class MR_RecordFileTable
 {
    public:
-      CString mFileTitle;
+      std::string mFileTitle;
       BOOL    mSumValid;
       DWORD   mChkSum;      // Check sum of the control record
       int     mRecordUsed;  // Nb of record used
@@ -84,23 +85,25 @@ void MR_RecordFileTable::Serialize( CArchive& pArchive )
 
    if( pArchive.IsStoring() )
    {       
-      pArchive << mFileTitle
-               << (int) 0   // Padding for checksum purpose
-               << (int) 0       
-               << mSumValid
-               << mChkSum               
-               << mRecordUsed
-               << mRecordMax
-               << (int) 0
-               << (int) 0;
+      ASSERT( FALSE );
+      throw std::runtime_error("Not implemented");
+      // pArchive << mFileTitle
+      //          << (int) 0   // Padding for checksum purpose
+      //          << (int) 0       
+      //          << mSumValid
+      //          << mChkSum               
+      //          << mRecordUsed
+      //          << mRecordMax
+      //          << (int) 0
+      //          << (int) 0;
 
 
-      if( mRecordMax > 0 )
-      {
-         ASSERT( mRecordList != NULL );
+      // if( mRecordMax > 0 )
+      // {
+      //    ASSERT( mRecordList != NULL );
       
-         pArchive.Write( mRecordList, sizeof( mRecordList[0] ) *mRecordMax );
-      }
+      //    pArchive.Write( mRecordList, sizeof( mRecordList[0] ) *mRecordMax );
+      // }
    }
    else
    {
@@ -134,6 +137,7 @@ MR_RecordFile::MR_RecordFile()
    mConstructionMode = FALSE;
    mTable = NULL;
    mCurrentRecord = -1;
+   mFile = NULL;
 }
 
 MR_RecordFile::~MR_RecordFile()
@@ -173,100 +177,6 @@ int MR_RecordFile::GetCurrentRecordNumber()const
    return mCurrentRecord;
 }
 
-BOOL MR_RecordFile::CreateForWrite( const char* pFileName, int pNbRecords, const char* pTitle )
-{
-   BOOL lReturnValue = FALSE;
-   ASSERT( mTable == NULL);   // Open function must be called only once
-
-   if( mTable == NULL )
-   {
-      mConstructionMode = TRUE;
-      mCurrentRecord    = -1;
-
-      // Try yo open the file
-      lReturnValue = CFile::Open( pFileName, modeCreate|modeWrite|typeBinary|shareExclusive );
-
-      if( lReturnValue )
-      {
-         // Create the mTable
-         mTable = new MR_RecordFileTable( pNbRecords );
-         mTable->mFileTitle = pTitle;
-
-         // Write the mTable to reserve some space and position the file on the first record
-         {
-            CArchive lArchive( this, CArchive::store );
-
-            mTable->Serialize( lArchive );
-         }
-      }
-   }
-   return lReturnValue;
-   
-}
-
-BOOL MR_RecordFile::OpenForWrite( const char* pFileName )
-{
-   BOOL lReturnValue = FALSE;
-   ASSERT( mTable == NULL);
-
-   if( mTable == NULL )
-   {
-      mConstructionMode = TRUE;
-      mCurrentRecord    = -1;
-
-      // Try yo open the file
-      lReturnValue = CFile::Open( pFileName, modeReadWrite|typeBinary|shareExclusive );
-
-      if( lReturnValue )
-      {
-         {
-            CArchive lArchive( this, CArchive::load );
-            mTable = new MR_RecordFileTable;
-
-            mTable->Serialize( lArchive );
-         }
-
-         if( mTable == NULL )
-         {
-            lReturnValue = FALSE;
-         }
-         
-         if( lReturnValue )
-         {
-            // Notting to do
-         }
-         else
-         {
-            CFile::Close();
-         }
-      }
-   }
-
-   return lReturnValue;
-}
-
-
-BOOL MR_RecordFile::BeginANewRecord()
-{
-   BOOL lReturnValue = FALSE;
-
-   ASSERT( mConstructionMode );
-
-   if( (mTable!=NULL)&& mConstructionMode )
-   {
-      if( mTable->mRecordUsed < mTable->mRecordMax )
-      {
-         mCurrentRecord = mTable->mRecordUsed;
-         CFile::Seek( 0, end );
-         mTable->mRecordList[mCurrentRecord] = CFile::GetPosition();
-         mTable->mRecordUsed = mCurrentRecord+1;
-
-         lReturnValue = TRUE;
-      }
-   }
-   return lReturnValue;
-}
-
 BOOL MR_RecordFile::OpenForRead( const char* pFileName, BOOL pValidateChkSum )
 {
    BOOL lReturnValue = FALSE;
@@ -284,13 +194,14 @@ BOOL MR_RecordFile::OpenForRead( const char* pFileName, BOOL pValidateChkSum )
       mConstructionMode = FALSE;
       mCurrentRecord    = -1;
 
-      // Try yo open the file
-      lReturnValue = CFile::Open( pFileName, modeRead|typeBinary|shareDenyWrite );
+      // Try to open the file
+      mFile = new CFile();
+      lReturnValue = mFile->OpenForRead(pFileName);
 
       if( lReturnValue )
       {
          {
-            CArchive lArchive( this, CArchive::load|CArchive::bNoFlushOnDelete );
+            CArchive lArchive(mFile, CArchive::Mode::load);
 
             mTable = new MR_RecordFileTable;
 
@@ -300,13 +211,13 @@ BOOL MR_RecordFile::OpenForRead( const char* pFileName, BOOL pValidateChkSum )
          if( mTable == NULL )
          {
             lReturnValue = FALSE;
-            CFile::Close();
+            mFile->Close();
          }
          else if( pValidateChkSum && (lSum != mTable->mChkSum ))
          {
             // Wrong file sum
             lReturnValue = FALSE;
-            CFile::Close();
+            mFile->Close();
          }
          else
          {
@@ -314,7 +225,7 @@ BOOL MR_RecordFile::OpenForRead( const char* pFileName, BOOL pValidateChkSum )
             if( mTable->mRecordList != NULL )
             {
                 mCurrentRecord = 0;
-                Seek( 0, begin );
+                Seek( 0, std::ios::beg );
             }
          }
       }
@@ -323,29 +234,8 @@ BOOL MR_RecordFile::OpenForRead( const char* pFileName, BOOL pValidateChkSum )
    return lReturnValue;
 }
 
-// Checksum stuff (Renamed to Reopen for security purpose
-//      #define ApplyChecksum ReOpen
-BOOL MR_RecordFile::ReOpen( const char* pFileName )
-{
-   BOOL lReturnValue = FALSE;
 
-   DWORD lSum = 0;
-
-   lSum = ComputeSum( pFileName );
-
-   lReturnValue = OpenForWrite( pFileName );
-
-   if( lReturnValue )
-   {
-      mTable->mSumValid = TRUE;
-      mTable->mChkSum   = lSum;
-   }
-
-   return lReturnValue;
-}
-
-// #define GetCheckSum GetAlignMode
-DWORD MR_RecordFile::GetAlignMode( )
+uint32_t MR_RecordFile::GetCheckSum()
 {
    if( (mTable != NULL)&&(mTable->mSumValid) )
    {
@@ -357,9 +247,6 @@ DWORD MR_RecordFile::GetAlignMode( )
    }
 }
 
-
-
-
 void MR_RecordFile::SelectRecord( int pRecordNumber )
 {
    ASSERT( !mConstructionMode );
@@ -369,7 +256,7 @@ void MR_RecordFile::SelectRecord( int pRecordNumber )
       if( pRecordNumber < mTable->mRecordUsed )
       {
          mCurrentRecord = pRecordNumber;
-         Seek( 0, begin );
+         Seek( 0, std::ios::beg  );
       }
       else
       {
@@ -378,136 +265,17 @@ void MR_RecordFile::SelectRecord( int pRecordNumber )
    }
 }
 
-ULONGLONG MR_RecordFile::GetPosition() const
-{
-   ULONGLONG lReturnValue = CFile::GetPosition();
-
-   if( (mTable != NULL)&&(mCurrentRecord >= 0 ))
-   {
-      lReturnValue -= mTable->mRecordList[mCurrentRecord];
-   }
-   return lReturnValue;
-}
-
-CString MR_RecordFile::GetFileTitle() const
-{  
-   if( mTable != NULL )
-   {
-      return mTable->mFileTitle;
-   }
-   else
-   {
-      ASSERT( FALSE );
-      return "";
-   }
-}
-
-BOOL MR_RecordFile::Open(LPCTSTR, UINT, CFileException* )
-{
-   ASSERT( FALSE );
-   AfxThrowNotSupportedException();
-
-   return FALSE;
-}
-
-CFile* MR_RecordFile::Duplicate() const
-{
-   ASSERT( FALSE );
-   AfxThrowNotSupportedException();
-   return NULL;
-}
-
-LONG MR_RecordFile::Seek(LONG pOff, UINT pFrom )
+LONG MR_RecordFile::Seek(LONG offset, std::ios::seekdir direction)
 {
    // BUG This function do not check for record overflow
    LONG lLocalOffset = 0;
 
-   ASSERT_VALID( this );
-   
    if( mCurrentRecord >= 0 )
    {
       lLocalOffset = mTable->mRecordList[ mCurrentRecord ];
    }
 
-   return CFile::Seek( pOff+lLocalOffset, pFrom )-lLocalOffset;
-}
-
-void MR_RecordFile::SetLength( DWORD )
-{
-   ASSERT( FALSE );
-   AfxThrowNotSupportedException();
-}
-
-ULONGLONG MR_RecordFile::GetLength() const
-{
-   ASSERT_VALID( this );
-   ASSERT( !mConstructionMode );
-
-   ULONGLONG lReturnValue = CFile::GetLength();
-
-   if( mCurrentRecord >= 0 )
-   {
-      if( mCurrentRecord+1 < mTable->mRecordUsed )
-      {
-         lReturnValue = mTable->mRecordList[ mCurrentRecord+1]
-                       -mTable->mRecordList[ mCurrentRecord];
-      }
-      else
-      {
-         lReturnValue -= mTable->mRecordList[ mCurrentRecord];
-      }
-   }
-   return lReturnValue;
-}
-
-UINT MR_RecordFile::Read(void* pBuf, UINT pCount)
-{
-
-   // Simply cut nCount if it overflow
-   ASSERT_VALID( this );
-
-   if( mCurrentRecord >= 0 )
-   {
-      if( mCurrentRecord+1 < mTable->mRecordUsed )
-      {
-         UINT lRecordLen = mTable->mRecordList[ mCurrentRecord+1]
-                          -mTable->mRecordList[ mCurrentRecord];
-
-         if( GetPosition()+pCount > lRecordLen )
-         {
-            pCount = lRecordLen-GetPosition();
-            ASSERT( (int)pCount >= 0 );
-         }
-      }
-   }
-
-   return CFile::Read( pBuf, pCount );
-}
-
-void MR_RecordFile::Write( const void* pBuf, UINT pCount)
-{
-   ASSERT( mConstructionMode );
-
-   CFile::Write( pBuf, pCount );
-}
-
-
-void MR_RecordFile::LockRange(DWORD, DWORD )
-{
-   ASSERT( FALSE );
-   AfxThrowNotSupportedException();
-}
-
-void MR_RecordFile::UnlockRange(DWORD, DWORD )
-{
-   ASSERT( FALSE );
-   AfxThrowNotSupportedException();
-}
-
-void MR_RecordFile::Abort()
-{
-   ASSERT( FALSE );
-   CFile( Abort );
+   return mFile->Seek( offset+lLocalOffset, direction )-lLocalOffset;
 }
 
 void MR_RecordFile::Close()
@@ -516,18 +284,22 @@ void MR_RecordFile::Close()
    if( mConstructionMode && (mTable != NULL ) )
    {
       // Write the Record table
-
-      Seek( 0, begin );
-
-      CArchive lArchive( this, CArchive::store );
-
-      mTable->Serialize( lArchive );
+      ASSERT( FALSE );
+      throw std::runtime_error("Not implemented");
+      // Seek( 0,  std::ios::beg );
+      // CArchive lArchive( mFile, CArchive::store );
+      // mTable->Serialize( lArchive );
    }
    mCurrentRecord = -1;
    delete mTable;
    mTable = NULL;
 
-   CFile::Close();
+   mFile->Close();
+}
+
+NoMFC::CFile*  MR_RecordFile::File() 
+{
+   return mFile;
 }
 
 DWORD ComputeSum( const char* pFileName )
@@ -568,36 +340,77 @@ DWORD ComputeSum( const char* pFileName )
 }
 
 
-
-
-#ifdef _DEBUG
-
-void MR_RecordFile::AssertValid() const
+CFile::CFile() 
 {
-   CFile::AssertValid();
 
-   ASSERT( mCurrentRecord >= -1 );
-   if( mTable != NULL )
-   {
-      ASSERT( mCurrentRecord >= -1 );
+}
 
-      if( !mConstructionMode )
-      {
-         ASSERT( mCurrentRecord < mTable->mRecordUsed );
-      }
-   }
-   else
+CFile::~CFile() {
+   Close();
+}
+
+BOOL CFile::OpenForRead(std::string fileName) 
+{
+   std::ios::openmode openMode = std::ios::binary | std::ios::in;
+   stream.open(fileName, openMode);
+   return stream.is_open();
+}
+
+LONG CFile::Seek(LONG offset, std::ios::seekdir direction) 
+{
+   if (!stream.is_open()) {
+      return -1;
+  }
+
+  stream.seekg(offset, direction);
+
+  if (stream.fail()) {
+      return -1;
+  }
+
+  return static_cast<LONG>(stream.tellg());  // Return new position
+}
+
+size_t CFile::Read(void* buffer, size_t maxBytes)
+{
+    if (!stream.is_open() || buffer == nullptr) {
+        throw std::runtime_error("Invalid read attempt");
+    }
+
+    stream.read(reinterpret_cast<char*>(buffer), maxBytes);
+    return static_cast<size_t>(stream.gcount()); // actual bytes read
+}
+
+void CFile::Close()
+{
+   if (stream.is_open()) {
+      stream.close();
+  }
+}
+
+CArchive::CArchive(CFile* pCFile, Mode mode)
+{
+   mCFile = pCFile;
+   if (mode != Mode::load) 
    {
-      ASSERT( mCurrentRecord == -1 );
+      ASSERT( FALSE );
+      throw std::runtime_error("Not implemented");
    }
 }
 
-void MR_RecordFile::Dump(CDumpContext& dc) const
+BOOL CArchive::IsStoring() 
 {
-   CFile::Dump( dc );
-
-   // TODO
+   return FALSE;
 }
 
-#endif
+UINT CArchive::Read(void* lpBuf, UINT nMax)
+{
+   size_t nRead = mCFile->Read(lpBuf, nMax);
+   return nRead;
+}
 
+void CArchive::Write(const void* lpBuf, INT nMax)
+{
+   ASSERT( FALSE );
+   throw std::runtime_error("Not implemented");
+}

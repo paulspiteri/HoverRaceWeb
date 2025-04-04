@@ -56,7 +56,7 @@ BOOL MR_Element::InitString( const char* pInitStr )
    return lReturnValue;
 }
 
-void MR_Element::SerializeLogicState( CArchive& /*pArchive*/ )
+void MR_Element::SerializeLogicState( NoMFC::CArchive& /*pArchive*/ )
 {
    // The default function do notting   
 }

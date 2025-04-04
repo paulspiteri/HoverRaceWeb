@@ -25,6 +25,7 @@
 
 
 #include "Profiler.h"
+#include <chrono>
 
 #ifdef _DEBUG
 
@@ -109,7 +110,11 @@ void MR_ProfilerSampler::EndSample()
 // MR_ProfilerMaster
 int MR_ProfilerMaster::GetTime()
 {
-   return timeGetTime()-mTimeOffset;
+   auto now = std::chrono::system_clock::now();
+   auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+       now.time_since_epoch()
+   );
+   return now_ms.count()-mTimeOffset;
 }
 
 int MR_ProfilerMaster::PauseTime()

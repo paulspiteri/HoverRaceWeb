@@ -35,31 +35,32 @@ MR_ResourceLib::MR_ResourceLib( const char* pResFile )
 
       {
          int lMagicNumber;
+         ASSERT( FALSE );
+         throw std::runtime_error("Not implemented yet");
+         // CArchive lArchive( &mRecordFile, CArchive::load );
 
-         CArchive lArchive( &mRecordFile, CArchive::load );
+         // lArchive >> lMagicNumber;
 
-         lArchive >> lMagicNumber;
+         // if( lMagicNumber == MR_RESOURCE_FILE_MAGIC )
+         // {
+         //    // Load the Bitmaps
+         //    LoadBitmaps( lArchive );
 
-         if( lMagicNumber == MR_RESOURCE_FILE_MAGIC )
-         {
-            // Load the Bitmaps
-            LoadBitmaps( lArchive );
+         //    // Load the Actors
+         //    LoadActors( lArchive );
 
-            // Load the Actors
-            LoadActors( lArchive );
+         //    // Load the sprites
+         //    LoadSprites( lArchive );
 
-            // Load the sprites
-            LoadSprites( lArchive );
+         //    // Load the sprites
+         //    LoadSounds( lArchive );
 
-            // Load the sprites
-            LoadSounds( lArchive );
-
-         }
-         else
-         {
-            ASSERT( FALSE );
-            AfxThrowArchiveException( CArchiveException::badSchema );
-         }
+         // }
+         // else
+         // {
+         //    ASSERT( FALSE );
+         //    AfxThrowArchiveException( CArchiveException::badSchema );
+         // }
       }
    }
    else

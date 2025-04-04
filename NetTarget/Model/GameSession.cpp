@@ -62,7 +62,7 @@ BOOL MR_GameSession::LoadLevel( int pLevel )
       mCurrentLevel = new MR_Level( mAllowRendering );
       mCurrentMazeFile->SelectRecord( pLevel );
 
-      CArchive lArchive ( mCurrentMazeFile, CArchive::load );
+      NoMFC::CArchive lArchive ( mCurrentMazeFile->File(), NoMFC::CArchive::load );
       
       mCurrentLevel->Serialize( lArchive );
 

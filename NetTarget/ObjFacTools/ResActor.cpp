@@ -255,7 +255,9 @@ void MR_ResActor::Patch::Serialize( CArchive& pArchive, MR_ResourceLib* pLib )
 
       for( lCounter =0; lCounter < mURes*mVRes; lCounter++ )
       {
-         mVertexList[ lCounter ].Serialize( pArchive );
+         ASSERT( FALSE );
+         throw std::runtime_error("Not implemented");
+        // mVertexList[ lCounter ].Serialize( pArchive );
       }
    }
    else
@@ -274,7 +276,9 @@ void MR_ResActor::Patch::Serialize( CArchive& pArchive, MR_ResourceLib* pLib )
 
       for( lCounter =0; lCounter < mURes*mVRes; lCounter++ )
       {
-         mVertexList[ lCounter ].Serialize( pArchive );
+         ASSERT( FALSE );
+         throw std::runtime_error("Not implemented - didn't want to go this deep changing to NoMFC yet");
+        // mVertexList[ lCounter ].Serialize( pArchive );
       }
    }
 }

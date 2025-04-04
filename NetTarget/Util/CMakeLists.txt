@@ -1,8 +1,8 @@
 add_library(Util STATIC
+    RecordFile.cpp
     DllObjectFactory.cpp
     FuzzyLogic.cpp
     Profiler.cpp
-    RecordFile.cpp
     StrRes.cpp
     WorldCoordinates.cpp
 )

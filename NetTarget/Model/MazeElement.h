@@ -85,7 +85,7 @@ class MR_DllDeclare MR_Element: public MR_ObjectFromFactory
       virtual void AddRenderer();
       virtual BOOL InitString( const char* pInitStr = NULL );   // Initialisation string used during maze creation
 
-      virtual void SerializeLogicState( CArchive& pArchive );          // Serialize the logic component and the body of the component
+      virtual void SerializeLogicState( NoMFC::CArchive& pArchive );          // Serialize the logic component and the body of the component
 
       // Contact effect interface
       virtual void ApplyEffect( const MR_ContactEffect* pEffect, MR_SimulationTime pTime, MR_SimulationTime pDuration, BOOL pValidDirection, MR_Angle pHorizontalDirection, MR_Int32 pZMin, MR_Int32 pZMax, MR_Level* pLevel );

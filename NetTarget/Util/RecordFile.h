@@ -20,6 +20,11 @@
 // and limitations under the License.
 //
 
+#include "nomfc_stdafx.h"
+
+#include <string>
+#include <fstream>
+
 #ifndef RECORD_FILE_H
 #define RECORD_FILE_H
 
@@ -29,13 +34,81 @@
    #define MR_DllDeclare //   __declspec( dllimport )
 #endif
 
+namespace NoMFC {
+   class CFile
+   {
+      public:
+      CFile();
+      ~CFile();
+      
+      BOOL OpenForRead(std::string fileName);
+      LONG Seek(LONG offset, std::ios::seekdir direction);
+
+      size_t Read(void* buffer, size_t maxBytes);
+      
+      template <typename T>
+      CFile& Read(T& value) {
+         stream.read(reinterpret_cast<char*>(&value), sizeof(T));
+         return *this;
+      }
+
+      // Overload >> for std::string (handling length-prefixed strings)
+      CFile& Read(std::string& value) {
+         unsigned char length;
+         this->Read(length);
+         value.resize(length);
+         stream.read(&value[0], length);
+         if (!stream) throw std::runtime_error("String read failed");
+         return *this;
+     }
+
+      void Close();
+
+      private:
+      std::ifstream stream;
+   };
+
+   class CArchive
+   {
+      private:
+         CFile* mCFile;
+
+      public:
+      enum Mode { store = 0, load = 1, };
+
+      CArchive(CFile* pCFile, Mode mode);
+      
+      BOOL IsStoring();
+      UINT Read(void* lpBuf, UINT nMax);
+      void Write(const void* lpBuf, INT nMax);
+
+      // Overload >> for primitive types (e.g., int, float, etc.)
+      template <typename T>
+      CArchive& operator>>(T& value) {
+         mCFile->Read(value);
+         return *this;
+      }
+
+      // Overload >> for std::string (handling length-prefixed strings)
+      CArchive& operator>>(std::string& value) {
+         mCFile->Read(value);
+         return *this;
+      }
+
+      template <typename T>
+      CArchive& operator<<(T& value) {
+         ASSERT( FALSE );
+         throw std::runtime_error("Not implemented");
+      }
+   };
+}
 
 class MR_RecordFileTable;
 
-class MR_RecordFile: public CFile
+class MR_RecordFile
 {
    private:
-
+      NoMFC::CFile*       mFile;
       MR_RecordFileTable* mTable;
       int                 mCurrentRecord; // for read and write, -1 = not specified
       BOOL                mConstructionMode;
@@ -45,58 +118,24 @@ class MR_RecordFile: public CFile
 	   MR_DllDeclare MR_RecordFile();
 	   MR_DllDeclare ~MR_RecordFile();
 
-     
-      // Creation operations
-	   MR_DllDeclare BOOL CreateForWrite( const char* pFileName, int pNbRecords, const char* lTitle = NULL );
-	   MR_DllDeclare BOOL OpenForWrite( const char* pFileName );
-
-	   MR_DllDeclare BOOL BeginANewRecord();
-
       // Read operation
 	   MR_DllDeclare BOOL OpenForRead( const char* pFileName, BOOL pValidateChkSum = FALSE );
       MR_DllDeclare void SelectRecord( int pRecordNumber );
 
-      // Checksum stuff (Renamed to Reopen for security purpose
-      #define ApplyChecksum ReOpen
-	   MR_DllDeclare BOOL ReOpen( const char* pFileName );
-
-      #define GetCheckSum GetAlignMode
-	   MR_DllDeclare DWORD GetAlignMode( );
-
+	   uint32_t GetCheckSum();
 
       // File information functions
       MR_DllDeclare int  GetNbRecords()const;
       MR_DllDeclare int  GetNbRecordsMax()const;
       MR_DllDeclare int  GetCurrentRecordNumber()const;
       
-      // Overrided CFile operations
-	   MR_DllDeclare ULONGLONG GetPosition() const;
-	   MR_DllDeclare CString GetFileTitle() const;
+	   MR_DllDeclare LONG Seek(LONG offset, std::ios::seekdir direction);
 
-      MR_DllDeclare BOOL   Open(LPCTSTR lpszFileName, UINT nOpenFlags, CFileException* pError = NULL);
-      MR_DllDeclare CFile* Duplicate() const;
-
-	   MR_DllDeclare LONG Seek(LONG lOff, UINT nFrom);
-	   MR_DllDeclare void SetLength(DWORD dwNewLen);
-	   MR_DllDeclare ULONGLONG GetLength() const;
-
-	   MR_DllDeclare UINT Read(void* lpBuf, UINT nCount);
-	   MR_DllDeclare void Write( const void* lpBuf, UINT nCount);
-
-	   MR_DllDeclare void LockRange(DWORD dwPos, DWORD dwCount);
-	   MR_DllDeclare void UnlockRange(DWORD dwPos, DWORD dwCount);
-
-	   MR_DllDeclare void Abort();
 	   MR_DllDeclare void Close();
 
-      #ifdef _DEBUG
-	      MR_DllDeclare void AssertValid() const;
-         MR_DllDeclare void Dump(CDumpContext& dc) const;
-      #endif
-
+      NoMFC::CFile*  File();
 };
 
 #undef MR_DllDeclare
 
 #endif
-

@@ -51,7 +51,7 @@ void MR_InitTrigoTables()
 }
 
 
-void MR_2DCoordinate::Serialize( CArchive& pArchive )
+void MR_2DCoordinate::Serialize( NoMFC::CArchive& pArchive )
 {
    
    if( pArchive.IsStoring() )
@@ -76,7 +76,7 @@ BOOL MR_2DCoordinate::operator !=( const MR_2DCoordinate& pCoordinate )const
    return (mX != pCoordinate.mX)||(mY != pCoordinate.mY);
 }
 
-void MR_3DCoordinate::Serialize( CArchive& pArchive )
+void MR_3DCoordinate::Serialize( NoMFC::CArchive& pArchive )
 {
    MR_2DCoordinate::Serialize( pArchive );
 

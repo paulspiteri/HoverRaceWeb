@@ -27,7 +27,7 @@
 #include "io.h"
 #include "TrackCommonStuff.h"
 #include "../Util/StrRes.h"
-
+#include "../Util/RecordFile.h"
 
 class TrackEntry
 {
@@ -319,7 +319,7 @@ BOOL ReadTrackEntry( MR_RecordFile* pRecordFile, TrackEntry* pDest, const char* 
    {
       int lMagicNumber;
 
-      CArchive lArchive( pRecordFile, CArchive::load|CArchive::bNoFlushOnDelete );
+      NoMFC::CArchive lArchive( pRecordFile->File(), NoMFC::CArchive::load );
    
       lArchive >> lMagicNumber;
 

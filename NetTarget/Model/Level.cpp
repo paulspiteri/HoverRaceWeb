@@ -85,7 +85,7 @@ void MR_Level::SetBroadcastHook( void (*pCreationHook)(MR_FreeElement*, int, voi
 
 
 // Serialization
-void MR_Level::Serialize( CArchive& pArchive )
+void MR_Level::Serialize( NoMFC::CArchive& pArchive )
 {
    int lCounter;
    int lPlayerNo;
@@ -606,7 +606,7 @@ MR_Level::Room::AudibleRoom::~AudibleRoom()
    delete []mSoundCoefficient;
 }
 
-void MR_Level::Room::AudibleRoom::Serialize(  CArchive& pArchive )
+void MR_Level::Room::AudibleRoom::Serialize(  NoMFC::CArchive& pArchive )
 {
    int lCounter;
 
@@ -714,7 +714,7 @@ MR_Level::Section::~Section()
    
 }
 
-void MR_Level::Section::SerializeStructure( CArchive& pArchive )
+void MR_Level::Section::SerializeStructure( NoMFC::CArchive& pArchive )
 {
    int lCounter;
 
@@ -777,7 +777,7 @@ void MR_Level::Section::SerializeStructure( CArchive& pArchive )
 }
 
 
-void MR_Level::Section::SerializeSurfacesLogicState( CArchive& pArchive )
+void MR_Level::Section::SerializeSurfacesLogicState( NoMFC::CArchive& pArchive )
 {
    // Serialize the textures state
    if( mFloorTexture != NULL )
@@ -828,7 +828,7 @@ MR_Level::Room::~Room()
    delete []mVisibleCeilingList;
 }
 
-void MR_Level::Room::SerializeStructure( CArchive& pArchive )
+void MR_Level::Room::SerializeStructure( NoMFC::CArchive& pArchive )
 {
    int lCounter;
    Section::SerializeStructure( pArchive );
@@ -929,7 +929,7 @@ void MR_Level::Room::SerializeStructure( CArchive& pArchive )
 
 // class MR_Level::Feature
 
-void MR_Level::Feature::SerializeStructure( CArchive& pArchive )
+void MR_Level::Feature::SerializeStructure( NoMFC::CArchive& pArchive )
 {
    Section::SerializeStructure( pArchive );
 
@@ -987,25 +987,27 @@ void MR_Level::FreeElement::LinkTo( FreeElement** pPrevLink )
    }
 }
 
-void MR_Level::FreeElement::SerializeList( CArchive& pArchive, FreeElement** pListHead )
+void MR_Level::FreeElement::SerializeList( NoMFC::CArchive& pArchive, FreeElement** pListHead )
 {
    if( pArchive.IsStoring() )
    {
-      FreeElement* lFreeElement = *pListHead;
+      ASSERT( FALSE );
+      throw std::runtime_error("Not implemented");
+      // FreeElement* lFreeElement = *pListHead;
 
-      while( lFreeElement )
-      {
-         MR_ObjectFromFactory::SerializePtr( pArchive, (MR_ObjectFromFactory*&)lFreeElement->mElement );
+      // while( lFreeElement )
+      // {
+      //    MR_ObjectFromFactory::SerializePtr( pArchive, (MR_ObjectFromFactory*&)lFreeElement->mElement );
 
-         lFreeElement->mElement->mPosition.Serialize( pArchive );
-         pArchive << lFreeElement->mElement->mOrientation;
+      //    lFreeElement->mElement->mPosition.Serialize( pArchive );
+      //    pArchive << lFreeElement->mElement->mOrientation;
 
-         lFreeElement = lFreeElement->mNext;
-      }
+      //    lFreeElement = lFreeElement->mNext;
+      // }
 
-      MR_ObjectFromFactory* lNullPtr = NULL;
+      // MR_ObjectFromFactory* lNullPtr = NULL;
 
-      MR_ObjectFromFactory::SerializePtr( pArchive, lNullPtr );
+      // MR_ObjectFromFactory::SerializePtr( pArchive, lNullPtr );
 
    }
    else
@@ -1035,12 +1037,14 @@ void MR_Level::FreeElement::SerializeList( CArchive& pArchive, FreeElement** pLi
  
 
 // class MR_SectionId
-void MR_SectionId::Serialize(  CArchive& pArchive )
+void MR_SectionId::Serialize(  NoMFC::CArchive& pArchive )
 {
    if( pArchive.IsStoring() )
    {
-      pArchive << (int)mType;
-      pArchive << mId;
+      ASSERT( FALSE );
+      throw std::runtime_error("Not implemented");
+      // pArchive << (int)mType;
+      // pArchive << mId;
    }
    else
    {
