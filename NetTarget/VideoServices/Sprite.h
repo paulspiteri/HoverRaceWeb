@@ -65,7 +65,7 @@ class MR_DllDeclare MR_Sprite
       int  GetItemHeight()const;
       int  GetItemWidth()const;
 
-      void Serialize( CArchive& pArchive );
+      void Serialize( NoMFC::CArchive& pArchive );
 
 };
 

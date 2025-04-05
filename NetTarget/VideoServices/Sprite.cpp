@@ -54,7 +54,7 @@ int MR_Sprite::GetItemWidth()const
    return mWidth;
 }
 
-void MR_Sprite::Serialize( CArchive& pArchive )
+void MR_Sprite::Serialize( NoMFC::CArchive& pArchive )
 {
    if( pArchive.IsStoring() )
    {

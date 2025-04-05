@@ -55,63 +55,60 @@ void MR_ClientSession::Process( int pSpeedFactor )
 
 void MR_ClientSession::ReadLevelAttrib( MR_RecordFile* pRecordFile, MR_VideoBuffer* pVideo )
 {
-   ASSERT( FALSE );
-   throw std::runtime_error("Not implemented yet");
+   // Read level background palette
+   if( (pVideo != NULL)&&(pRecordFile->GetNbRecords()>=3 ) )
+   {
+      pRecordFile->SelectRecord( 2 );
 
-   // // Read level background palette
-   // if( (pVideo != NULL)&&(pRecordFile->GetNbRecords()>=3 ) )
-   // {
-   //    pRecordFile->SelectRecord( 2 );
+      {
+         NoMFC::CArchive lArchive( pRecordFile->File(), NoMFC::CArchive::load );
 
-   //    {
-   //       CArchive lArchive( pRecordFile, CArchive::load|CArchive::bNoFlushOnDelete );
+         int lImageType;
 
-   //       int lImageType;
+         lArchive >> lImageType;
 
-   //       lArchive >> lImageType;
-
-   //       if( lImageType == MR_RAWBITMAP )
-   //       {
-   //          MR_UInt8* lPalette = new MR_UInt8[ MR_BACK_COLORS*3 ];
+         if( lImageType == MR_RAWBITMAP )
+         {
+            MR_UInt8* lPalette = new MR_UInt8[ MR_BACK_COLORS*3 ];
          
-   //          if( mBackImage == NULL )
-   //          {
-   //             mBackImage = new MR_UInt8[ MR_BACK_X_RES*MR_BACK_Y_RES ];
-   //          }
+            if( mBackImage == NULL )
+            {
+               mBackImage = new MR_UInt8[ MR_BACK_X_RES*MR_BACK_Y_RES ];
+            }
 
 
-   //          lArchive.Read( lPalette, MR_BACK_COLORS*3 );
-   //          lArchive.Read( mBackImage, MR_BACK_X_RES*MR_BACK_Y_RES );
+            lArchive.Read( lPalette, MR_BACK_COLORS*3 );
+            lArchive.Read( mBackImage, MR_BACK_X_RES*MR_BACK_Y_RES );
 
-   //          pVideo->SetBackPalette( lPalette );
-   //       }
-   //    }
-   // }
+            pVideo->SetBackPalette( lPalette );
+         }
+      }
+   }
 
-   // // Read map section
-   // if( pRecordFile->GetNbRecords()>=4 )
-   // {
-   //    pRecordFile->SelectRecord( 3 );
-   //    {
-   //       CArchive lArchive( pRecordFile, CArchive::load|CArchive::bNoFlushOnDelete );
+   // Read map section
+   if( pRecordFile->GetNbRecords()>=4 )
+   {
+      pRecordFile->SelectRecord( 3 );
+      {
+         NoMFC::CArchive lArchive( pRecordFile->File(), NoMFC::CArchive::load );
 
-   //       int          lX0;
-   //       int          lX1;
-   //       int          lY0;
-   //       int          lY1;
+         int          lX0;
+         int          lX1;
+         int          lY0;
+         int          lY1;
 
-   //       MR_Sprite* lMapSprite = new MR_Sprite;
+         MR_Sprite* lMapSprite = new MR_Sprite;
 
-   //       lArchive >> lX0;
-   //       lArchive >> lX1;
-   //       lArchive >> lY0;
-   //       lArchive >> lY1;
+         lArchive >> lX0;
+         lArchive >> lX1;
+         lArchive >> lY0;
+         lArchive >> lY1;
 
-   //       lMapSprite->Serialize( lArchive );
+         lMapSprite->Serialize( lArchive );
 
-   //       SetMap( lMapSprite, lX0, lY0, lX1, lY1 );
-   //    }
-   // }
+         SetMap( lMapSprite, lX0, lY0, lX1, lY1 );
+      }
+   }
 
 
    // Read level midi stream

@@ -47,7 +47,7 @@ int MR_ResBitmap::GetResourceId()const
    return mResourceId;
 }
 
-void MR_ResBitmap::Serialize( CArchive& pArchive )
+void MR_ResBitmap::Serialize( NoMFC::CArchive& pArchive )
 {
    int lCounter;
 
@@ -178,7 +178,7 @@ MR_ResBitmap::SubBitmap::~SubBitmap()
    delete []mColumnPtr;
 }
 
-void MR_ResBitmap::SubBitmap::Serialize( CArchive& pArchive )
+void MR_ResBitmap::SubBitmap::Serialize( NoMFC::CArchive& pArchive )
 {
    if( pArchive.IsStoring() )
    {

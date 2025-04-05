@@ -49,7 +49,7 @@ int MR_ResShortSound::GetResourceId()const
    return mResourceId;
 }
 
-void MR_ResShortSound::Serialize( CArchive& pArchive )
+void MR_ResShortSound::Serialize( NoMFC::CArchive& pArchive )
 {
    if( pArchive.IsStoring() )
    {
@@ -112,7 +112,7 @@ int MR_ResContinuousSound::GetResourceId()const
    return mResourceId;
 }
 
-void MR_ResContinuousSound::Serialize( CArchive& pArchive )
+void MR_ResContinuousSound::Serialize( NoMFC::CArchive& pArchive )
 {
    if( pArchive.IsStoring() )
    {

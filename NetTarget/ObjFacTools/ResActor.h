@@ -32,7 +32,7 @@ class MR_ResActor
 
          virtual ~ActorComponent();
          virtual eComponentType GetType()const = 0;
-         virtual void           Serialize( CArchive& pArchive, MR_ResourceLib* pLib ) = 0;
+         virtual void           Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib ) = 0;
          virtual void           Draw( MR_3DViewPort* pDest, const MR_PositionMatrix& pMatrix )const = 0;
 
       };
@@ -49,7 +49,7 @@ class MR_ResActor
          ~Patch();
 
          eComponentType GetType()const;
-         void           Serialize( CArchive& pArchive, MR_ResourceLib* pLib );
+         void           Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib );
          void           Draw( MR_3DViewPort* pDest, const MR_PositionMatrix& pMatrix )const;
 
          int   GetURes()const;
@@ -68,7 +68,7 @@ class MR_ResActor
          Frame();
          ~Frame();
          void Clean();
-         void Serialize( CArchive& pArchive, MR_ResourceLib* pLib );
+         void Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib );
          void Draw( MR_3DViewPort* pDest, const MR_PositionMatrix& pMatrix )const;
 
       };
@@ -81,7 +81,7 @@ class MR_ResActor
 
          Sequence();
          ~Sequence();
-         void Serialize( CArchive& pArchive, MR_ResourceLib* pLib );
+         void Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib );
          void Draw( MR_3DViewPort* pDest, const MR_PositionMatrix& pMatrix, int pFrame )const;
 
       };
@@ -101,7 +101,7 @@ class MR_ResActor
       MR_DllDeclare int  GetFrameCount( int pSequence )const;
 
 
-      MR_DllDeclare void Serialize( CArchive& pArchive, MR_ResourceLib* pLib=NULL );
+      MR_DllDeclare void Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib=NULL );
       MR_DllDeclare void Draw( MR_3DViewPort* pDest, const MR_PositionMatrix& pMatrix, int pSequence, int pFrame )const;
 
 };

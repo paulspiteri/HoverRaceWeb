@@ -35,32 +35,31 @@ MR_ResourceLib::MR_ResourceLib( const char* pResFile )
 
       {
          int lMagicNumber;
-         ASSERT( FALSE );
-         throw std::runtime_error("Not implemented yet");
-         // CArchive lArchive( &mRecordFile, CArchive::load );
 
-         // lArchive >> lMagicNumber;
+         NoMFC::CArchive lArchive( mRecordFile.File(), NoMFC::CArchive::load );
 
-         // if( lMagicNumber == MR_RESOURCE_FILE_MAGIC )
-         // {
-         //    // Load the Bitmaps
-         //    LoadBitmaps( lArchive );
+         lArchive >> lMagicNumber;
 
-         //    // Load the Actors
-         //    LoadActors( lArchive );
+         if( lMagicNumber == MR_RESOURCE_FILE_MAGIC )
+         {
+            // Load the Bitmaps
+            LoadBitmaps( lArchive );
 
-         //    // Load the sprites
-         //    LoadSprites( lArchive );
+            // Load the Actors
+            LoadActors( lArchive );
 
-         //    // Load the sprites
-         //    LoadSounds( lArchive );
+            // Load the sprites
+            LoadSprites( lArchive );
 
-         // }
-         // else
-         // {
-         //    ASSERT( FALSE );
-         //    AfxThrowArchiveException( CArchiveException::badSchema );
-         // }
+            // Load the sprites
+            LoadSounds( lArchive );
+
+         }
+         else
+         {
+            ASSERT( FALSE );
+            AfxThrowArchiveException( CArchiveException::badSchema );
+         }
       }
    }
    else
@@ -189,7 +188,7 @@ const MR_ResContinuousSound* MR_ResourceLib::GetContinuousSound( int pSoundId  )
 }
 
 
-void MR_ResourceLib::LoadBitmaps( CArchive& pArchive )
+void MR_ResourceLib::LoadBitmaps( NoMFC::CArchive& pArchive )
 {
    int lNbBitmap;
 
@@ -211,7 +210,7 @@ void MR_ResourceLib::LoadBitmaps( CArchive& pArchive )
 }
 
 
-void MR_ResourceLib::LoadActors( CArchive& pArchive )
+void MR_ResourceLib::LoadActors( NoMFC::CArchive& pArchive )
 {
    int lNbActor;
 
@@ -232,7 +231,7 @@ void MR_ResourceLib::LoadActors( CArchive& pArchive )
 }
 
 
-void MR_ResourceLib::LoadSprites( CArchive& pArchive )
+void MR_ResourceLib::LoadSprites( NoMFC::CArchive& pArchive )
 {
    int lNbSprite;
 
@@ -253,7 +252,7 @@ void MR_ResourceLib::LoadSprites( CArchive& pArchive )
 }
 
 
-void MR_ResourceLib::LoadSounds( CArchive& pArchive )
+void MR_ResourceLib::LoadSounds( NoMFC::CArchive& pArchive )
 {
    int lNbSound;
    int lCounter;

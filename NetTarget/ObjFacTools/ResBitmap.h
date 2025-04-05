@@ -26,6 +26,7 @@
 #define MR_RES_BITMAP_H
 
 #include "../VideoServices/Bitmap.h"
+#include "../Util/RecordFile.h"
 
 #ifdef MR_OBJ_FAC_TOOLS
    #define MR_DllDeclare //   __declspec( dllexport )
@@ -51,7 +52,7 @@ class MR_ResBitmap: public MR_Bitmap
         MR_DllDeclare SubBitmap();
         MR_DllDeclare ~SubBitmap();
 
-        void Serialize( CArchive& pArchive );
+        void Serialize( NoMFC::CArchive& pArchive );
 
       };
 
@@ -72,7 +73,7 @@ class MR_ResBitmap: public MR_Bitmap
       MR_DllDeclare ~MR_ResBitmap();
 
       MR_DllDeclare int  GetResourceId()const;
-      MR_DllDeclare void Serialize( CArchive& pArchive );
+      MR_DllDeclare void Serialize( NoMFC::CArchive& pArchive );
 
       MR_DllDeclare int       GetWidth()const;
       MR_DllDeclare int       GetHeight()const;

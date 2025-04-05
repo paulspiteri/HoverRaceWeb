@@ -25,6 +25,7 @@
 #define MR_RES_SOUND_H
 
 #include "../VideoServices/SoundServer.h"
+#include "../Util/RecordFile.h"
 
 #ifdef MR_OBJ_FAC_TOOLS
    #define MR_DllDeclare //   __declspec( dllexport )
@@ -49,7 +50,7 @@ class MR_ResShortSound
       MR_DllDeclare ~MR_ResShortSound();
 
       MR_DllDeclare int  GetResourceId()const;
-      MR_DllDeclare void Serialize( CArchive& pArchive );
+      MR_DllDeclare void Serialize( NoMFC::CArchive& pArchive );
 
       MR_DllDeclare MR_ShortSound* GetSound()const;
 
@@ -70,7 +71,7 @@ class MR_ResContinuousSound
       MR_DllDeclare ~MR_ResContinuousSound();
 
       MR_DllDeclare int  GetResourceId()const;
-      MR_DllDeclare void Serialize( CArchive& pArchive );
+      MR_DllDeclare void Serialize( NoMFC::CArchive& pArchive );
 
       MR_DllDeclare MR_ContinuousSound* GetSound()const;
 

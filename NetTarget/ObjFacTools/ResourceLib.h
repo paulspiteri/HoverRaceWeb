@@ -50,10 +50,10 @@ class MR_ResourceLib
       CMap< int, int, MR_ResShortSound*,      MR_ResShortSound* >      mShortSoundList;
       CMap< int, int, MR_ResContinuousSound*, MR_ResContinuousSound* > mContinuousSoundList;
       
-      void LoadBitmaps( CArchive& pArchive );
-      void LoadActors(  CArchive& pArchive );
-      void LoadSprites( CArchive& pArchive );
-      void LoadSounds(  CArchive& pArchive );
+      void LoadBitmaps( NoMFC::CArchive& pArchive );
+      void LoadActors(  NoMFC::CArchive& pArchive );
+      void LoadSprites( NoMFC::CArchive& pArchive );
+      void LoadSounds(  NoMFC::CArchive& pArchive );
 
       MR_DllDeclare MR_ResourceLib();
 

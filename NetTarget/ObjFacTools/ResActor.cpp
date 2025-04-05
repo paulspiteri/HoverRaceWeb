@@ -53,7 +53,7 @@ int MR_ResActor::GetFrameCount( int pSequence )const
    return mSequenceList[ pSequence ].mNbFrame;
 }
 
-void MR_ResActor::Serialize( CArchive& pArchive, MR_ResourceLib* pLib )
+void MR_ResActor::Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib )
 {
 
    if( pArchive.IsStoring() )
@@ -100,7 +100,7 @@ MR_ResActor::Sequence::~Sequence()
    delete []mFrameList;
 }
 
-void MR_ResActor::Sequence::Serialize( CArchive& pArchive, MR_ResourceLib* pLib )
+void MR_ResActor::Sequence::Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib )
 {
    if( pArchive.IsStoring() )
    {
@@ -161,7 +161,7 @@ void MR_ResActor::Frame::Clean()
    }
 }
 
-void MR_ResActor::Frame::Serialize( CArchive& pArchive, MR_ResourceLib* pLib )
+void MR_ResActor::Frame::Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib )
 {
    int lCounter;
 
@@ -171,7 +171,8 @@ void MR_ResActor::Frame::Serialize( CArchive& pArchive, MR_ResourceLib* pLib )
 
       for( lCounter =0; lCounter < mNbComponent; lCounter++ )
       {
-         pArchive << (int)mComponentList[ lCounter ]->GetType();
+         int componentType = (int)mComponentList[ lCounter ]->GetType();
+         pArchive << componentType; // Store the type of the component
          mComponentList[ lCounter ]->Serialize( pArchive, pLib );
       }
    }
@@ -243,21 +244,20 @@ MR_ResActor::eComponentType MR_ResActor::Patch::GetType()const
    return ePatch;
 }
 
-void MR_ResActor::Patch::Serialize( CArchive& pArchive, MR_ResourceLib* pLib )
+void MR_ResActor::Patch::Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib )
 {
    int lCounter;
 
    if( pArchive.IsStoring() )
    {
       pArchive << mURes;
-      pArchive << mVRes;      
-      pArchive << mBitmap->GetResourceId(); //bitmaptype is serialize using the Id of the bitmap
+      pArchive << mVRes;   
+      int resourceId = mBitmap->GetResourceId();
+      pArchive << resourceId; //bitmaptype is serialize using the Id of the bitmap   
 
       for( lCounter =0; lCounter < mURes*mVRes; lCounter++ )
       {
-         ASSERT( FALSE );
-         throw std::runtime_error("Not implemented");
-        // mVertexList[ lCounter ].Serialize( pArchive );
+         mVertexList[ lCounter ].Serialize( pArchive );
       }
    }
    else
@@ -276,9 +276,7 @@ void MR_ResActor::Patch::Serialize( CArchive& pArchive, MR_ResourceLib* pLib )
 
       for( lCounter =0; lCounter < mURes*mVRes; lCounter++ )
       {
-         ASSERT( FALSE );
-         throw std::runtime_error("Not implemented - didn't want to go this deep changing to NoMFC yet");
-        // mVertexList[ lCounter ].Serialize( pArchive );
+         mVertexList[ lCounter ].Serialize( pArchive );
       }
    }
 }
