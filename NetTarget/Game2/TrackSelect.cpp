@@ -32,8 +32,8 @@
 class TrackEntry
 {
 public:
-   CString mFileName;   
-   CString mDescription;
+   std::string mFileName;   
+   std::string mDescription;
    int     mRegistrationMode;
    int     mSortingIndex;   
 };
@@ -150,7 +150,7 @@ BOOL MR_SelectTrack( HWND pParentWindow, CString& pTrackFile, int& pNbLap, BOOL&
 
    if( DialogBox( GetModuleHandle(NULL),  MAKEINTRESOURCE( IDD_TRACK_SELECT ), pParentWindow, TrackSelectCallBack )==IDOK )
    {
-      pTrackFile    = gsSortedTrackList[ gsSelectedEntry ]->mFileName;
+      pTrackFile    = gsSortedTrackList[ gsSelectedEntry ]->mFileName.c_str();
       pNbLap        = gsNbLaps;
       pAllowWeapons = gsAllowWeapons;
       lReturnValue  = TRUE;
@@ -177,7 +177,7 @@ static BOOL CALLBACK TrackSelectCallBack( HWND pWindow, UINT  pMsgId, WPARAM  pW
          // Init track file list
          for( lCounter = 0; lCounter < gsNbTrack; lCounter++ )
          {
-            SendDlgItemMessage( pWindow, IDC_LIST, LB_ADDSTRING, 0, (LPARAM)(const char*)(gsSortedTrackList[ lCounter ]->mFileName) );
+            SendDlgItemMessage( pWindow, IDC_LIST, LB_ADDSTRING, 0, (LPARAM)(const char*)(gsSortedTrackList[ lCounter ]->mFileName.c_str()) );
          }
 
          
@@ -189,7 +189,7 @@ static BOOL CALLBACK TrackSelectCallBack( HWND pWindow, UINT  pMsgId, WPARAM  pW
          {
             gsSelectedEntry = 0;            
             SendDlgItemMessage( pWindow, IDOK, WM_ENABLE, TRUE, 0 );
-            SetDlgItemText( pWindow, IDC_DESCRIPTION, gsSortedTrackList[ gsSelectedEntry ]->mDescription );                        
+            SetDlgItemText( pWindow, IDC_DESCRIPTION, gsSortedTrackList[ gsSelectedEntry ]->mDescription.c_str() );                        
             SendDlgItemMessage( pWindow, IDC_LIST, LB_SETCURSEL, 0, 0 );
 
          }
@@ -221,7 +221,7 @@ static BOOL CALLBACK TrackSelectCallBack( HWND pWindow, UINT  pMsgId, WPARAM  pW
                      else
                      {
                         SendDlgItemMessage( pWindow, IDOK, WM_ENABLE, TRUE, 0 );
-                        SetDlgItemText( pWindow, IDC_DESCRIPTION, gsSortedTrackList[ gsSelectedEntry ]->mDescription );
+                        SetDlgItemText( pWindow, IDC_DESCRIPTION, gsSortedTrackList[ gsSelectedEntry ]->mDescription.c_str() );
                      }                     
                      break;
                }
@@ -419,7 +419,7 @@ int CompareFunc(const void *elem1, const void *elem2 )
 
    if( lReturnValue == 0 )
    {
-      lReturnValue = strcmp( (*lElem1)->mFileName,(*lElem2)->mFileName );
+      lReturnValue = strcmp( (*lElem1)->mFileName.c_str(),(*lElem2)->mFileName.c_str() );
    }
 
    return lReturnValue;
@@ -451,7 +451,7 @@ void ReadList()
          // Open the file and read aditionnal info
          MR_RecordFile lRecordFile;
 
-         if( !lRecordFile.OpenForRead( lPath+gsTrackList[ gsNbTrack ].mFileName+TRACK_EXT ) )
+         if( !lRecordFile.OpenForRead( lPath+gsTrackList[ gsNbTrack ].mFileName.c_str()+TRACK_EXT ) )
          {
             ASSERT( FALSE );
          }

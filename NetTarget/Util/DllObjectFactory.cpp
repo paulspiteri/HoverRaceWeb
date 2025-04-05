@@ -267,7 +267,7 @@ const MR_ObjectFromFactoryId& MR_ObjectFromFactory::GetTypeId()const
    return mId;
 }
 
-void MR_ObjectFromFactory::SerializePtr( CArchive& pArchive, MR_ObjectFromFactory*& pPtr )
+void MR_ObjectFromFactory::SerializePtr( NoMFC::CArchive& pArchive, MR_ObjectFromFactory*& pPtr )
 {
    MR_ObjectFromFactoryId lId = {0,0};
 
@@ -301,17 +301,18 @@ void MR_ObjectFromFactory::SerializePtr( CArchive& pArchive, MR_ObjectFromFactor
    }
 }
 
-void MR_ObjectFromFactory::Serialize( CArchive& pArchive )
+void MR_ObjectFromFactory::Serialize( NoMFC::CArchive& pArchive )
 {
-   CObject::Serialize( pArchive );
-
    // Notting to serialize at that point
    // Object type should be already initialize if Loading
-   
+}
+
+void  MR_ObjectFromFactory::Serialize( CArchive& pArchive ) {
+     CObject::Serialize( pArchive );
 }
 
 // MR_ObjectFromFactoryId
-void MR_ObjectFromFactoryId::Serialize( CArchive& pArchive )
+void MR_ObjectFromFactoryId::Serialize( NoMFC::CArchive& pArchive )
 {
    if( pArchive.IsStoring() )
    {

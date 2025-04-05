@@ -33,6 +33,7 @@
 #define DLL_OBJECT_FACTORY_H
 
 #include "MR_Types.h"
+#include "RecordFile.h"
 
 #ifdef MR_UTIL
    #define MR_DllDeclare //   __declspec( dllexport )
@@ -49,7 +50,7 @@ class MR_ObjectFromFactoryId
       MR_UInt16 mDllId;
       MR_UInt16 mClassId;
 
-      void Serialize( CArchive& pArchive );
+      void Serialize( NoMFC::CArchive& pArchive);
 
       MR_DllDeclare int operator == ( const MR_ObjectFromFactoryId& pId )const;
 };
@@ -79,8 +80,11 @@ class MR_DllDeclare MR_ObjectFromFactory: public CObject
       // you will have to serialize the object.(To use this technique, the first time 
       // you serialize the object, you must know that the object hav not been serialize yet)
       // 
-      static  void SerializePtr( CArchive& pArchive, MR_ObjectFromFactory*& pPtr );
-      virtual void Serialize( CArchive& pArchive );
+      static  void SerializePtr( NoMFC::CArchive& pArchive, MR_ObjectFromFactory*& pPtr );
+      virtual void Serialize( NoMFC::CArchive& pArchive );
+
+   private:
+      void Serialize( CArchive& pArchive );
 
 };
 

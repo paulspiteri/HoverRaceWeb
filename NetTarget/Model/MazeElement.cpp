@@ -62,7 +62,7 @@ void MR_Element::SerializeLogicState( NoMFC::CArchive& /*pArchive*/ )
 }
 
 
-void MR_Element::Serialize( CArchive& pArchive )
+void MR_Element::Serialize( NoMFC::CArchive& pArchive )
 {
    MR_ObjectFromFactory::Serialize( pArchive );
 }

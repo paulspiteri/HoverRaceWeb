@@ -98,7 +98,7 @@ class MR_DllDeclare MR_Element: public MR_ObjectFromFactory
 
 
    private:
-      virtual void Serialize( CArchive& pArchive ); // Prevent overriding of the Serialize function
+      virtual void Serialize( NoMFC::CArchive& pArchive ); // Prevent overriding of the Serialize function
 
 
 };
