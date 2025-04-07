@@ -69,24 +69,19 @@ MR_Observer::MR_Observer()
    mCockpitView = FALSE;
 
    MR_ObjectFromFactoryId lBaseFontId = { 1, 1000 };
-   mBaseFont = (MR_SpriteHandle*)MR_GetObject(lBaseFontId.mClassId);
-   //mBaseFont     = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lBaseFontId );
+   mBaseFont     = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lBaseFontId );
 
    MR_ObjectFromFactoryId lMissileLevelId = { 1, 1100 };
-   mMissileLevel = (MR_SpriteHandle*)MR_GetObject(lMissileLevelId.mClassId);
-   //mMissileLevel = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lMissileLevelId );
+   mMissileLevel = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lMissileLevelId );
 
    MR_ObjectFromFactoryId lMineDispId = { 1, 1102 };
-   mMineDisp = (MR_SpriteHandle*)MR_GetObject(lMineDispId.mClassId);
-   //mMineDisp = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lMineDispId );
+   mMineDisp = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lMineDispId );
 
    MR_ObjectFromFactoryId lPowerUpDispId = { 1, 1103 };
-   mPowerUpDisp = (MR_SpriteHandle*)MR_GetObject(lPowerUpDispId.mClassId);
-   //mPowerUpDisp = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lPowerUpDispId );
+   mPowerUpDisp = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lPowerUpDispId );
 
    MR_ObjectFromFactoryId lHoverIconsId = { 1, 1101 };
-   mHoverIcons = (MR_SpriteHandle*)MR_GetObject(lHoverIconsId.mClassId);
-   //mHoverIcons = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lHoverIconsId );
+   mHoverIcons = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lHoverIconsId );
 }
 
 MR_Observer::~MR_Observer()

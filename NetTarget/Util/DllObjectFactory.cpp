@@ -128,8 +128,8 @@ void MR_DllObjectFactory::IncrementReferenceCount( MR_UInt16 pDllId )
    }
    else
    {
-      // disabled due to new static linking
-     // ASSERT( FALSE ); // Dll not loaded
+     // disabled due to new static linking
+     ASSERT( FALSE ); // Dll not loaded
    }
 
 }
@@ -145,7 +145,7 @@ void MR_DllObjectFactory::DecrementReferenceCount( MR_UInt16 pDllId )
    else
    {
       // disabled due to new static linking
-      // ASSERT( FALSE ); // Dll discarted
+       ASSERT( FALSE ); // Dll discarted
    }
 }
 
@@ -364,44 +364,46 @@ MR_FactoryDll::~MR_FactoryDll()
 
 BOOL MR_FactoryDll::Open( MR_UInt16 pDllId )
 {
-   ASSERT( mHandle == NULL );
+   return FALSE; // disabled due to new static linking
 
-   char lNameBuffer[ 40 ];
+   // ASSERT( mHandle == NULL );
 
-   sprintf( lNameBuffer, "%s%u.dll", gsFilePrefix, pDllId );
+   // char lNameBuffer[ 40 ];
 
-   mDynamic = TRUE;
+   // sprintf( lNameBuffer, "%s%u.dll", gsFilePrefix, pDllId );
 
-   mHandle = LoadLibrary( lNameBuffer );
+   // mDynamic = TRUE;
 
-   if(mHandle != NULL )
-   {
-      mInitModule           = (void (*)(HMODULE) )
-                              GetProcAddress( mHandle,
-                                              "MR_InitModule" );
-      mCleanModule          = (void (*)() )
-                              GetProcAddress( mHandle,
-                                              "MR_CleanModule" );
-      mGetObjectTypeCount   = (MR_UInt16 (*)() )
-                              GetProcAddress( mHandle,
-                                              "MR_GetObjectTypeCount" );
-      mGetObjectFamily      = (CString (*)( MR_UInt16 ))
-                              GetProcAddress( mHandle,
-                                              "MR_GetObjectFamily" );
-      mGetObjectDescription = (CString (*)( MR_UInt16 ))
-                              GetProcAddress( mHandle,
-                                              "MR_GetObjectDescription" );
-      mGetObject            = ( MR_ObjectFromFactory* (*)( MR_UInt16 ))
-                              GetProcAddress( mHandle,
-                                              "MR_GetObject" );
+   // mHandle = LoadLibrary( lNameBuffer );
 
-      if( mInitModule != NULL )
-      {
-         mInitModule( mHandle );
-      }
+   // if(mHandle != NULL )
+   // {
+   //    mInitModule           = (void (*)(HMODULE) )
+   //                            GetProcAddress( mHandle,
+   //                                            "MR_InitModule" );
+   //    mCleanModule          = (void (*)() )
+   //                            GetProcAddress( mHandle,
+   //                                            "MR_CleanModule" );
+   //    mGetObjectTypeCount   = (MR_UInt16 (*)() )
+   //                            GetProcAddress( mHandle,
+   //                                            "MR_GetObjectTypeCount" );
+   //    mGetObjectFamily      = (CString (*)( MR_UInt16 ))
+   //                            GetProcAddress( mHandle,
+   //                                            "MR_GetObjectFamily" );
+   //    mGetObjectDescription = (CString (*)( MR_UInt16 ))
+   //                            GetProcAddress( mHandle,
+   //                                            "MR_GetObjectDescription" );
+   //    mGetObject            = ( MR_ObjectFromFactory* (*)( MR_UInt16 ))
+   //                            GetProcAddress( mHandle,
+   //                                            "MR_GetObject" );
 
-   }
+   //    if( mInitModule != NULL )
+   //    {
+   //       mInitModule( mHandle );
+   //    }
 
-   return( mHandle != NULL );
+   // }
+
+   // return( mHandle != NULL );
 }
 
