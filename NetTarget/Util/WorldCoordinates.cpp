@@ -20,9 +20,6 @@
 // and limitations under the License.
 //
 
-
-#include "stdafx.h"
-
 // System includes
 #include <math.h>
 

@@ -19,7 +19,7 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
+#include "nomfc_stdafx.h"
 #include "FuzzyLogic.h"
 // Local variables
 

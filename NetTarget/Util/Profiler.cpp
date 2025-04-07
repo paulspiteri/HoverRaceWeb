@@ -19,11 +19,6 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
-// #include <Mmsystem.h>
-
-
 #include "Profiler.h"
 #include <chrono>
 

@@ -1,4 +1,5 @@
 add_library(Util STATIC
+    StringResources.cpp
     RecordFile.cpp
     DllObjectFactory.cpp
     FuzzyLogic.cpp

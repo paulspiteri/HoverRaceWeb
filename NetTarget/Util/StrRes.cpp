@@ -20,40 +20,46 @@
 // and limitations under the License.
 //
 
-
-#include "stdafx.h"
-
-
 // Project Includes
 #include "StrRes.h"
+#include "nomfc_stdafx.h"
+#include <unordered_map>
+#include <string>
+#include <stdexcept>
+#include "iostream"
 
+static std::unique_ptr<std::unordered_map<int, std::string>> g_stringTable;
+
+void EnsureStringTableInitialized()
+{
+    static bool initialized = false;
+    if (!initialized)
+    {
+         g_stringTable = std::make_unique<std::unordered_map<int, std::string>>();
+         LoadGameStringResources(g_stringTable.get());
+         initialized = true;
+    }
+}
 
 CString MR_LoadString( int pResource )
 {
-   CString lReturnValue;
+   EnsureStringTableInitialized();
 
-   // MFC patch
-   if( afxCurrentResourceHandle == NULL )
-   {
-      afxCurrentResourceHandle = GetModuleHandle( NULL );
+   auto it = g_stringTable->find(pResource);
+   if (it != g_stringTable->end()) {
+      auto stringResource = it->second;
+      return CString(stringResource.c_str());
    }
-
-   lReturnValue.LoadString( pResource );
-
-   return lReturnValue;
+   return "RESOURCE NOT FOUND";
 }
 
 const char* MR_LoadStringBuffered( int pResource )
 {
-   static CString lReturnValue;
+    EnsureStringTableInitialized();
 
-   // MFC patch
-   if( afxCurrentResourceHandle == NULL )
-   {
-      afxCurrentResourceHandle = GetModuleHandle( NULL );
-   }
-
-   lReturnValue.LoadString( pResource );
-
-   return lReturnValue;
+    auto it = g_stringTable->find(pResource);
+    if (it != g_stringTable->end()) {
+        return it->second.c_str();
+    }
+    return "RESOURCE NOT FOUND";
 }
