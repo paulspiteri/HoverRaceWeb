@@ -95,24 +95,14 @@ namespace MR_DllObjectFactory
    MR_DllDeclare void IncrementReferenceCount( MR_UInt16 pDllId );   // Usually don't need to be called
    MR_DllDeclare void DecrementReferenceCount( MR_UInt16 pDllId );   // Usually don't need to be called
 
-   // Slow interrocation functions
-   MR_DllDeclare MR_UInt16 GetObjectTypeCount( MR_UInt16 pDllId );
-   MR_DllDeclare CString   GetObjectFamily   ( const MR_ObjectFromFactoryId& pId );
-   MR_DllDeclare CString   GetObjectDescription( const MR_ObjectFromFactoryId& pId );
-                                                 
-
 
    // Fast Object Creation function
    MR_DllDeclare MR_ObjectFromFactory* CreateObject( const MR_ObjectFromFactoryId& pId );
-
 
    // Local Dll 
    MR_DllDeclare void RegisterLocalDll( MR_UInt16 pDLLId, MR_ObjectFromFactory* (*pFunc)(MR_UInt16) );
 
 };
-
-
-
 
 #undef MR_DllDeclare
 

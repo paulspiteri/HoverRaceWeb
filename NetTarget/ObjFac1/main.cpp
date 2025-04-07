@@ -60,6 +60,11 @@ extern "C"
 // Data declaration
 MR_ObjectFactoryData* gObjectFactoryData = NULL;
 
+void ObjFac1RegisterFactory()
+{
+   MR_DllObjectFactory::RegisterLocalDll(1, &MR_GetObject);
+   MR_InitModule(NULL);
+}
 
 // Functions implementations
 void MR_InitModule( HMODULE pModule )

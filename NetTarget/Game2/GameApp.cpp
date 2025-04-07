@@ -1201,8 +1201,7 @@ BOOL MR_GameApp::InitGame()
    MR_InitFuzzyModule();
    MR_DllObjectFactory::Init();
    
-   MR_DllObjectFactory::RegisterLocalDll(1, MR_GetObject);
-   MR_InitModule(NULL); // added for statically linked ObjFac1 to open .dat
+   ObjFac1RegisterFactory();
    MR_MainCharacter::RegisterFactory();
 
    // Load accelerators

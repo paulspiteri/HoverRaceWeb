@@ -246,7 +246,7 @@ void MR_MainCharacter::AddRenderer()
    {
       MR_ObjectFromFactoryId lId = { 1, 100 };
 
-      mRenderer = (MR_MainCharacterRenderer*) MR_GetObject( lId.mClassId );
+      mRenderer = (MR_MainCharacterRenderer*) MR_DllObjectFactory::CreateObject( lId );
    }
 }
 
