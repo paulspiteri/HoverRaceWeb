@@ -307,10 +307,6 @@ void MR_ObjectFromFactory::Serialize( NoMFC::CArchive& pArchive )
    // Object type should be already initialize if Loading
 }
 
-void  MR_ObjectFromFactory::Serialize( CArchive& pArchive ) {
-     CObject::Serialize( pArchive );
-}
-
 // MR_ObjectFromFactoryId
 void MR_ObjectFromFactoryId::Serialize( NoMFC::CArchive& pArchive )
 {

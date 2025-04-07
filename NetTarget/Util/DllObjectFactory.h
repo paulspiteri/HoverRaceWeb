@@ -56,7 +56,7 @@ class MR_ObjectFromFactoryId
 };
 
 
-class MR_DllDeclare MR_ObjectFromFactory: public CObject
+class MR_DllDeclare MR_ObjectFromFactory
 {   
    // Base class for object created with a Dll Factory
 
@@ -82,10 +82,6 @@ class MR_DllDeclare MR_ObjectFromFactory: public CObject
       // 
       static  void SerializePtr( NoMFC::CArchive& pArchive, MR_ObjectFromFactory*& pPtr );
       virtual void Serialize( NoMFC::CArchive& pArchive );
-
-   private:
-      void Serialize( CArchive& pArchive );
-
 };
 
 namespace MR_DllObjectFactory

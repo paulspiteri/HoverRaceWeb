@@ -3,7 +3,7 @@
 #include "DllObjectFactory.h"
 #include "RecordFile.h"
 
-class MR_ObjectFromStaticFactory: public CObject
+class MR_ObjectFromStaticFactory
 {   
    // Base class for object created with a Statically Linked Factory
 
@@ -20,5 +20,4 @@ class MR_ObjectFromStaticFactory: public CObject
 
       static  void SerializePtr( CArchive& pArchive, MR_ObjectFromFactory*& pPtr );
       static  void SerializePtr( NoMFC::CArchive& pArchive, MR_ObjectFromFactory*& pPtr );
-      virtual void Serialize( CArchive& pArchive );
 };

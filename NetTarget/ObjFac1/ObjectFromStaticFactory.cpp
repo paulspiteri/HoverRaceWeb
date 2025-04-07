@@ -53,12 +53,3 @@ void MR_ObjectFromStaticFactory::SerializePtr( NoMFC::CArchive& pArchive, MR_Obj
       }
    }
 }
-
-void MR_ObjectFromStaticFactory::Serialize( CArchive& pArchive )
-{
-   CObject::Serialize( pArchive );
-
-   // Notting to serialize at that point
-   // Object type should be already initialize if Loading
-   
-}
