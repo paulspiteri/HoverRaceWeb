@@ -3,8 +3,6 @@ add_library(ColorTools STATIC
 )
 
 target_compile_definitions(ColorTools PRIVATE
-    _WINDLL
-    _AFXDLL
     MR_COLOR_TOOLS
 )
 

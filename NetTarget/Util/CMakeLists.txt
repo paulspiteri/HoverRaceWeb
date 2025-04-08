@@ -9,8 +9,6 @@ add_library(Util STATIC
 )
 
 target_compile_definitions(Util PRIVATE
-    _WINDLL
-    _AFXDLL
     MR_UTIL
 )
 
