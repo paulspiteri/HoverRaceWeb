@@ -20,7 +20,7 @@
 //
 
 
-#include "stdafx.h"
+#include "../Util/nomfc_stdafx.h"
 
 #include <math.h>
 

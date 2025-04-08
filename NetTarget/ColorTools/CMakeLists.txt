@@ -1,6 +1,5 @@
 add_library(ColorTools STATIC
     ColorTools.cpp
-    stdafx.cpp
 )
 
 target_compile_definitions(ColorTools PRIVATE
