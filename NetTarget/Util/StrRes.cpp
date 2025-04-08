@@ -41,16 +41,15 @@ void EnsureStringTableInitialized()
     }
 }
 
-CString MR_LoadString( int pResource )
+const char* MR_LoadString( int pResource )
 {
-   EnsureStringTableInitialized();
+    EnsureStringTableInitialized();
 
-   auto it = g_stringTable->find(pResource);
-   if (it != g_stringTable->end()) {
-      auto stringResource = it->second;
-      return CString(stringResource.c_str());
-   }
-   return "RESOURCE NOT FOUND";
+    auto it = g_stringTable->find(pResource);
+    if (it != g_stringTable->end()) {
+        return it->second.c_str();
+    }
+    return "RESOURCE NOT FOUND";
 }
 
 const char* MR_LoadStringBuffered( int pResource )

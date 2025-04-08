@@ -23,7 +23,6 @@
 #include "MR_Types.h"
 #include "resource.h"
 
-#include "stdafx.h"
 #include "string"
 #include <unordered_map>
 
@@ -38,7 +37,7 @@
 #endif
 
 void LoadGameStringResources(std::unordered_map<int, std::string>* stringTable);
-MR_DllDeclare CString     MR_LoadString( int pResource );
+MR_DllDeclare const char* MR_LoadString( int pResource );
 MR_DllDeclare const char* MR_LoadStringBuffered( int pResource );
 
 #undef MR_DllDeclare
