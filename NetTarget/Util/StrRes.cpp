@@ -26,8 +26,7 @@
 #include <unordered_map>
 #include <string>
 #include <stdexcept>
-#include <memory>fixed minor include errors in Util. 
-Util & ColorTools now building on linux.
+#include <memory>
 
 static std::unique_ptr<std::unordered_map<int, std::string>> g_stringTable;
 
