@@ -1,5 +1,6 @@
 #include "StrRes.h"
 #include <iostream>
+#include <vector>
 
 void LoadGameStringResources(std::unordered_map<int, std::string>* stringTable) 
 {
