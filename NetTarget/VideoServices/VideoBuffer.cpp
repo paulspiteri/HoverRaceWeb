@@ -23,6 +23,7 @@
 #include "stdafx.h"
 
 #include "VideoBuffer.h"
+#include "VideoBufferDirectDraw.h"
 #include "ColorPalette.h"
 
 
@@ -261,14 +262,9 @@ MR_VideoBuffer::MR_VideoBuffer( HWND pWindow, double pGamma, double pContrast, d
    PRINT_LOG( "VIDEO_BUFFER_CREATION" );
 
    ASSERT( pWindow != NULL );
-
-   mWindow      = pWindow;
-   mDirectDraw  = NULL;
-   mFrontBuffer = NULL;
-   mBackBuffer  = NULL;
+   mVideoBufferDirectDraw = std::make_unique<VideoBufferDirectDraw>(pWindow);
    mZBuffer     = NULL;
    mBuffer      = NULL;
-   mClipper     = NULL;
    mBackPalette = NULL;
 
    mModeSettingInProgress = FALSE;
@@ -292,11 +288,6 @@ MR_VideoBuffer::MR_VideoBuffer( HWND pWindow, double pGamma, double pContrast, d
 
 MR_VideoBuffer::~MR_VideoBuffer()
 {
-   if( mDirectDraw != NULL )
-   {
-      mDirectDraw->Release();
-   }
-
    delete []mBackPalette;
 
    PRINT_LOG( "VIDEO_BUFFER_DESTRUCTION\n\n" );
@@ -311,18 +302,18 @@ BOOL MR_VideoBuffer::InitDirectDraw()
 
    BOOL lReturnValue = TRUE;
 
-   if( mDirectDraw == NULL )
+   if( mVideoBufferDirectDraw->mDirectDraw == NULL )
    {
        TRACE("InitDirectDraw\n");
 
-      if( DD_CALL(DirectDrawCreate( /*(LPGUID) DDCREATE_EMULATIONONLY*/NULL, &mDirectDraw, NULL )) != DD_OK )
+      if( DD_CALL(DirectDrawCreate( /*(LPGUID) DDCREATE_EMULATIONONLY*/NULL, &mVideoBufferDirectDraw->mDirectDraw, NULL )) != DD_OK )
       {
          ASSERT( FALSE );
          lReturnValue = FALSE;
       }
       else
       {
-         if( DD_CALL(mDirectDraw->SetCooperativeLevel( mWindow, DDSCL_NORMAL )) != DD_OK )
+         if( DD_CALL(mVideoBufferDirectDraw->mDirectDraw->SetCooperativeLevel( mVideoBufferDirectDraw->mWindow, DDSCL_NORMAL )) != DD_OK )
          {
             ASSERT( FALSE );
             lReturnValue = FALSE;
@@ -343,26 +334,8 @@ void MR_VideoBuffer::DeleteInternalSurfaces()
 
    ASSERT( mBuffer == NULL ); // should be unlock
 
-   if( mDirectDraw!= NULL )
-   {
-      if( mBackBuffer != NULL )
-      {
-         DD_CALL( mBackBuffer->Release() );
-         mBackBuffer = NULL;
-      }
-
-      if( mFrontBuffer != NULL )
-      {
-         DD_CALL( mFrontBuffer->Release() );
-         mFrontBuffer = NULL;
-      }
-
-      if( mClipper != NULL )
-      {
-         DD_CALL( mClipper->Release() ); 
-         mClipper = NULL;
-      }
-   }
+   mVideoBufferDirectDraw->DeleteInternalSurfaces();
+   
    delete []mZBuffer;
    mZBuffer = NULL;
    mBuffer  = NULL;
@@ -411,7 +384,7 @@ void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBri
       mBrightness = 0.3;
    }
 
-   if( mDirectDraw != NULL )
+   if( mVideoBufferDirectDraw->mDirectDraw != NULL )
    {
       // Initialize with system colors (Ignore errors)
       HDC hdc = GetDC(NULL);
@@ -456,7 +429,7 @@ void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBri
       }
       
 
-      memcpy(mPaletteEntries, lPalette, sizeof(mPaletteEntries));
+      memcpy(mVideoBufferDirectDraw->mPaletteEntries, lPalette, sizeof(mVideoBufferDirectDraw->mPaletteEntries));
    }
 }
 
@@ -497,7 +470,7 @@ BOOL MR_VideoBuffer::SetVideoMode()
    {
       RECT lRect;
 
-      lReturnValue = GetClientRect( mWindow, &lRect );
+      lReturnValue = GetClientRect( mVideoBufferDirectDraw->mWindow, &lRect );
 
       ASSERT( lReturnValue );
 
@@ -510,7 +483,7 @@ BOOL MR_VideoBuffer::SetVideoMode()
    {
       POINT lPoint = {0,0};
 
-      lReturnValue = ClientToScreen( mWindow, &lPoint );
+      lReturnValue = ClientToScreen( mVideoBufferDirectDraw->mWindow, &lPoint );
 
       mX0 = lPoint.x;
       mY0 = lPoint.y;
@@ -526,7 +499,7 @@ BOOL MR_VideoBuffer::SetVideoMode()
       lSurfaceDesc.dwFlags = DDSD_CAPS;
       lSurfaceDesc.ddsCaps.dwCaps         = DDSCAPS_PRIMARYSURFACE;
 
-      if( DD_CALL( mDirectDraw->CreateSurface( &lSurfaceDesc, &mFrontBuffer, NULL )) != DD_OK )
+      if( DD_CALL( mVideoBufferDirectDraw->mDirectDraw->CreateSurface( &lSurfaceDesc, &mVideoBufferDirectDraw->mFrontBuffer, NULL )) != DD_OK )
       {
          // ASSERT( FALSE );
          lReturnValue =FALSE;
@@ -550,14 +523,14 @@ BOOL MR_VideoBuffer::SetVideoMode()
       lSurfaceDesc.ddpfPixelFormat.dwRGBBitCount = 8;      
       */
 
-      if( DD_CALL( mDirectDraw->CreateSurface( &lSurfaceDesc, &mBackBuffer, NULL )) != DD_OK )
+      if( DD_CALL( mVideoBufferDirectDraw->mDirectDraw->CreateSurface( &lSurfaceDesc, &mVideoBufferDirectDraw->mBackBuffer, NULL )) != DD_OK )
       {
          // ASSERT( FALSE ); // Probably a bad video mode (not 8bit/pixel)
          // Retry but not is system memory this time
 
          lSurfaceDesc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN /*| DDSCAPS_SYSTEMMEMORY*/;
 
-         if( DD_CALL( mDirectDraw->CreateSurface( &lSurfaceDesc, &mBackBuffer, NULL )) != DD_OK )
+         if( DD_CALL( mVideoBufferDirectDraw->mDirectDraw->CreateSurface( &lSurfaceDesc, &mVideoBufferDirectDraw->mBackBuffer, NULL )) != DD_OK )
          {
             // ASSERT( FALSE ); // Probably a bad video mode (not 8bit/pixel)
             lReturnValue =FALSE;
@@ -568,7 +541,7 @@ BOOL MR_VideoBuffer::SetVideoMode()
    if( lReturnValue )
    {
       // Create a clipper
-      if( DD_CALL( mDirectDraw->CreateClipper( 0, &mClipper, NULL )) != DD_OK )
+      if( DD_CALL( mVideoBufferDirectDraw->mDirectDraw->CreateClipper( 0, &mVideoBufferDirectDraw->mClipper, NULL )) != DD_OK )
       {
          ASSERT( FALSE );
          lReturnValue = FALSE;
@@ -578,7 +551,7 @@ BOOL MR_VideoBuffer::SetVideoMode()
    if( lReturnValue )
    {
       // Attatch it to the current window
-      if( DD_CALL( mClipper->SetHWnd( 0, mWindow )) != DD_OK )
+      if( DD_CALL( mVideoBufferDirectDraw->mClipper->SetHWnd( 0, mVideoBufferDirectDraw->mWindow )) != DD_OK )
       {
          ASSERT( FALSE );
          lReturnValue = FALSE;
@@ -588,7 +561,7 @@ BOOL MR_VideoBuffer::SetVideoMode()
    if( lReturnValue )
    {
       // Attatch it to the current window
-      if( DD_CALL( mFrontBuffer->SetClipper( mClipper )) != DD_OK )
+      if( DD_CALL( mVideoBufferDirectDraw->mFrontBuffer->SetClipper( mVideoBufferDirectDraw->mClipper )) != DD_OK )
       {
          ASSERT( FALSE );
          lReturnValue = FALSE;
@@ -689,14 +662,14 @@ BOOL MR_VideoBuffer::Lock()
    BOOL lReturnValue = TRUE;
 
    ASSERT( mBuffer == NULL );
-   ASSERT( mDirectDraw != NULL );
+   ASSERT( mVideoBufferDirectDraw->mDirectDraw != NULL );
 
    if( mIconMode )
    {
       lReturnValue = FALSE;
    }
 
-   if( mBackBuffer == NULL )
+   if( mVideoBufferDirectDraw->mBackBuffer == NULL )
    {
       // ASSERT( FALSE ); // It is possible but I want to know when it append
       // No surface 
@@ -706,17 +679,17 @@ BOOL MR_VideoBuffer::Lock()
    // Restore lost buffers (I have to do that but I don't know why
    if( lReturnValue )
    {
-      if( DD_CALL( mFrontBuffer->IsLost() ) == DDERR_SURFACELOST )
+      if( DD_CALL( mVideoBufferDirectDraw->mFrontBuffer->IsLost() ) == DDERR_SURFACELOST )
       {
-         if( DD_CALL(mFrontBuffer->Restore() ) != DD_OK )
+         if( DD_CALL(mVideoBufferDirectDraw->mFrontBuffer->Restore() ) != DD_OK )
          {
             ASSERT( FALSE );
             lReturnValue = FALSE;
          }
       }
-      if( DD_CALL(mBackBuffer->IsLost()) == DDERR_SURFACELOST )
+      if( DD_CALL(mVideoBufferDirectDraw->mBackBuffer->IsLost()) == DDERR_SURFACELOST )
       {
-         if( DD_CALL(mBackBuffer->Restore()) != DD_OK )
+         if( DD_CALL(mVideoBufferDirectDraw->mBackBuffer->Restore()) != DD_OK )
          {
             ASSERT( FALSE );
             lReturnValue = FALSE;
@@ -734,7 +707,7 @@ BOOL MR_VideoBuffer::Lock()
 
          lSurfaceDesc.dwSize = sizeof( lSurfaceDesc );
 
-         if( DD_CALL(mBackBuffer->Lock( NULL, &lSurfaceDesc, DDLOCK_SURFACEMEMORYPTR|DDLOCK_WAIT, NULL )) != DD_OK )
+         if( DD_CALL(mVideoBufferDirectDraw->mBackBuffer->Lock( NULL, &lSurfaceDesc, DDLOCK_SURFACEMEMORYPTR|DDLOCK_WAIT, NULL )) != DD_OK )
          {
             ASSERT( FALSE );
             lReturnValue = FALSE;
@@ -763,12 +736,12 @@ void MR_VideoBuffer::Unlock()
    MR_SAMPLE_CONTEXT( "UnlockVideoBuffer" );
 
    ASSERT( mBuffer != NULL );
-   ASSERT( mDirectDraw != NULL );
-   ASSERT( mBackBuffer != NULL );
+   ASSERT( mVideoBufferDirectDraw->mDirectDraw != NULL );
+   ASSERT( mVideoBufferDirectDraw->mBackBuffer != NULL );
 
    if( !gDebugMode )
    {
-      if( DD_CALL(mBackBuffer->Unlock( NULL )) != DD_OK )
+      if( DD_CALL(mVideoBufferDirectDraw->mBackBuffer->Unlock( NULL )) != DD_OK )
       {
          ASSERT( FALSE );
       }
@@ -777,16 +750,16 @@ void MR_VideoBuffer::Unlock()
    else
    {
       // Lock the back buffer and copy mBuffer
-      if( DD_CALL(mFrontBuffer->IsLost()) == DDERR_SURFACELOST )
+      if( DD_CALL(mVideoBufferDirectDraw->mFrontBuffer->IsLost()) == DDERR_SURFACELOST )
       {
-         if( DD_CALL(mFrontBuffer->Restore()) != DD_OK )
+         if( DD_CALL(mVideoBufferDirectDraw->mFrontBuffer->Restore()) != DD_OK )
          {
             // ASSERT( FALSE );
          }
       }
-      if( DD_CALL(mBackBuffer->IsLost()) == DDERR_SURFACELOST )
+      if( DD_CALL(mVideoBufferDirectDraw->mBackBuffer->IsLost()) == DDERR_SURFACELOST )
       {
-         if( DD_CALL(mBackBuffer->Restore()) != DD_OK )
+         if( DD_CALL(mVideoBufferDirectDraw->mBackBuffer->Restore()) != DD_OK )
          {
             // ASSERT( FALSE );
          }
@@ -796,7 +769,7 @@ void MR_VideoBuffer::Unlock()
 
       lSurfaceDesc.dwSize = sizeof( lSurfaceDesc );
 
-      if( DD_CALL(mBackBuffer->Lock( NULL, &lSurfaceDesc, DDLOCK_SURFACEMEMORYPTR|DDLOCK_WAIT, NULL )) != DD_OK )
+      if( DD_CALL(mVideoBufferDirectDraw->mBackBuffer->Lock( NULL, &lSurfaceDesc, DDLOCK_SURFACEMEMORYPTR|DDLOCK_WAIT, NULL )) != DD_OK )
       {
          // ASSERT( FALSE );
       }
@@ -812,7 +785,7 @@ void MR_VideoBuffer::Unlock()
          {
              for (int x = 0; x < mXRes; x++) {
                  MR_UInt8 colorIndex = lSrc[x];
-                 PALETTEENTRY paletteEntry = mPaletteEntries[colorIndex];
+                 PALETTEENTRY paletteEntry = mVideoBufferDirectDraw->mPaletteEntries[colorIndex];
                  DWORD color = (paletteEntry.peRed << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peBlue;
                  lDest[x] = color;
              }
@@ -825,7 +798,7 @@ void MR_VideoBuffer::Unlock()
       }
 
       // Unlock
-      if( DD_CALL(mBackBuffer->Unlock( NULL )) != DD_OK )
+      if( DD_CALL(mVideoBufferDirectDraw->mBackBuffer->Unlock( NULL )) != DD_OK )
       {
          // ASSERT( FALSE );
       }
@@ -844,13 +817,13 @@ void MR_VideoBuffer::Flip()
    HRESULT lErrorCode;
 
    ASSERT( mBuffer == NULL );
-   ASSERT( mDirectDraw != NULL );
-   ASSERT( mFrontBuffer != NULL );
+   ASSERT( mVideoBufferDirectDraw->mDirectDraw != NULL );
+   ASSERT( mVideoBufferDirectDraw->mFrontBuffer != NULL );
 
     RECT lDestRectangle  = { mX0, mY0, mX0+mXRes, mY0+mYRes };
     RECT lSrcRectangle  = { 0, 0, mXRes, mYRes };
 
-    lErrorCode = DD_CALL(mFrontBuffer->Blt( &lDestRectangle, mBackBuffer, &lSrcRectangle, DDBLT_WAIT, NULL ));
+    lErrorCode = DD_CALL(mVideoBufferDirectDraw->mFrontBuffer->Blt( &lDestRectangle, mVideoBufferDirectDraw->mBackBuffer, &lSrcRectangle, DDBLT_WAIT, NULL ));
 
     if( lErrorCode != DD_OK )
     {
@@ -861,8 +834,8 @@ void MR_VideoBuffer::Flip()
 void MR_VideoBuffer::Clear( MR_UInt8 pColor )
 {
    ASSERT( mBuffer != NULL );
-   ASSERT( mDirectDraw != NULL );
-   ASSERT( mBackBuffer != NULL );
+   ASSERT( mVideoBufferDirectDraw->mDirectDraw != NULL );
+   ASSERT( mVideoBufferDirectDraw->mBackBuffer != NULL );
 
    memset( mBuffer, pColor, mLineLen*mYRes );
 }

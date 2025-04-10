@@ -23,10 +23,10 @@
 #ifndef VIDEO_BUFFER_H
 #define VIDEO_BUFFER_H
 
-#include <ddraw.h>
+
 
 #include "../Util/MR_Types.h"
-
+#include <memory>
 
 #ifdef MR_VIDEO_SERVICES
    #define MR_DllDeclare //   __declspec( dllexport )
@@ -36,18 +36,13 @@
 
 
 
+class VideoBufferDirectDraw;
 
 class MR_VideoBuffer
 {   
 
    private:
-      HWND                 mWindow;
-      LPDIRECTDRAW         mDirectDraw;
-      LPDIRECTDRAWSURFACE  mFrontBuffer;
-      LPDIRECTDRAWSURFACE  mBackBuffer;
-      LPDIRECTDRAWCLIPPER  mClipper;    // To use in windows only
-                                        // remove if too slow
-      PALETTEENTRY         mPaletteEntries[256];
+      std::unique_ptr<VideoBufferDirectDraw> mVideoBufferDirectDraw;
 
       BOOL                 mSpecialWindowMode; // Use a 256 color mode when switching to window mode
       int                  mSpecialModeXRes;

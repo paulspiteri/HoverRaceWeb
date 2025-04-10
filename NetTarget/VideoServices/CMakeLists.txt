@@ -8,6 +8,7 @@ add_library(VideoServices STATIC
     SoundServer.cpp          
     Sprite.cpp               
     stdafx.cpp               
+    VideoBufferDirectDraw.cpp
     VideoBuffer.cpp          
     VideoBuffer2DDraw.cpp    
 )
