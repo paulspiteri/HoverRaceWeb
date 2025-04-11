@@ -18,5 +18,4 @@ target_compile_definitions(Model PRIVATE
 )
 
 target_link_libraries(Model PRIVATE Util
-    winmm.lib
 )

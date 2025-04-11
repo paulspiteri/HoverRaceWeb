@@ -28,6 +28,8 @@
 #include "ContactEffect.h"
 #include "../Util/RecordFile.h"
 
+#include <string>
+
 #ifdef MR_MODEL
    #define MR_DllDeclare //   __declspec( dllexport )
 #else
@@ -42,15 +44,15 @@ class MR_GameSession
 {
    private:
       BOOL               mAllowRendering;
-      CString            mCurrentMazeName;
+      std::string        mCurrentMazeName;
       int                mCurrentLevelNumber;
 
-      CString            mTitle;
+      std::string        mTitle;
       MR_RecordFile*     mCurrentMazeFile;
       MR_Level*          mCurrentLevel;
       
       MR_SimulationTime  mSimulationTime;       // Time simulated since the session start
-      DWORD              mLastSimulateCallTime; // Time in ms obtainend by timeGetTime
+      long long          mLastSimulateCallTime; // Time in ms obtainend by timeGetTime
 
 
       BOOL LoadLevel( int pLevelIndex ); 

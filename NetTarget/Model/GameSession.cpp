@@ -19,13 +19,9 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
-#include <Mmsystem.h>
-
 #include "GameSession.h"
 #include "FreeElementMovingHelper.h"
-
+#include <chrono>
 
 #define MR_SIMULATION_SLICE             25 
 #define MR_MINIMUM_SIMULATION_SLICE      5
@@ -112,6 +108,12 @@ BOOL MR_GameSession::LoadNew( const char* pTitle, MR_RecordFile* pMazeFile )
    return lReturnValue;
 }
 
+inline long long timeGetTime()
+{
+    using namespace std::chrono;
+    return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
+}
+
 void MR_GameSession::SetSimulationTime( MR_SimulationTime pTime )
 {
    mSimulationTime       = pTime;
@@ -128,7 +130,7 @@ void MR_GameSession::Simulate()
 {
    ASSERT( mCurrentLevel !=NULL );
 
-   DWORD             lSimulateCallTime = timeGetTime();
+   long long lSimulateCallTime = timeGetTime();
    MR_SimulationTime lTimeToSimulate;
 
    // Determine the duration of the simulation step
@@ -498,7 +500,7 @@ MR_Level* MR_GameSession::GetCurrentLevel()
 
 const char* MR_GameSession::GetTitle()const
 {
-   return mTitle;
+   return mTitle.c_str();
 }
 
 MR_RecordFile* MR_GameSession::GetCurrentMazeFile()
