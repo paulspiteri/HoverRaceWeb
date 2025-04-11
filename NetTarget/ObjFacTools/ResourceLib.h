@@ -28,6 +28,7 @@
 #include "ResActor.h"
 #include "ResSprite.h"
 #include "ResSound.h"
+#include <unordered_map>
 
 #ifdef MR_OBJ_FAC_TOOLS
    #define MR_DllDeclare //   __declspec( dllexport )
@@ -44,11 +45,11 @@ class MR_ResourceLib
    protected:
       MR_RecordFile  mRecordFile;
 
-      CMap< int, int, MR_ResBitmap*,          MR_ResBitmap* >          mBitmapList;
-      CMap< int, int, MR_ResActor*,           MR_ResActor*  >          mActorList;
-      CMap< int, int, MR_ResSprite*,          MR_ResSprite* >          mSpriteList;
-      CMap< int, int, MR_ResShortSound*,      MR_ResShortSound* >      mShortSoundList;
-      CMap< int, int, MR_ResContinuousSound*, MR_ResContinuousSound* > mContinuousSoundList;
+      std::unordered_map< int, MR_ResBitmap* >          mBitmapList;
+      std::unordered_map< int, MR_ResActor*  >          mActorList;
+      std::unordered_map< int, MR_ResSprite* >          mSpriteList;
+      std::unordered_map< int, MR_ResShortSound* >      mShortSoundList;
+      std::unordered_map< int, MR_ResContinuousSound* > mContinuousSoundList;
       
       void LoadBitmaps( NoMFC::CArchive& pArchive );
       void LoadActors(  NoMFC::CArchive& pArchive );

@@ -70,7 +70,7 @@ void ObjFac1RegisterFactory()
 void MR_InitModule( HMODULE pModule )
 {
    delete gObjectFactoryData;
-   gObjectFactoryData = new MR_ObjectFactoryData( pModule, "ObjFac1.dat" );
+   gObjectFactoryData = new MR_ObjectFactoryData( "ObjFac1.dat" );
 }
 
 void MR_CleanModule()

@@ -20,11 +20,8 @@
 //
 
 
-#include "stdafx.h"
-
 #include "ResourceLib.h"
-
-#define new DEBUG_NEW
+#include <exception>
 
 MR_ResourceLib::MR_ResourceLib( const char* pResFile )
 {
@@ -58,14 +55,14 @@ MR_ResourceLib::MR_ResourceLib( const char* pResFile )
          else
          {
             ASSERT( FALSE );
-            AfxThrowArchiveException( CArchiveException::badSchema );
+            throw std::runtime_error("Invalid resource file format");
          }
       }
    }
    else
    {
       ASSERT( FALSE );
-      AfxThrowFileException( CFileException::fileNotFound );
+      throw std::runtime_error("Failed to open resource file");
    }
 }
 
@@ -76,115 +73,70 @@ MR_ResourceLib::MR_ResourceLib()
    
 MR_ResourceLib::~MR_ResourceLib()
 {
-   POSITION lPos;
-
-   lPos = mActorList.GetStartPosition();
-
-   while( lPos != NULL )
+   for(auto it = mActorList.begin(); it != mActorList.end(); ++it)
    {
-      int lKey;
-      MR_ResActor* lValue;
-
-      mActorList.GetNextAssoc( lPos, lKey, lValue );
-
-      delete lValue;
+      delete it->second;
    }
 
-
-   lPos = mBitmapList.GetStartPosition();
-
-   while( lPos != NULL )
+   for(auto it = mBitmapList.begin(); it != mBitmapList.end(); ++it)
    {
-      int lKey;
-      MR_ResBitmap* lValue;
-
-      mBitmapList.GetNextAssoc( lPos, lKey, lValue );
-
-      delete lValue;
+      delete it->second;
    }
 
-   lPos = mSpriteList.GetStartPosition();
-
-   while( lPos != NULL )
+   for(auto it = mSpriteList.begin(); it != mSpriteList.end(); ++it)
    {
-      int lKey;
-      MR_ResSprite* lValue;
-
-      mSpriteList.GetNextAssoc( lPos, lKey, lValue );
-
-      delete lValue;
+      delete it->second;
    }
 
-   lPos = mShortSoundList.GetStartPosition();
-
-   while( lPos != NULL )
+   for(auto it = mShortSoundList.begin(); it != mShortSoundList.end(); ++it)
    {
-      int lKey;
-      MR_ResShortSound* lValue;
-
-      mShortSoundList.GetNextAssoc( lPos, lKey, lValue );
-
-      delete lValue;
+      delete it->second;
    }
 
-   lPos = mContinuousSoundList.GetStartPosition();
-
-   while( lPos != NULL )
+   for(auto it = mContinuousSoundList.begin(); it != mContinuousSoundList.end(); ++it)
    {
-      int lKey;
-      MR_ResContinuousSound* lValue;
-
-      mContinuousSoundList.GetNextAssoc( lPos, lKey, lValue );
-
-      delete lValue;
+      delete it->second;
    }
-
 }
 
 /*const*/ MR_ResBitmap* MR_ResourceLib::GetBitmap( int pBitmapId )
 {
-
-   MR_ResBitmap* lValue;
-
-   mBitmapList.Lookup( pBitmapId, lValue );
-
-   return lValue;
+   auto it = mBitmapList.find(pBitmapId);
+   if (it != mBitmapList.end())
+       return it->second;
+   return nullptr;
 }
 
 const MR_ResActor* MR_ResourceLib::GetActor(  int pActorId  )
 {
-   MR_ResActor* lValue;
-
-   mActorList.Lookup( pActorId, lValue );
-
-   return lValue;
+   auto it = mActorList.find(pActorId);
+   if (it != mActorList.end())
+       return it->second;
+   return nullptr;
 }
 
 const MR_ResSprite* MR_ResourceLib::GetSprite(  int pSpriteId  )
 {
-   MR_ResSprite* lValue;
-
-   mSpriteList.Lookup( pSpriteId, lValue );
-
-   return lValue;
+   auto it = mSpriteList.find(pSpriteId);
+   if (it != mSpriteList.end())
+       return it->second;
+   return nullptr;
 }
 
 const MR_ResShortSound* MR_ResourceLib::GetShortSound( int pSoundId  )
 {
-   MR_ResShortSound* lValue;
-
-   mShortSoundList.Lookup( pSoundId, lValue );
-
-   return lValue;
+   auto it = mShortSoundList.find(pSoundId);
+   if (it != mShortSoundList.end())
+       return it->second;
+   return nullptr;
 }
 
 const MR_ResContinuousSound* MR_ResourceLib::GetContinuousSound( int pSoundId  )
 {
-   MR_ResContinuousSound* lValue;
-
-   mContinuousSoundList.Lookup( pSoundId, lValue );
-
-   return lValue;
+   auto it = mContinuousSoundList.find(pSoundId);
+   if (it != mContinuousSoundList.end())
+       return it->second;
+   return nullptr;
 }
 
 
@@ -204,8 +156,8 @@ void MR_ResourceLib::LoadBitmaps( NoMFC::CArchive& pArchive )
       lValue = new MR_ResBitmap( lKey );
       
       lValue->Serialize( pArchive );
-
-      mBitmapList.SetAt( lKey, lValue );
+      
+      mBitmapList[lKey] = lValue;
    }  
 }
 
@@ -226,7 +178,7 @@ void MR_ResourceLib::LoadActors( NoMFC::CArchive& pArchive )
       lValue = new MR_ResActor( lKey );
       lValue->Serialize( pArchive, this );
 
-      mActorList.SetAt( lKey, lValue );
+      mActorList[lKey] = lValue;
    }  
 }
 
@@ -246,8 +198,8 @@ void MR_ResourceLib::LoadSprites( NoMFC::CArchive& pArchive )
 
       lValue = new MR_ResSprite( lKey );
       lValue->Serialize( pArchive );
-
-      mSpriteList.SetAt( lKey, lValue );
+      
+      mSpriteList[lKey] = lValue;
    }  
 }
 
@@ -269,7 +221,7 @@ void MR_ResourceLib::LoadSounds( NoMFC::CArchive& pArchive )
       lValue = new MR_ResShortSound( lKey );
       lValue->Serialize( pArchive );
 
-      mShortSoundList.SetAt( lKey, lValue );
+      mShortSoundList[lKey] = lValue;
    }  
 
    pArchive >> lNbSound;
@@ -284,7 +236,7 @@ void MR_ResourceLib::LoadSounds( NoMFC::CArchive& pArchive )
       lValue = new MR_ResContinuousSound( lKey );
       lValue->Serialize( pArchive );
 
-      mContinuousSoundList.SetAt( lKey, lValue );
+      mContinuousSoundList[lKey] = lValue;
    }  
 
 }
