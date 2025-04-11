@@ -19,10 +19,11 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
 #include "ResActor.h"
 
 #include "ResourceLib.h"
+
+#include <exception>
 
 // ResActor
 //
@@ -200,7 +201,7 @@ void MR_ResActor::Frame::Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* p
 
                default:
                   ASSERT( FALSE );
-                  AfxThrowArchiveException( CArchiveException::badSchema );
+                  throw std::runtime_error("Unknown component type in actor deserialization");
             }
 
             mComponentList[ lCounter ]->Serialize( pArchive, pLib );

@@ -4,7 +4,9 @@
 // This file contains structures definition that hold the 
 // movement capabilities and state of a character
 
-
+#include "../Util/nomfc_stdafx.h"
+#include "../Util/MR_Types.h"
+#include "../Util/WorldCoordinates.h"
 
 // Related constants
 enum MR_MoveType{ eOnPlanSurface, eOnAir }; 

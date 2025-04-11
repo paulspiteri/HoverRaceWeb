@@ -19,7 +19,6 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
 #include "SpriteHandle.h"
       const MR_ResSprite* mSprite;
 

@@ -9,12 +9,9 @@ add_library(ObjFacTools STATIC
     ResSound.cpp                
     ResSprite.cpp               
     SpriteHandle.cpp            
-    stdafx.cpp                     
 )
 
 target_compile_definitions(ObjFacTools PRIVATE
-    _WINDLL
-    _AFXDLL
     MR_OBJ_FAC_TOOLS
 )
 

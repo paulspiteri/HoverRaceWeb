@@ -19,10 +19,7 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
 #include "ResSprite.h"
-
-#define new DEBUG_NEW
 
 MR_ResSprite::MR_ResSprite( int pResourceId )
 {

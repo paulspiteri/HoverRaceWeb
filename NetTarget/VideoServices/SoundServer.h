@@ -24,7 +24,7 @@
 #ifndef SOUND_SERVER_H
 #define SOUND_SERVER_H
 
-
+#include "../Util/nomfc_stdafx.h"
 
 #ifdef MR_VIDEO_SERVICES
    #define MR_DllDeclare //   __declspec( dllexport )

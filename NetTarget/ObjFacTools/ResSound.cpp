@@ -19,10 +19,7 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
 #include "ResSound.h"
-
-#define new DEBUG_NEW
 
 MR_ResShortSound::MR_ResShortSound( int pResourceId )
 {

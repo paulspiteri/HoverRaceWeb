@@ -19,10 +19,7 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
 #include "ResBitmap.h"
-
-#define new DEBUG_NEW
 
 MR_ResBitmap::MR_ResBitmap( int pResourceId )
 {
