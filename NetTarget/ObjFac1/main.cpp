@@ -20,8 +20,6 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
 #include "DefaultSurface.h"
 #include "WoodSurface.h"
 #include "BallElement.h"
@@ -40,20 +38,14 @@
 #include "../ObjFacTools/ObjectFactoryData.h"
 #include "../ObjFacTools/SpriteHandle.h"
 
-#define new DEBUG_NEW
-
-#define MR_DllDeclare   __declspec( dllexport )
+#define MR_DllDeclare  // __declspec( dllexport )
 
 // Functions declaration
 
 extern "C"
 {
-   MR_DllDeclare void                  MR_InitModule( HMODULE pModule );
+   MR_DllDeclare void                  MR_InitModule();
    MR_DllDeclare void                  MR_CleanModule();
-   MR_DllDeclare MR_UInt16             MR_GetObjectTypeCount  ();
-   MR_DllDeclare MR_UInt16             MR_GetObjectTypeCount  ();
-   MR_DllDeclare CString               MR_GetObjectFamily     ( MR_UInt16 pClassId );
-   MR_DllDeclare CString               MR_GetObjectDescription( MR_UInt16 pClassId );
    MR_DllDeclare MR_ObjectFromFactory* MR_GetObject           ( MR_UInt16 pClassId );
 };
 
@@ -63,11 +55,11 @@ MR_ObjectFactoryData* gObjectFactoryData = NULL;
 void ObjFac1RegisterFactory()
 {
    MR_DllObjectFactory::RegisterLocalDll(1, &MR_GetObject);
-   MR_InitModule(NULL);
+   MR_InitModule();
 }
 
 // Functions implementations
-void MR_InitModule( HMODULE pModule )
+void MR_InitModule()
 {
    delete gObjectFactoryData;
    gObjectFactoryData = new MR_ObjectFactoryData( "ObjFac1.dat" );
@@ -77,22 +69,6 @@ void MR_CleanModule()
 {
    delete gObjectFactoryData;
    gObjectFactoryData = NULL;   
-}
-
-
-MR_UInt16 MR_GetObjectTypeCount()
-{
-   return 0;
-}
-
-CString MR_GetObjectFamily( MR_UInt16 /*pClassId*/ )
-{
-   return "n/a";
-}
-
-CString MR_GetObjectDescription( MR_UInt16 /*pClassId*/ )
-{
-   return "n/a";
 }
 
 MR_ObjectFromFactory* MR_GetObject( MR_UInt16 pClassId )

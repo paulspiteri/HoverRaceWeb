@@ -11,14 +11,11 @@ add_library(ObjFac1 STATIC
     Mine.cpp
     Missile.cpp
     PowerUp.cpp
-    stdafx.cpp
     TestElement.cpp
     WoodSurface.cpp           
 )
 
 target_compile_definitions(ObjFac1 PRIVATE
-    _WINDLL
-    _AFXDLL
 )
 
 target_link_libraries(ObjFac1 PRIVATE Model Util
