@@ -18,5 +18,5 @@ target_compile_definitions(ObjFacTools PRIVATE
     MR_OBJ_FAC_TOOLS
 )
 
-target_link_libraries(ObjFacTools PRIVATE Model Util VideoServices
+target_link_libraries(ObjFacTools PRIVATE Model Util
 )
