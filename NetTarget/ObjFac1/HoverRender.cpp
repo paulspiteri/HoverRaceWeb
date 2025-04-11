@@ -19,8 +19,6 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
 #include "HoverRender.h"
 #include "ObjFac1Res.h"
 #include "../ObjFacTools/ObjectFactoryData.h"
@@ -28,7 +26,7 @@
 
 // Local stuff
 
-static class MR_ResActorFriend
+class MR_ResActorFriend
 {
    public:
       static void Draw( const MR_ResActor* pActor, MR_3DViewPort* pDest, const MR_PositionMatrix& pMatrix, int pSequence, int pFrame, const MR_Bitmap* pCockpitBitmap );

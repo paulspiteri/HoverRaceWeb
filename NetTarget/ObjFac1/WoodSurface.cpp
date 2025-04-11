@@ -19,8 +19,6 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
 #include "WoodSurface.h"
 #include "../ObjFacTools/ObjectFactoryData.h"
 #include "ObjFac1Res.h"

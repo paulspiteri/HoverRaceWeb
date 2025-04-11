@@ -20,8 +20,6 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
 #include "Mine.h"
 #include "ObjFac1Res.h"
 #include "../ObjFacTools/ObjectFactoryData.h"
