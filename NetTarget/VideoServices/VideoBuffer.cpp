@@ -25,6 +25,7 @@
 #include "VideoBuffer.h"
 #include "VideoBufferDirectDraw.h"
 #include "ColorPalette.h"
+#include "ColorPaletteEntry.h"
 
 
 #include "../Util/Profiler.h"

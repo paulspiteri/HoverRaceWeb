@@ -24,7 +24,7 @@
 #define VIDEO_BUFFER_H
 
 
-
+#include "../Util/nomfc_stdafx.h"
 #include "../Util/MR_Types.h"
 #include <memory>
 

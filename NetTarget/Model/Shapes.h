@@ -34,6 +34,7 @@
 #define SHAPES_H
 
 #include "../Util/WorldCoordinates.h"
+#include <vector>
 
 #ifdef MR_MODEL
    #define MR_DllDeclare //   __declspec( dllexport )
@@ -132,12 +133,6 @@ class MR_DllDeclare MR_PolygonShape: public MR_ShapeInterface
 
       eShape    ShapeType()const;
 
-};
-
-
-
-class MR_ShapeList: public CList< MR_ShapeInterface*, MR_ShapeInterface* >
-{
 };
 
 

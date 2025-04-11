@@ -24,10 +24,13 @@ using INT = int32_t;
 using DWORD = uint32_t;
 using LONG = int32_t;
 using UINT = uint32_t;
+using BYTE = uint8_t;
 
 typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
+
+using HWND = void*;
 
 #define ASSERT(condition) assert(condition)
 

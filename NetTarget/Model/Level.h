@@ -22,6 +22,7 @@
 #ifndef LEVEL_H
 #define LEVEL_H
 
+#include "../Util/nomfc_stdafx.h"
 #include "MazeElement.h"
 #include "ShapeCollisions.h"
 #include "../Util/FastArray.h"

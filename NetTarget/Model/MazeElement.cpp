@@ -85,13 +85,14 @@ void MR_Element::ApplyEffects( const MR_ContactEffectList* pList,  MR_Simulation
 
    if( pList != NULL )
    {
-      POSITION lPos = pList->GetHeadPosition();
+      auto lPos = pList->begin();
 
-      while( lPos != NULL )
+      while( lPos != pList->end() )
       {
-         const MR_ContactEffect* lEffect = pList->GetNext( lPos );
+         const MR_ContactEffect* lEffect = *lPos;
 
          ApplyEffect( lEffect, pTime, pDuration,pValidDirection, pHorizontalDirection, pZMin, pZMax, pLevel );
+         ++lPos;
       }
    }
 }

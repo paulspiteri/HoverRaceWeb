@@ -25,6 +25,7 @@
 #define CONTACT_EFFECT_H
 
 #include "../Model/Shapes.h"
+#include <vector>
 
 #ifdef MR_MODEL
    #define MR_DllDeclare //   __declspec( dllexport )
@@ -44,8 +45,13 @@ class MR_DllDeclare MR_ContactEffect
                                                            // Usually return NULL
 };
 
-class MR_DllDeclare MR_ContactEffectList: public CList< MR_ContactEffect*, MR_ContactEffect* >
+class MR_DllDeclare MR_ContactEffectList: public std::vector<MR_ContactEffect*>
 {
+   public:
+      void AddTail(MR_ContactEffect* effect)
+      {
+         this->push_back(effect);
+      }
 };
 
 

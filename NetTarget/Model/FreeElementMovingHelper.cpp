@@ -19,7 +19,7 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
+#include <algorithm>
 
 #include "FreeElementMovingHelper.h"
 #include "../Util/FastArray.h"
@@ -50,7 +50,7 @@ MR_Int32 MR_ObstacleCollisionReport::StepHeight()const
 
    if( mHaveObstacleContact )
    {
-      lReturnValue = max( lReturnValue, mObstacleTop-mShapeBottom );
+      lReturnValue = std::max( lReturnValue, mObstacleTop-mShapeBottom );
    }
    
    return lReturnValue;
@@ -64,7 +64,7 @@ MR_Int32 MR_ObstacleCollisionReport::CeilingStepHeight()const
 
    if( mHaveObstacleContact )
    {
-      lReturnValue = max( lReturnValue, mShapeTop-mObstacleBottom );
+      lReturnValue = std::max( lReturnValue, mShapeTop-mObstacleBottom );
    }   
    return lReturnValue;
 }
@@ -175,8 +175,8 @@ void MR_ObstacleCollisionReport::GetContactWithObstacles( MR_Level*             
 
             if( lNextSpec.mTouchingRoom )
             {
-               mClosestFloor        = min( mClosestFloor,   lNextSpec.mDistanceFromFloor );
-               mClosestCeiling      = min( mClosestCeiling, lNextSpec.mDistanceFromCeiling );
+               mClosestFloor        = std::min( mClosestFloor,   lNextSpec.mDistanceFromFloor );
+               mClosestCeiling      = std::min( mClosestCeiling, lNextSpec.mDistanceFromCeiling );
 
                GetContactWithFeaturesAndActors( pLevel,
                                                 pShape,
@@ -220,8 +220,8 @@ void MR_ObstacleCollisionReport::GetContactWithFeaturesAndActors( MR_Level*     
          {
             if( mHaveObstacleContact )
             {
-               mObstacleBottom      = min( mObstacleBottom, lSpec.mZMin );
-               mObstacleTop         = max( mObstacleTop,    lSpec.mZMax );
+               mObstacleBottom      = std::min( mObstacleBottom, lSpec.mZMin );
+               mObstacleTop         = std::max( mObstacleTop,    lSpec.mZMax );
             }
             else
             {
@@ -259,8 +259,8 @@ void MR_ObstacleCollisionReport::GetContactWithFeaturesAndActors( MR_Level*     
                   {
                      if( mHaveObstacleContact )
                      {
-                         mObstacleBottom      = min( mObstacleBottom, lSpec.mZMin );
-                         mObstacleTop         = max( mObstacleTop,    lSpec.mZMax );
+                         mObstacleBottom      = std::min( mObstacleBottom, lSpec.mZMin );
+                         mObstacleTop         = std::max( mObstacleTop,    lSpec.mZMax );
                      }
                      else
                      {
