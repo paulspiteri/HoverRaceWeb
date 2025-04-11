@@ -1,21 +1,3 @@
-// // stdafx.h : include file for standard system include files,
-// //  or project specific include files that are used frequently, but
-// //      are changed infrequently
-// //
-
-// #define VC_EXTRALEAN		// Exclude rarely-used stuff from Windows headers
-
-// #include <afxwin.h>         // MFC core and standard components
-// #include <afxext.h>         // MFC extensions
-// #include <afxtempl.h>
-
-// #include <typeinfo>
-
-// #ifndef _AFX_NO_AFXCMN_SUPPORT
-// #include <afxcmn.h>			// MFC support for Windows 95 Common Controls
-// #endif // _AFX_NO_AFXCMN_SUPPORT
-
-
 #include <cassert>
 #include <stdint.h>
 
@@ -35,5 +17,8 @@ using HWND = void*;
 #define ASSERT(condition) assert(condition)
 
 #define Int32x32To64(a, b)  (((__int64)((long)(a))) * ((__int64)((long)(b))))
+#define Int64ShraMod32(a, b) (((__int64)(a)) >> (b))
+
+#define TRACE              /* TODO */
 
 #endif

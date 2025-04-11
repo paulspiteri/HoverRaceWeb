@@ -22,7 +22,6 @@
 
 #include "stdafx.h"
 
-#include <math.h>
 #include "ColorPalette.h"
 
 
