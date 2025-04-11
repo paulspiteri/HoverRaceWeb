@@ -19,8 +19,6 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
 #include "FinishLine.h"
 
 
