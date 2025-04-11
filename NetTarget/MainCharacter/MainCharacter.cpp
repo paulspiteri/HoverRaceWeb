@@ -19,9 +19,6 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
-#include <math.h>
 
 #include "MainCharacter.h"
 #include "../Model/RaceEffects.h"
@@ -29,6 +26,8 @@
 #include "../Util/FuzzyLogic.h"
 
 #include "../ObjFac1/ObjFac1.h"
+
+#include <algorithm>
 
 #define MR_NB_HOVER_MODEL 8
 
@@ -674,7 +673,7 @@ int MR_MainCharacter::InternalSimulate( MR_SimulationTime pDuration, MR_Level* p
          }
          else if( (lAbsoluteSpeed > eSteadySpeed[mHoverModel])&&(lAbsoluteSpeed < 2.5*eSteadySpeed[mHoverModel]) )
          {
-            lFrictionAmplifier = min( 1.7, 1.1+2.5*(lAbsoluteSpeed/eSteadySpeed[0]-1.0) );
+            lFrictionAmplifier = std::min( 1.7, 1.1+2.5*(lAbsoluteSpeed/eSteadySpeed[0]-1.0) );
          }
 
          double lConstantPart = pDuration*lFrictionAmplifier*eFrictionAccell[mHoverModel]/lAbsoluteSpeed;
@@ -982,7 +981,7 @@ void MR_MainCharacter::ApplyEffect( const MR_ContactEffect* pEffect,  MR_Simulat
 
          if( (lPhysCollision->mXSpeed!=0 || lPhysCollision->mYSpeed!=0) )
          {
-            TRACE( "Net priority increase %d\n", mMasterMode );
+            //TRACE( "Net priority increase %d\n", mMasterMode );
             mNetPriority       = TRUE;
             mLastCollisionTime = pTime;
          }
