@@ -34,4 +34,6 @@ using HWND = void*;
 
 #define ASSERT(condition) assert(condition)
 
+#define Int32x32To64(a, b)  (((__int64)((long)(a))) * ((__int64)((long)(b))))
+
 #endif

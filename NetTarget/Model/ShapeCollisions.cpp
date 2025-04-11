@@ -19,10 +19,9 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
-#include <math.h>
+#include <algorithm>
 #include "ShapeCollisions.h"
+#include "../Util/nomfc_stdafx.h"
 
 // Local prototypes
 typedef BOOL (*MR_ActorActorContactFunc)  ( const MR_ShapeInterface* pActor0, const MR_ShapeInterface* pActor1, MR_ContactSpec& pAnswer );
@@ -640,11 +639,11 @@ void MR_PolygonRoomContact( const MR_PolygonShape* pActor, const MR_PolygonShape
       int lP1Room = (lP0Room + 1 )%lRoomSides;
 
       // Verify if the bounding box of the actor cross the selected side
-      if(   ( pActor->XMin() <= max( pRoom->X( lP0Room ), pRoom->X( lP1Room ) ) )
-          &&( pActor->XMax() >= min( pRoom->X( lP0Room ), pRoom->X( lP1Room ) ) ) )
+      if(   ( pActor->XMin() <= std::max( pRoom->X( lP0Room ), pRoom->X( lP1Room ) ) )
+          &&( pActor->XMax() >= std::min( pRoom->X( lP0Room ), pRoom->X( lP1Room ) ) ) )
       {
-         if(   ( pActor->YMin() <= max( pRoom->Y( lP0Room ), pRoom->Y( lP1Room ) ) )
-             &&( pActor->YMax() >= min( pRoom->Y( lP0Room ), pRoom->Y( lP1Room ) ) ) )
+         if(   ( pActor->YMin() <= std::max( pRoom->Y( lP0Room ), pRoom->Y( lP1Room ) ) )
+             &&( pActor->YMax() >= std::min( pRoom->Y( lP0Room ), pRoom->Y( lP1Room ) ) ) )
          {
             for( int lP0Actor = 0; lP0Actor < lActorSides; lP0Actor++ )
             {
@@ -693,8 +692,8 @@ BOOL MR_TestLevelShape( const MR_ShapeInterface* pActor0, const MR_ShapeInterfac
    int lZMax0 = pActor0->ZMax();
    int lZMax1 = pActor1->ZMax();
 
-   pAnswer.mZMin = max(lZMin0,lZMin1); 
-   pAnswer.mZMax = min(lZMax0,lZMax1); 
+   pAnswer.mZMin = std::max(lZMin0,lZMin1); 
+   pAnswer.mZMax = std::min(lZMax0,lZMax1); 
 
    return pAnswer.mZMin<pAnswer.mZMax;
 }
@@ -703,8 +702,8 @@ BOOL MR_TestBoundingBox( const MR_ShapeInterface* pActor0, const MR_ShapeInterfa
 {
    BOOL lReturnValue = TRUE;
 
-   int lXMin = max( pActor0->XMin(), pActor1->XMin() );
-   int lXMax = min( pActor0->XMax(), pActor1->XMax() );
+   int lXMin = std::max( pActor0->XMin(), pActor1->XMin() );
+   int lXMax = std::min( pActor0->XMax(), pActor1->XMax() );
 
    if( lXMax<lXMin )
    {
@@ -712,8 +711,8 @@ BOOL MR_TestBoundingBox( const MR_ShapeInterface* pActor0, const MR_ShapeInterfa
    }
    else
    {
-      int lYMin = max( pActor0->YMin(), pActor1->YMin() );
-      int lYMax = min( pActor0->YMax(), pActor1->YMax() );
+      int lYMin = std::max( pActor0->YMin(), pActor1->YMin() );
+      int lYMax = std::min( pActor0->YMax(), pActor1->YMax() );
 
       if( lXMax<lXMin )
       {
@@ -782,11 +781,11 @@ BOOL MR_AreLineCrossing( MR_Int32 pAX0, MR_Int32 pAY0,
    BOOL lReturnValue = FALSE;
 
    // Go by elimination
-   if(   ( min( pBX0, pBX1 ) <= max( pAX0, pAX1 ) )
-       &&( max( pBX0, pBX1 ) >= min( pAX0, pAX1 ) ) )
+   if(   ( std::min( pBX0, pBX1 ) <= std::max( pAX0, pAX1 ) )
+       &&( std::max( pBX0, pBX1 ) >= std::min( pAX0, pAX1 ) ) )
    {
-      if(   ( min( pBY0, pBY1 ) <= max( pAY0, pAY1 ) )
-          &&( max( pBY0, pBY1 ) >= min( pAX0, pAY1 ) ) )
+      if(   ( std::min( pBY0, pBY1 ) <= std::max( pAY0, pAY1 ) )
+          &&( std::max( pBY0, pBY1 ) >= std::min( pAX0, pAY1 ) ) )
       {
          // Now verify that the two points of B are on each side of A
          int lDist0 =  (pAY1-pAY0*pBX0-pAX0)
