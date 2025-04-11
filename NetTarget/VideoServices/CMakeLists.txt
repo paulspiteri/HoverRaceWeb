@@ -5,6 +5,7 @@ add_library(VideoServices STATIC
     Bitmap.cpp               
     ColorPalette.cpp         
     ColorTab.cpp                      
+    Patch.cpp
     SoundServer.cpp          
     Sprite.cpp               
     stdafx.cpp               

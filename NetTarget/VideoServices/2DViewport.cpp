@@ -20,8 +20,6 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
 #include "2DViewport.h"
 
 
