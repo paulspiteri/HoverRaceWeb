@@ -8,12 +8,9 @@ add_library(Model STATIC
     PhysicalCollision.cpp      
     ShapeCollisions.cpp        
     Shapes.cpp                 
-    stdafx.cpp                 
 )
 
 target_compile_definitions(Model PRIVATE
-    _WINDLL
-    _AFXDLL
     MR_MODEL
 )
 

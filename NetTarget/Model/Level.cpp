@@ -19,11 +19,7 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
 #include "Level.h"
-
-#define new DEBUG_NEW
 
 // MR_Level implementation
 MR_Level::MR_Level( BOOL pAllowRendering )
