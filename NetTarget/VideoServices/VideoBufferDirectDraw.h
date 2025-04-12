@@ -9,8 +9,6 @@ class VideoBufferDirectDraw
         LPDIRECTDRAWSURFACE  mBackBuffer;
         LPDIRECTDRAWCLIPPER  mClipper;    // To use in windows only
                                         // remove if too slow
-        PALETTEENTRY         mPaletteEntries[256];
-
 
         VideoBufferDirectDraw(HWND pWindow);
         ~VideoBufferDirectDraw(); 

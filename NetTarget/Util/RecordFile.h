@@ -34,7 +34,8 @@
    #define MR_DllDeclare //   __declspec( dllimport )
 #endif
 
-namespace NoMFC {
+namespace NoMFC 
+{
    class CFile
    {
       public:

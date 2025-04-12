@@ -347,7 +347,7 @@ void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBri
    PRINT_LOG( "CreatePalette" );
    TRACE("CreatePalette\n");
 
-   PALETTEENTRY lPalette[256];
+   NoMFC::PALETTEENTRY lPalette[256];
 
    int lCounter;
 
@@ -391,8 +391,11 @@ void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBri
       HDC hdc = GetDC(NULL);
       if( GetDeviceCaps(hdc, RASTERCAPS) & RC_PALETTE )
       {
+         ASSERT( FALSE );
+         // we don't need this as it's for a 256 color mode
+
          // get the current windows colors.
-         GetSystemPaletteEntries(hdc, 0, 256, lPalette );
+        // GetSystemPaletteEntries(hdc, 0, 256, lPalette );
       }
       else
       {
@@ -401,7 +404,7 @@ void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBri
       ReleaseDC(NULL, hdc);
 
       // Add out own entries
-      PALETTEENTRY* lOurEntries = MR_GetColors( 1.0/mGamma, mContrast*mBrightness, mBrightness-(mContrast*mBrightness) );
+      NoMFC::PALETTEENTRY* lOurEntries = MR_GetColors( 1.0/mGamma, mContrast*mBrightness, mBrightness-(mContrast*mBrightness) );
 
       for( lCounter = 0; lCounter<MR_BASIC_COLORS; lCounter++ )
       {
@@ -430,7 +433,7 @@ void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBri
       }
       
 
-      memcpy(mVideoBufferDirectDraw->mPaletteEntries, lPalette, sizeof(mVideoBufferDirectDraw->mPaletteEntries));
+      memcpy(mPaletteEntries, lPalette, sizeof(mPaletteEntries));
    }
 }
 
@@ -659,7 +662,6 @@ BOOL MR_VideoBuffer::Lock()
 
    MR_SAMPLE_CONTEXT( "LockVideoBuffer" );
 
-   HRESULT lErrorCode;
    BOOL lReturnValue = TRUE;
 
    ASSERT( mBuffer == NULL );
@@ -786,7 +788,7 @@ void MR_VideoBuffer::Unlock()
          {
              for (int x = 0; x < mXRes; x++) {
                  MR_UInt8 colorIndex = lSrc[x];
-                 PALETTEENTRY paletteEntry = mVideoBufferDirectDraw->mPaletteEntries[colorIndex];
+                 NoMFC::PALETTEENTRY paletteEntry = mPaletteEntries[colorIndex];
                  DWORD color = (paletteEntry.peRed << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peBlue;
                  lDest[x] = color;
              }

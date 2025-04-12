@@ -30,6 +30,7 @@
 // #include <ddraw.h>
 
 #include "../Util/MR_Types.h"
+#include "../Util/nomfc_stdafx.h"
 
 
 #ifdef MR_VIDEO_SERVICES

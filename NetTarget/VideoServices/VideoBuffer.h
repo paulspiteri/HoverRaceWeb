@@ -24,6 +24,7 @@
 #define VIDEO_BUFFER_H
 
 
+#include "ColorPaletteEntry.h"
 #include "../Util/nomfc_stdafx.h"
 #include "../Util/MR_Types.h"
 #include <memory>
@@ -60,6 +61,7 @@ class MR_VideoBuffer
       MR_UInt8*            mBuffer;
 
       MR_UInt8*            mBackPalette;
+      NoMFC::PALETTEENTRY  mPaletteEntries[256];
 
 
       // IconMode releted functions

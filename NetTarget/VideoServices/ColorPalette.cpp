@@ -20,18 +20,16 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
 #include "ColorPalette.h"
+#include "ColorPaletteEntry.h"
+#include <algorithm>
 
-
-// Local functions
 
 // Functions implementation
 
-PALETTEENTRY* MR_GetColors( double pGamma, double pIntensity, double pIntensityBase )
+NoMFC::PALETTEENTRY* MR_GetColors( double pGamma, double pIntensity, double pIntensityBase )
 {
-   PALETTEENTRY* lReturnValue = new PALETTEENTRY[MR_BASIC_COLORS];
+   NoMFC::PALETTEENTRY* lReturnValue = new NoMFC::PALETTEENTRY[MR_BASIC_COLORS];
 
    int lColorIndex = 0;
 
@@ -89,10 +87,10 @@ PALETTEENTRY* MR_GetColors( double pGamma, double pIntensity, double pIntensityB
    return lReturnValue;
 }
 
-const PALETTEENTRY& MR_ConvertColor( MR_UInt8 pRed, MR_UInt8 pGreen, MR_UInt8 pBlue,
+const NoMFC::PALETTEENTRY& MR_ConvertColor( MR_UInt8 pRed, MR_UInt8 pGreen, MR_UInt8 pBlue,
                                      double pGamma, double pIntensity, double pIntensityBase )
 {
-   static PALETTEENTRY lReturnValue;
+   static NoMFC::PALETTEENTRY lReturnValue;
 
    double lRed;
    double lGreen;
