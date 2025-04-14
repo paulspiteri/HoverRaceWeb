@@ -399,7 +399,8 @@ BOOL MR_SoundServer::Init( HWND pWindow )
          
          if( gDirectSound->SetCooperativeLevel( pWindow, DSSCL_NORMAL ) != DS_OK )
          {
-            ASSERT( FALSE );
+            // commented assert during SDL port
+//            ASSERT( FALSE );
             lReturnValue = FALSE;
          }         
       }

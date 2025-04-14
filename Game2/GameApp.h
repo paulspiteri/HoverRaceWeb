@@ -71,9 +71,8 @@ class MR_GameApp
       MR_VideoBuffer*          mVideoBuffer;
       MR_Observer*             mObserver1;
       MR_Observer*             mObserver2;
-      MR_ClientSession*        mCurrentSession;
       MR_GameThread*           mGameThread;
-
+      MR_ClientSession*        mCurrentSession;
       eViewMode                mCurrentMode;
       // int                      mMenuStack;
 
@@ -113,7 +112,6 @@ class MR_GameApp
 
       // Debug data
       time_t mNbFramesStartingTime;
-      int    mNbFrames;
 
       void   SetProperties();
       static LRESULT CALLBACK DispatchFunc( HWND pWindow, UINT  pMsgId, WPARAM  pWParam, LPARAM  pLParam );
@@ -131,14 +129,11 @@ class MR_GameApp
 
       BOOL CreateMainWindow( );
 
-      void RefreshView();
       void SetVideoMode( int pX, int pY );
       void RefreshTitleBar();
 
-      void ReadAssyncInputControler(); // Get the state of the input controler (KDB, joystick, mouse)
 
       // Message treatement
-      void NewLocalSession();
       void NewSplitSession();
       void NewNetworkSession( BOOL pIsServer );
       void NewInternetSession( );
@@ -183,6 +178,10 @@ class MR_GameApp
       BOOL InitGame();
 
       int  MainLoop();
+      void NewLocalSession();
+      void ReadAssyncInputControler(); // Get the state of the input controler (KDB, joystick, mouse)
+      void RefreshView();
+      void Simulate();
 
 
       // Helper stuff

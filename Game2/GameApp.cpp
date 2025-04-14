@@ -335,7 +335,6 @@ unsigned long MR_GameThread::Loop( LPVOID pThread )
 
       MR_SAMPLE_START( Refresh, "Refresh" );
       lThis->mGameApp->RefreshView();
-      lThis->mGameApp->mNbFrames++;
       MR_SAMPLE_END( Refresh );
 
       MR_PRINT_STATS( 10 ); // Print and reset profiling statistics every 5 seconds
@@ -1246,6 +1245,12 @@ BOOL MR_GameApp::InitGame()
    }
 
    return lReturnValue;
+}
+
+void MR_GameApp::Simulate()
+{
+   ASSERT( mCurrentSession != NULL );
+   mCurrentSession->Process();
 }
 
 void MR_GameApp::RefreshView()
