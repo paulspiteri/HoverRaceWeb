@@ -24,7 +24,7 @@ target_compile_definitions(Game2 PRIVATE
     _AFXDLL
 )
 
-target_link_libraries(Game2 PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3
+`target_link_libraries(Game2 PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3-static
     vfw32.lib
     wsock32.lib
     winmm.lib
