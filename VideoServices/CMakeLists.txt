@@ -17,5 +17,5 @@ target_compile_definitions(VideoServices PRIVATE
     MR_VIDEO_SERVICES
 )
 
-`target_link_libraries(VideoServices PRIVATE ColorTools Util SDL3::SDL3-static
+target_link_libraries(VideoServices PRIVATE ColorTools Util SDL3::SDL3-static
 )
