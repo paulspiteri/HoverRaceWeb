@@ -37,18 +37,15 @@
 
 
 
-class VideoBufferDirectDraw;
 
 class MR_VideoBuffer
 {   
 
    private:
-      std::unique_ptr<VideoBufferDirectDraw> mVideoBufferDirectDraw;
-
+      HWND                 mWindow;
       BOOL                 mSpecialWindowMode; // Use a 256 color mode when switching to window mode
       int                  mSpecialModeXRes;
       int                  mSpecialModeYRes;
-
       BOOL                 mModeSettingInProgress;
 
       int                  mX0;    // used only when

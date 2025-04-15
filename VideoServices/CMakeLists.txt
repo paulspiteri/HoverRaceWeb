@@ -9,7 +9,6 @@ add_library(VideoServices STATIC
     SoundServer.cpp          
     Sprite.cpp               
     stdafx.cpp               
-    VideoBufferDirectDraw.cpp
     VideoBuffer.cpp          
     VideoBuffer2DDraw.cpp    
 )
@@ -21,7 +20,5 @@ target_compile_definitions(VideoServices PRIVATE
 )
 
 target_link_libraries(VideoServices PRIVATE ColorTools Util SDL3::SDL3 
-    ddraw.lib
     dsound.lib
-    winmm.lib
 )
