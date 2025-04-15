@@ -20,7 +20,6 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
 #include "SoundServer.h"
 #include "../Util/MR_Types.h"
 #include <mmreg.h>

@@ -6,19 +6,16 @@ add_library(VideoServices STATIC
     ColorPalette.cpp         
     ColorTab.cpp                      
     Patch.cpp
-    SoundServer.cpp          
+    #SoundServer.cpp          
+    StubSoundServer.cpp
     Sprite.cpp               
-    stdafx.cpp               
     VideoBuffer.cpp          
     VideoBuffer2DDraw.cpp    
 )
 
 target_compile_definitions(VideoServices PRIVATE
-    _WINDLL
-    _AFXDLL
     MR_VIDEO_SERVICES
 )
 
 target_link_libraries(VideoServices PRIVATE ColorTools Util SDL3::SDL3 
-    dsound.lib
 )

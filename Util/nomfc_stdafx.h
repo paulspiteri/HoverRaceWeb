@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cassert>
 #include <stdint.h>
 
@@ -12,7 +14,8 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 
-using HWND = void*;
+#define DECLARE_HANDLE(name) struct name##__{int unused;}; typedef struct name##__ *name
+DECLARE_HANDLE (HWND);
 
 #define ASSERT(condition) assert(condition)
 
