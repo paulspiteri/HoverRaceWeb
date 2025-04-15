@@ -334,7 +334,7 @@ unsigned long MR_GameThread::Loop( LPVOID pThread )
       MR_SAMPLE_END( Process );
 
       MR_SAMPLE_START( Refresh, "Refresh" );
-      lThis->mGameApp->RefreshView();
+      lThis->mGameApp->RefreshView(nullptr);
       MR_SAMPLE_END( Refresh );
 
       MR_PRINT_STATS( 10 ); // Print and reset profiling statistics every 5 seconds
@@ -367,13 +367,13 @@ MR_GameThread* MR_GameThread::New( MR_GameApp* pApp )
    unsigned long lDummyInt;
    MR_GameThread* lReturnValue = new MR_GameThread( pApp );
 
-   lReturnValue->mThread = CreateThread( NULL, 0, Loop, lReturnValue, 0, &lDummyInt);
-
-   if( lReturnValue->mThread == NULL )
-   {
-      delete lReturnValue;
-      lReturnValue = NULL;
-   }
+   // commented for SDL
+   // lReturnValue->mThread = CreateThread( NULL, 0, Loop, lReturnValue, 0, &lDummyInt);
+   // if( lReturnValue->mThread == NULL )
+   // {
+   //    delete lReturnValue;
+   //    lReturnValue = NULL;
+   // }
    return lReturnValue;
 }
 
@@ -1138,21 +1138,24 @@ BOOL MR_GameApp::CreateMainWindow( )
 {
    BOOL lReturnValue = TRUE;
 
-   mMainWindow = CreateWindowEx( WS_EX_APPWINDOW,
-                                 MR_APP_CLASS_NAME,
-                                 MR_LoadString( IDS_CAPTION ),
-                                 (WS_VISIBLE |    // so we dont have to call ShowWindow
-                                 WS_OVERLAPPEDWINDOW|
-                                 WS_EX_CLIENTEDGE)&~WS_MAXIMIZEBOX,
-                                 CW_USEDEFAULT,
-                                 CW_USEDEFAULT,
-                                 480,
-                                 320,
-                                 NULL,
-                                 NULL,
-                                 mInstance,
-                                 NULL      );
+   // commented out for SDL
+   
+   // mMainWindow = CreateWindowEx( WS_EX_APPWINDOW,
+   //                               MR_APP_CLASS_NAME,
+   //                               MR_LoadString( IDS_CAPTION ),
+   //                               (WS_VISIBLE |    // so we dont have to call ShowWindow
+   //                               WS_OVERLAPPEDWINDOW|
+   //                               WS_EX_CLIENTEDGE)&~WS_MAXIMIZEBOX,
+   //                               CW_USEDEFAULT,
+   //                               CW_USEDEFAULT,
+   //                               480,
+   //                               320,
+   //                               NULL,
+   //                               NULL,
+   //                               mInstance,
+   //                               NULL      );
 
+   mMainWindow = GetActiveWindow();
 
    if( mMainWindow == NULL )
    {
@@ -1253,7 +1256,7 @@ void MR_GameApp::Simulate()
    mCurrentSession->Process();
 }
 
-void MR_GameApp::RefreshView()
+void MR_GameApp::RefreshView(SDL_Texture* texture)
 {
    static int lColor = 0;
 
@@ -1336,7 +1339,7 @@ void MR_GameApp::RefreshView()
          {
             mVideoBuffer->Clear( lColor++ );
          }
-         mVideoBuffer->Unlock();
+         mVideoBuffer->Unlock(texture);
          
       }
    }  

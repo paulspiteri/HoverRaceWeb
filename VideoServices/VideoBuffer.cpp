@@ -29,7 +29,7 @@
 
 
 #include "../Util/Profiler.h"
-
+#include <SDL3/SDL.h>
 
 // Debug flag
 #ifdef _DEBUG
@@ -811,6 +811,41 @@ void MR_VideoBuffer::Unlock()
    }
 
    Flip();
+}
+
+
+void MR_VideoBuffer::Unlock(/* SDL_Texture* */ void* texture)
+{
+   SDL_Texture* sdlTexture = static_cast<SDL_Texture*>(texture);
+   void* pixels = nullptr;
+   int pitch = 0;
+   if (SDL_LockTexture(sdlTexture, NULL, &pixels, &pitch)) {
+      MR_UInt8* lSrc     = mBuffer;
+      uint32_t* lDest = (uint32_t*)pixels;
+      int lLineLen = pitch / sizeof(uint32_t);
+
+      for( int lCounter = 0; lCounter < mYRes; lCounter++ )
+      {
+          for (int x = 0; x < mXRes; x++) {
+              MR_UInt8 colorIndex = lSrc[x];
+              NoMFC::PALETTEENTRY paletteEntry = mPaletteEntries[colorIndex];
+              uint32_t color = 0xFF000000 | (paletteEntry.peRed << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peBlue;
+              lDest[x] = color;
+          }
+         lDest += lLineLen;
+         lSrc  += mLineLen;
+      }
+
+      SDL_UnlockTexture(sdlTexture);
+   } 
+   else 
+   {
+      ASSERT(FALSE);
+      TRACE("Failed to lock texture: %s", SDL_GetError());
+   }
+
+   delete mBuffer;
+   mBuffer = NULL;
 }
 
 void MR_VideoBuffer::Flip()

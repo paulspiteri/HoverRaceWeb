@@ -26,6 +26,7 @@
 
 #include "Observer.h"
 #include "ClientSession.h"
+#include <SDL3/SDL.h>
 
 class MR_GameApp;
 
@@ -180,7 +181,7 @@ class MR_GameApp
       int  MainLoop();
       void NewLocalSession();
       void ReadAssyncInputControler(); // Get the state of the input controler (KDB, joystick, mouse)
-      void RefreshView();
+      void RefreshView(SDL_Texture* texture);
       void Simulate();
 
 

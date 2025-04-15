@@ -19,6 +19,7 @@
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
+static SDL_Texture *texture = NULL;
 static MR_GameApp *game = NULL;
 
 /* This function runs once at startup. */
@@ -29,8 +30,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
-   // HINSTANCE hInstance = GetModuleHandle(NULL);
-    game = new MR_GameApp( NULL );
+    texture = SDL_CreateTexture(renderer,
+        SDL_PIXELFORMAT_ARGB8888,
+        SDL_TEXTUREACCESS_STREAMING,
+        320, 200);
+
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    game = new MR_GameApp( hInstance );
     game->InitGame();
     game->NewLocalSession();
     
@@ -52,8 +58,12 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
     game->ReadAssyncInputControler();
     game->Simulate();
-    game->RefreshView();
-    
+    game->RefreshView(texture);
+
+   // SDL_RenderClear(renderer);
+    SDL_RenderTexture(renderer, texture, NULL, NULL);
+    // SDL_RenderPresent(renderer);
+        
     const char *message = "HoverRace";
     int w = 0, h = 0;
     float x, y;
@@ -66,10 +76,12 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     y = ((h / scale) - SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE) / 2;
 
     /* Draw the message */
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
+    // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    // SDL_RenderClear(renderer);
+
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderDebugText(renderer, x, y, message);
+    
     SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE;
