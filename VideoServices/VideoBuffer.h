@@ -42,14 +42,11 @@ class MR_VideoBuffer
 {   
 
    private:
-      HWND                 mWindow;
       BOOL                 mSpecialWindowMode; // Use a 256 color mode when switching to window mode
       int                  mSpecialModeXRes;
       int                  mSpecialModeYRes;
       BOOL                 mModeSettingInProgress;
 
-      int                  mX0;    // used only when
-      int                  mY0;    // displaying in a window
       int                  mXRes;
       int                  mYRes;
       int                  mLineLen;
@@ -62,7 +59,6 @@ class MR_VideoBuffer
 
 
       // IconMode releted functions
-      BOOL mIconMode;
 //      int  mBeforeIconXRes;
 //      int  mBeforeIconYRes;
 
@@ -80,7 +76,7 @@ class MR_VideoBuffer
 
    public:
 
-      MR_DllDeclare MR_VideoBuffer( HWND pWindow, double lGamma, double lContrast, double mBrightness );
+      MR_DllDeclare MR_VideoBuffer( double lGamma, double lContrast, double mBrightness );
       MR_DllDeclare ~MR_VideoBuffer();
 
 

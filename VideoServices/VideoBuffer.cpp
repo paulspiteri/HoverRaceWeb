@@ -20,8 +20,6 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
 #include "VideoBuffer.h"
 #include "ColorPalette.h"
 #include "ColorPaletteEntry.h"
@@ -29,10 +27,6 @@
 
 #include "../Util/Profiler.h"
 #include <SDL3/SDL.h>
-
-static const BOOL gDebugMode = TRUE;
-
-
 
 
 void PrintLog( const char* pFormat, ... );
@@ -49,33 +43,22 @@ void PrintLog( const char* pFormat, ... );
 
 
 
-MR_VideoBuffer::MR_VideoBuffer( HWND pWindow, double pGamma, double pContrast, double pBrightness )
+MR_VideoBuffer::MR_VideoBuffer( double pGamma, double pContrast, double pBrightness )
 {
    OPEN_LOG();
    PRINT_LOG( "VIDEO_BUFFER_CREATION" );
 
-   ASSERT( pWindow != NULL );
    mZBuffer     = NULL;
    mBuffer      = NULL;
    mBackPalette = NULL;
 
    mModeSettingInProgress = FALSE;
-   mWindow = pWindow;
-
-   mIconMode       = IsIconic( pWindow );
 
    mGamma      = pGamma;
    mContrast   = pContrast;
    mBrightness = pBrightness;
 
    mSpecialWindowMode = FALSE;
-
-   /*
-   if( !SetVideoMode() )
-   {
-
-   }
-   */
 }
 
 
@@ -158,29 +141,12 @@ void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBri
 
   // if( mVideoBufferDirectDraw->mDirectDraw != NULL )
    {
-      // Initialize with system colors (Ignore errors)
-      HDC hdc = GetDC(NULL);
-      if( GetDeviceCaps(hdc, RASTERCAPS) & RC_PALETTE )
-      {
-         ASSERT( FALSE );
-         // we don't need this as it's for a 256 color mode
-
-         // get the current windows colors.
-        // GetSystemPaletteEntries(hdc, 0, 256, lPalette );
-      }
-      else
-      {
-         // ASSERT( FALSE );
-      }
-      ReleaseDC(NULL, hdc);
-
       // Add out own entries
       NoMFC::PALETTEENTRY* lOurEntries = MR_GetColors( 1.0/mGamma, mContrast*mBrightness, mBrightness-(mContrast*mBrightness) );
 
       for( lCounter = 0; lCounter<MR_BASIC_COLORS; lCounter++ )
       {
          lPalette[ MR_RESERVED_COLORS_BEGINNING+lCounter ] = lOurEntries[ lCounter ];
-         lPalette[ MR_RESERVED_COLORS_BEGINNING+lCounter ].peFlags = PC_NOCOLLAPSE; //|*/PC_EXPLICIT; //lPalette[ 0 ].peFlags;
       }
       delete []lOurEntries;
 
@@ -192,18 +158,9 @@ void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBri
             lPalette[ MR_RESERVED_COLORS_BEGINNING+MR_BASIC_COLORS+lCounter ] = 
                MR_ConvertColor( mBackPalette[ lCounter*3], mBackPalette[ lCounter*3+1], mBackPalette[ lCounter*3+2],
                                 1.0/mGamma, mContrast*mBrightness, mBrightness-(mContrast*mBrightness) );
-            lPalette[ MR_RESERVED_COLORS_BEGINNING+MR_BASIC_COLORS+lCounter ].peFlags = PC_NOCOLLAPSE; //|*/PC_EXPLICIT; //lPalette[ 0 ].peFlags;
-
          }
       }
       
-
-      for( lCounter = 0; lCounter<MR_RESERVED_COLORS_BEGINNING; lCounter++ )
-      {
-         lPalette[ lCounter ].peFlags = 0; //PC_NOCOLLAPSE; //lPalette[ 0 ].peFlags;
-      }
-      
-
       memcpy(mPaletteEntries, lPalette, sizeof(mPaletteEntries));
    }
 }
@@ -239,37 +196,32 @@ BOOL MR_VideoBuffer::SetVideoMode()
        DeleteInternalSurfaces();
    }
 
-   // Retrieve the window size
-   if( lReturnValue )
-   {
-      RECT lRect;
+   //  commented out for now
 
-      lReturnValue = GetClientRect( mWindow, &lRect );
+   // // Retrieve the window size
+   // if( lReturnValue )
+   // {
+   //    RECT lRect;
 
-      ASSERT( lReturnValue );
+   //    lReturnValue = GetClientRect( mWindow, &lRect );
 
-      mXRes = lRect.right;
-      mYRes = lRect.bottom;
-      mLineLen = mXRes;
-   }
+   //    ASSERT( lReturnValue );
 
-   if( lReturnValue )
-   {
-      POINT lPoint = {0,0};
+   //    mXRes = lRect.right;
+   //    mYRes = lRect.bottom;
+   //    mLineLen = mXRes;
+   // }
 
-      lReturnValue = ClientToScreen( mWindow, &lPoint );
+   mXRes = 640;
+   mYRes = 400;
+   mLineLen = 640;
 
-      mX0 = lPoint.x;
-      mY0 = lPoint.y;
-
-      ASSERT( lReturnValue );
-   }
 
    if( lReturnValue )
    {
       // Create a local memory ZBuffer
       // We do not use DirectDrawZBuffer for now
-
+      ASSERT( mZBuffer == NULL );
       mZBuffer = new MR_UInt16[ mXRes*mYRes ];
 
    }
@@ -293,7 +245,7 @@ BOOL MR_VideoBuffer::IsWindowMode()const
 
 BOOL MR_VideoBuffer::IsIconMode()const
 {
-   return mIconMode;
+   return FALSE;
 }
 
 BOOL MR_VideoBuffer::IsModeSettingInProgress()const
@@ -332,20 +284,20 @@ MR_UInt16* MR_VideoBuffer::GetZBuffer()
    return mZBuffer;
 }
 
+// THESE ARE NOT SUPPOSED TO BE CONSTANTS 
 int MR_VideoBuffer::GetXPixelMeter()const
 {
    {
-      return 3*GetSystemMetrics( SM_CXSCREEN );
+      return 8;
    }
 }
 
 int MR_VideoBuffer::GetYPixelMeter()const
 {
    {
-      return 4*GetSystemMetrics( SM_CYSCREEN );
+      return 5;
    }
 }
-
 
 BOOL MR_VideoBuffer::Lock()
 {
@@ -357,12 +309,6 @@ BOOL MR_VideoBuffer::Lock()
 
    ASSERT( mBuffer == NULL );
 
-   if( mIconMode )
-   {
-      lReturnValue = FALSE;
-   }
-
-   
    // Do the lock
    if( lReturnValue )
    {
@@ -418,50 +364,13 @@ void MR_VideoBuffer::Clear( MR_UInt8 pColor )
 void MR_VideoBuffer::EnterIconMode()
 {
    PRINT_LOG( "EnterIconMode" );
-
-   if( !mIconMode )
-   {
-      mIconMode = TRUE;
-
-      /*
-      if( !mFullScreen )
-      {
-         mBeforeIconXRes = 0;
-         mBeforeIconYRes = 0;
-      }
-      else
-      {
-         // mBeforeIconXRes = 0;
-         // mBeforeIconYRes = 0;
-         
-         mBeforeIconXRes = mXRes;
-         mBeforeIconYRes = mYRes;         
-      }
-      */
-   }
 }
 
 void MR_VideoBuffer::ExitIconMode()
 {
    PRINT_LOG( "ExitIconMode" );
 
-   if( mIconMode )
-   {
-      mIconMode = FALSE;
 
-      /*
-      if( mBeforeIconXRes != 0 )
-      {
-         mFullScreen = TRUE;
-         SetVideoMode();
-        
-         
-         // SetFocus( mWindow );
-         // SetVideoMode( mBeforeIconXRes, mBeforeIconYRes );         
-      } 
-      */
-           
-   }
 }
 
 

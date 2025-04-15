@@ -68,8 +68,6 @@ NoMFC::PALETTEENTRY* MR_GetColors( double pGamma, double pIntensity, double pInt
       lReturnValue[ lColorIndex ].peGreen = (MR_UInt8)lGreen;
       lReturnValue[ lColorIndex ].peBlue  = (MR_UInt8)lBlue;
    
-      lReturnValue[ lColorIndex ].peFlags = 0; //PC_EXPLICIT;
-
    }
 
    for( ; lColorIndex < MR_BASIC_COLORS; lColorIndex++ )
@@ -79,8 +77,6 @@ NoMFC::PALETTEENTRY* MR_GetColors( double pGamma, double pIntensity, double pInt
       lReturnValue[ lColorIndex ].peGreen = 255;
       lReturnValue[ lColorIndex ].peBlue  = lColorIndex-15;
    
-      lReturnValue[ lColorIndex ].peFlags = 0; //PC_EXPLICIT;
-
       lColorIndex++;
    }
 
@@ -124,8 +120,6 @@ const NoMFC::PALETTEENTRY& MR_ConvertColor( MR_UInt8 pRed, MR_UInt8 pGreen, MR_U
    lReturnValue.peRed   = (MR_UInt8)lRed;
    lReturnValue.peGreen = (MR_UInt8)lGreen;
    lReturnValue.peBlue  = (MR_UInt8)lBlue;
-
-   lReturnValue.peFlags = 0; //PC_EXPLICIT;
 
    return lReturnValue;
 }

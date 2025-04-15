@@ -1213,7 +1213,7 @@ BOOL MR_GameApp::InitGame()
 
    if( lReturnValue )
    {
-      mVideoBuffer = new MR_VideoBuffer( mMainWindow, mGamma, mContrast, mBrightness );
+      mVideoBuffer = new MR_VideoBuffer( mGamma, mContrast, mBrightness );
    }
 
    if( lReturnValue )

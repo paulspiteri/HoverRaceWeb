@@ -25,7 +25,7 @@ static MR_GameApp *game = NULL;
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
-    if (!SDL_CreateWindowAndRenderer("HoverRace SDL", 320, 200, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
+    if (!SDL_CreateWindowAndRenderer("HoverRace SDL", 640, 400, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
         SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -33,7 +33,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     texture = SDL_CreateTexture(renderer,
         SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING,
-        320, 200);
+        640, 400);
 
     HINSTANCE hInstance = GetModuleHandle(NULL);
     game = new MR_GameApp( hInstance );
@@ -81,7 +81,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_RenderDebugText(renderer, x, y, message);
-    
+
     SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE;

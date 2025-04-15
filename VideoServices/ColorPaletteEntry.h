@@ -9,7 +9,6 @@ namespace NoMFC
       BYTE        peRed;
       BYTE        peGreen;
       BYTE        peBlue;
-      BYTE        peFlags;
    } PALETTEENTRY;
 }
 
