@@ -161,13 +161,6 @@ void MR_SDLGameApp::RefreshView()
    }
 }
 
-
-void MR_SDLGameApp::ReadAssyncInputControler()
-{
-   // TODO
-}
-
-
 struct DialogCallbackContext {
    MR_SDLGameApp* app;
    std::promise<void>* promise;
@@ -268,4 +261,11 @@ void MR_SDLGameApp::DrawBackground()
       }
       lDest+= lDestLineStep;
    }
+}
+
+
+void MR_SDLGameApp::SetControlState(int pState1)
+{
+   ASSERT( mCurrentSession != NULL );
+   mCurrentSession->SetControlState( pState1, NULL );
 }

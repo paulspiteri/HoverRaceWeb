@@ -50,7 +50,7 @@ class MR_SDLGameApp
       BOOL InitGame();
 
       void NewLocalSession();
-      void ReadAssyncInputControler(); // Get the state of the input controler (KDB, joystick, mouse)
       void RefreshView();
       void Simulate();
+      void SetControlState(int pState1);
 };
