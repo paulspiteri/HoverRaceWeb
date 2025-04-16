@@ -12,6 +12,7 @@
 #endif
 
 #include "MR_Types.h"
+#include <cstring>
 
 class MR_BitPack
 {
@@ -21,7 +22,7 @@ class MR_BitPack
 
    public:
       void Clear( int pSize );
-      void MR_BitPack::Set( int pOffset, int pLen, int pPrecision, MR_Int32 pValue );
+      void Set( int pOffset, int pLen, int pPrecision, MR_Int32 pValue );
 
       MR_Int32  Get( int pOffset, int pLen, int pPrecision )const;
       MR_UInt32 Getu( int pOffset, int pLen, int pPrecision )const;

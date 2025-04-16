@@ -23,6 +23,7 @@
 
 #include "ClientSession.h"
 #include "TrackCommonStuff.h"
+#include <cstring>
 
 MR_ClientSession::MR_ClientSession()
                  :mSession( TRUE )
@@ -377,7 +378,7 @@ BOOL MR_ClientSession::GetMessageStack( int pLevel, char* pDest, int pExpiration
       if( ((mMessageStack[ pLevel ].mCreationTime+pExpiration) > time( NULL ))&&(mMessageStack[ pLevel ].mBuffer.length() > 0) )
       {
          lReturnValue = TRUE;
-         strcpy( pDest, mMessageStack[ pLevel ].mBuffer.c_str() );
+         std::strcpy( pDest, mMessageStack[ pLevel ].mBuffer.c_str() );
       }
    }   
 

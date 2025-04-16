@@ -28,6 +28,7 @@
 #include "../ObjFac1/ObjFac1.h"
 
 #include <algorithm>
+#include <cmath>
 
 #define MR_NB_HOVER_MODEL 8
 

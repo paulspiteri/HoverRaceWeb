@@ -65,7 +65,7 @@ template <class pType> class MR_FastFifo:public MR_FastFifoBase< pType >
 {
    public:
       MR_FastFifo<pType>( int pSize ):MR_FastFifoBase<pType>( pSize, new pType[ pSize ] ){};
-      ~MR_FastFifo<pType>()                                                              { delete []mArray; };
+      ~MR_FastFifo<pType>()                                                              { delete []this->mArray; };
 };
 
 

@@ -26,6 +26,8 @@
 #include "../Util/StrRes.h"
 #include "../ObjFac1/ObjFac1.h"
 #include <algorithm>
+#include <cstring>
+#include <cmath>
 
 #define NB_PLAYER_PAGE 4
 #define MR_CHAT_EXPIRATION     20
@@ -1256,7 +1258,7 @@ void MR_Observer::PlaySounds( const MR_Level* pLevel, MR_MainCharacter* pViewing
                double lXDist = pViewingCharacter->mPosition.mX-lElement->mPosition.mX;
                double lYDist = pViewingCharacter->mPosition.mY-lElement->mPosition.mY;
 
-               int lDB = -sqrt( lXDist*lXDist+lYDist*lYDist )/15.0;
+               int lDB = -std::sqrt( lXDist*lXDist+lYDist*lYDist )/15.0;
 
 
                lElement->PlayExternalSounds( lDB, 0 );

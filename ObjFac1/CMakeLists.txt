@@ -18,5 +18,5 @@ add_library(ObjFac1 STATIC
 target_compile_definitions(ObjFac1 PRIVATE
 )
 
-target_link_libraries(ObjFac1 PRIVATE Model Util
+target_link_libraries(ObjFac1 PRIVATE Model Util MainCharacter ObjFacTools
 )
