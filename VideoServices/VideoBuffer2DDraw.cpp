@@ -21,6 +21,7 @@
 //
 
 #include "VideoBuffer.h"
+#include <cstring>
 
 
 void MR_VideoBuffer::DrawPoint( int pX, int pY, MR_UInt8 pColor )

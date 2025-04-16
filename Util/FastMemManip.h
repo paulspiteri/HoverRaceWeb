@@ -43,12 +43,12 @@ inline void MR_LargeMem16Set( MR_UInt16* pDest, MR_UInt16 pValue, int pCount )
    if( pCount > 0 )
    {
       MR_UInt32  lValue = pValue|( pValue<<16);
-      MR_UInt32* lDest  = (MR_UInt32*)(((int)pDest)&~1);
+      MR_UInt32* lDest  = (MR_UInt32*)(((uintptr_t)pDest)&~1);
 
 
       pDest[ pCount-1 ] = pValue;
 
-      if( (int)pDest&1 )
+      if( (uintptr_t)pDest&1 )
       {
          *pDest = pValue; 
          pCount--;

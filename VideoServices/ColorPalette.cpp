@@ -23,6 +23,7 @@
 #include "ColorPalette.h"
 #include "ColorPaletteEntry.h"
 #include <algorithm>
+#include <cmath>
 
 
 // Functions implementation
@@ -40,9 +41,9 @@ NoMFC::PALETTEENTRY* MR_GetColors( double pGamma, double pIntensity, double pInt
       double lBlue;
 
       // Compute the gamma correction
-      lRed   = pIntensityBase + pIntensity*pow( MR_BasicPalette[ lColorIndex ][0],  pGamma );
-      lGreen = pIntensityBase + pIntensity*pow( MR_BasicPalette[ lColorIndex ][1],  pGamma );
-      lBlue  = pIntensityBase + pIntensity*pow( MR_BasicPalette[ lColorIndex ][2],  pGamma );
+      lRed   = pIntensityBase + pIntensity*std::pow( MR_BasicPalette[ lColorIndex ][0],  pGamma );
+      lGreen = pIntensityBase + pIntensity*std::pow( MR_BasicPalette[ lColorIndex ][1],  pGamma );
+      lBlue  = pIntensityBase + pIntensity*std::pow( MR_BasicPalette[ lColorIndex ][2],  pGamma );
 
       // Return in the int domain
       lRed   *= 256;
@@ -93,9 +94,9 @@ const NoMFC::PALETTEENTRY& MR_ConvertColor( MR_UInt8 pRed, MR_UInt8 pGreen, MR_U
    double lBlue;
 
    // Compute the gamma correction
-   lRed   = pIntensityBase + pIntensity*pow( pRed/256.0,   pGamma );
-   lGreen = pIntensityBase + pIntensity*pow( pGreen/256.0, pGamma );
-   lBlue  = pIntensityBase + pIntensity*pow( pBlue/256.0,  pGamma );
+   lRed   = pIntensityBase + pIntensity*std::pow( pRed/256.0,   pGamma );
+   lGreen = pIntensityBase + pIntensity*std::pow( pGreen/256.0, pGamma );
+   lBlue  = pIntensityBase + pIntensity*std::pow( pBlue/256.0,  pGamma );
 
    lRed   *= 256;
    lGreen *= 256;

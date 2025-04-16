@@ -21,6 +21,7 @@
 //
 
 #include "2DViewport.h"
+#include <cstring>
 
 
 MR_2DViewPort::MR_2DViewPort()

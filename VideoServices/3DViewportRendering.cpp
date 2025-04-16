@@ -24,6 +24,7 @@
 #include "../Util/Profiler.h"
 #include "MulDiv.h"
 #include "../Util/nomfc_stdafx.h"
+#include <cstring>
 
 // #pragma optimize( "atw", on )
 

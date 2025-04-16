@@ -22,6 +22,7 @@
 
 
 #include "Sprite.h"
+#include <cstring>
 
 
 MR_Sprite::MR_Sprite()

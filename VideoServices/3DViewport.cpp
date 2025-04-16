@@ -24,6 +24,8 @@
 #include "../Util/FastMemManip.h"
 
 #include "MulDiv.h"
+#include <cmath>
+#include <cstring>
 
 // Methods implementation
 MR_3DViewPort::MR_3DViewPort()
