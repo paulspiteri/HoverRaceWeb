@@ -71,7 +71,7 @@ MR_RecordFileTable::MR_RecordFileTable( int pNbRecords )
    // Initialize the vector
    for( int lCounter = 0; lCounter < pNbRecords; lCounter++ )
    {
-      mRecordList[lCounter] = NULL;
+      mRecordList[lCounter] = 0;
    }
 }
 

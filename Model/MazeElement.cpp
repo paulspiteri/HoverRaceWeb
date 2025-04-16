@@ -21,7 +21,7 @@
 
 #include "MazeElement.h"
 // #include "Shapes.h"
-
+#include <cstring>
 
 // MR_Element default behavior
 

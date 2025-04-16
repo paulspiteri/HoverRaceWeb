@@ -20,6 +20,7 @@
 //
 
 #include <algorithm>
+#include <cmath>
 #include "ShapeCollisions.h"
 #include "../Util/nomfc_stdafx.h"
 

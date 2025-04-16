@@ -20,8 +20,8 @@ DECLARE_HANDLE (HWND);
 
 #define ASSERT(condition) assert(condition)
 
-#define Int32x32To64(a, b)  (((__int64)((long)(a))) * ((__int64)((long)(b))))
-#define Int64ShraMod32(a, b) (((__int64)(a)) >> (b))
+#define Int32x32To64(a, b)  (((int64_t)((long)(a))) * ((int64_t)((long)(b))))
+#define Int64ShraMod32(a, b) (((int64_t)(a)) >> (b))
 
 
 inline void TRACE(const char* msg) 
