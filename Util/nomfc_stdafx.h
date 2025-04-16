@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <stdint.h>
+#include <iostream>
 
 #ifndef _WINDEF_
 using INT = int32_t;
@@ -22,6 +23,10 @@ DECLARE_HANDLE (HWND);
 #define Int32x32To64(a, b)  (((__int64)((long)(a))) * ((__int64)((long)(b))))
 #define Int64ShraMod32(a, b) (((__int64)(a)) >> (b))
 
-#define TRACE              /* TODO */
+
+inline void TRACE(const char* msg) 
+{
+    std::clog << msg << std::endl;
+}
 
 #endif

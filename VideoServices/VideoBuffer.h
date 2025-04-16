@@ -42,9 +42,6 @@ class MR_VideoBuffer
 {   
 
    private:
-      BOOL                 mSpecialWindowMode; // Use a 256 color mode when switching to window mode
-      int                  mSpecialModeXRes;
-      int                  mSpecialModeYRes;
       BOOL                 mModeSettingInProgress;
 
       int                  mXRes;
@@ -69,9 +66,7 @@ class MR_VideoBuffer
 
 
 
-      BOOL  InitDirectDraw();
       void  DeleteInternalSurfaces();
-      void Flip();
 
 
    public:

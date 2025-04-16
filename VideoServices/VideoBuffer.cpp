@@ -24,7 +24,6 @@
 #include "ColorPalette.h"
 #include "ColorPaletteEntry.h"
 
-
 #include "../Util/Profiler.h"
 #include <SDL3/SDL.h>
 
@@ -39,7 +38,6 @@ void PrintLog( const char* pFormat, ... );
 #else
    #define PRINT_LOG          if( FALSE )PrintLog
 #endif
-#define DD_CALL( pFunc )   pFunc
 
 
 
@@ -57,8 +55,6 @@ MR_VideoBuffer::MR_VideoBuffer( double pGamma, double pContrast, double pBrightn
    mGamma      = pGamma;
    mContrast   = pContrast;
    mBrightness = pBrightness;
-
-   mSpecialWindowMode = FALSE;
 }
 
 
@@ -71,28 +67,15 @@ MR_VideoBuffer::~MR_VideoBuffer()
 
 }
 
-
-BOOL MR_VideoBuffer::InitDirectDraw()
-{
-   PRINT_LOG( "InitDirectDraw" );
-
-   BOOL lReturnValue = TRUE;
-
-   // Create a palette
-   CreatePalette(mGamma, mContrast, mBrightness);
-
-   return lReturnValue;
-}
-
 void MR_VideoBuffer::DeleteInternalSurfaces()
 {
    PRINT_LOG( "DeleteInternalSurfaces" );
    TRACE("DeleteInternalSurfaces\n");
 
-   ASSERT( mBuffer == NULL ); // should be unlock
-
    delete []mZBuffer;
    mZBuffer = NULL;
+
+   delete []mBuffer;
    mBuffer  = NULL;
 }
 
@@ -189,49 +172,22 @@ BOOL MR_VideoBuffer::SetVideoMode()
 
    mModeSettingInProgress = TRUE;
 
-   lReturnValue = InitDirectDraw();
+   CreatePalette(mGamma, mContrast, mBrightness);
 
-   if( lReturnValue ) 
-   {
-       DeleteInternalSurfaces();
-   }
-
-   //  commented out for now
-
-   // // Retrieve the window size
-   // if( lReturnValue )
-   // {
-   //    RECT lRect;
-
-   //    lReturnValue = GetClientRect( mWindow, &lRect );
-
-   //    ASSERT( lReturnValue );
-
-   //    mXRes = lRect.right;
-   //    mYRes = lRect.bottom;
-   //    mLineLen = mXRes;
-   // }
+   DeleteInternalSurfaces();
 
    mXRes = 640;
    mYRes = 400;
    mLineLen = 640;
 
+   // Create a local memory ZBuffer
+   // We do not use DirectDrawZBuffer for now
+   ASSERT( mZBuffer == NULL );
+   mZBuffer = new MR_UInt16[ mXRes*mYRes ];
 
-   if( lReturnValue )
-   {
-      // Create a local memory ZBuffer
-      // We do not use DirectDrawZBuffer for now
-      ASSERT( mZBuffer == NULL );
-      mZBuffer = new MR_UInt16[ mXRes*mYRes ];
-
-   }
-
-   if( !lReturnValue )
-   {
-      DeleteInternalSurfaces();
-   }
-
-   // AssignPalette();
+   ASSERT( mBuffer == NULL );
+   mBuffer    = new MR_UInt8[ mXRes*mYRes ];
+   mLineLen   = mXRes;
 
    mModeSettingInProgress = FALSE;
 
@@ -288,14 +244,14 @@ MR_UInt16* MR_VideoBuffer::GetZBuffer()
 int MR_VideoBuffer::GetXPixelMeter()const
 {
    {
-      return 8;
+      return 3 * 1024;
    }
 }
 
 int MR_VideoBuffer::GetYPixelMeter()const
 {
    {
-      return 5;
+      return 4 * 768;
    }
 }
 
@@ -307,15 +263,7 @@ BOOL MR_VideoBuffer::Lock()
 
    BOOL lReturnValue = TRUE;
 
-   ASSERT( mBuffer == NULL );
-
-   // Do the lock
-   if( lReturnValue )
-   {
-      // Debug lock type
-      mBuffer    = new MR_UInt8[ mXRes*mYRes ];
-      mLineLen   = mXRes;
-   }
+   ASSERT( mBuffer != NULL );
 
    return lReturnValue;
 }
@@ -347,11 +295,8 @@ void MR_VideoBuffer::Unlock(/* SDL_Texture* */ void* texture)
    else 
    {
       ASSERT(FALSE);
-      TRACE("Failed to lock texture: %s", SDL_GetError());
+      TRACE("Failed to lock texture");
    }
-
-   delete mBuffer;
-   mBuffer = NULL;
 }
 
 void MR_VideoBuffer::Clear( MR_UInt8 pColor )
