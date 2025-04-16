@@ -320,13 +320,8 @@ BOOL MR_VideoBuffer::Lock()
    return lReturnValue;
 }
 
-void MR_VideoBuffer::Unlock()
+void MR_VideoBuffer::Unlock(/* SDL_Texture* */ void* texture)
 {
-   void* texture = NULL;
-
-
-
-   
    SDL_Texture* sdlTexture = static_cast<SDL_Texture*>(texture);
    void* pixels = nullptr;
    int pitch = 0;

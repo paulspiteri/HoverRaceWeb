@@ -6,6 +6,8 @@
 #include "../Util/Profiler.h"
 #include "../Util/StrRes.h"
 #include "../ObjFac1/ObjFac1.h"
+#include <SDL3/SDL.h>
+#include <future>
 
 // global registration variables
 static BOOL         gKeyFilled        = TRUE;   // disabled demo mode
@@ -19,8 +21,31 @@ MR_SDLGameApp::MR_SDLGameApp(SDL_Texture* texture)
    mVideoBuffer     = NULL;
    mObserver1       = NULL;
    mCurrentSession  = NULL;
-
+   mTexture         = texture;
    mClrScrTodo = 2;
+
+      // Built-in defaults
+   // Controls
+   mMotorOn1   = 1;
+   mRight1     = 5;
+   mLeft1      = 6;
+   mJump1      = 3;
+   mFire1      = 2;
+   mBreak1     = 4;
+   mWeapon1    = 11;
+
+   mMotorOn2   = 38;
+   mRight2     = 18;
+   mLeft2      = 31;
+   mJump2      = 17;
+   mFire2      = 13;
+   mBreak2     = 16;
+   mWeapon2    = 29;
+
+   // Screen
+   mGamma       = 1.2;
+   mContrast    = 0.95;
+   mBrightness  = 0.95;
 
 }
 MR_SDLGameApp::~MR_SDLGameApp()
@@ -120,7 +145,7 @@ void MR_SDLGameApp::RefreshView()
          {
             mVideoBuffer->Clear( lColor++ );
          }
-         mVideoBuffer->Unlock();
+         mVideoBuffer->Unlock(mTexture);
       }
    }  
 
@@ -142,61 +167,83 @@ void MR_SDLGameApp::ReadAssyncInputControler()
    // TODO
 }
 
+
+struct DialogCallbackContext {
+   MR_SDLGameApp* app;
+   std::promise<void>* promise;
+};
+
 void MR_SDLGameApp::NewLocalSession()
 {   
-   // BOOL lSuccess = TRUE;
+   std::promise<void> dialogPromise;
+   std::future<void> dialogFuture = dialogPromise.get_future();
+   DialogCallbackContext context { this, &dialogPromise };
 
-   // // Delete the current session
-   // Clean();
+   SDL_ShowOpenFileDialog([](void* userdata, const char* const* filelist, int filter) 
+      {
+         DialogCallbackContext* context = static_cast<DialogCallbackContext*>(userdata);
+         if (filelist && *filelist) 
+         {
+           context->app->LoadSelectedTrack(filelist[0]);
+         }
+         context->promise->set_value();
+      }, &context, NULL, NULL, 0, NULL, FALSE);
 
-   // // Prompt the user for a maze name
-   // CString lCurrentTrack;
-   // int     lNbLap;
-   // BOOL    lAllowWeapons;
+      dialogFuture.get();
+}
 
-   // lSuccess = MR_SelectTrack( mMainWindow, lCurrentTrack, lNbLap, lAllowWeapons, gKeyFilled );
-   
+void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
+{
+   BOOL lSuccess = TRUE;
 
-   // if( lSuccess )
-   // {
-   //    MR_SoundServer::Init( mMainWindow );
-   //    mObserver1 = MR_Observer::New();
+   // Delete the current session
+   Clean();
 
-   //    // Create the new session
-   //    MR_ClientSession* lCurrentSession = new MR_ClientSession;
+   // Prompt the user for a maze name
+   int     lNbLap = 5;
+   BOOL    lAllowWeapons = TRUE;
+
+   if( lSuccess )
+   {
+      MR_SoundServer::Init( NULL );
+      mObserver1 = MR_Observer::New();
+
+      // Create the new session
+      MR_ClientSession* lCurrentSession = new MR_ClientSession;
 
 
-   //    // Load the selected maze
-   //    if( lSuccess )
-   //    {
-   //       MR_RecordFile* lTrackFile = MR_TrackOpen( mMainWindow, lCurrentTrack, gKeyFilled );
+      // Load the selected maze
+      if( lSuccess )
+      {
+         MR_RecordFile* lTrackFile = new MR_RecordFile();
+         lTrackFile->OpenForRead(trackFile);
+         char* filename = "Unknown Track"; //;std::filesystem::path(trackFile).filename();
+         lSuccess = lCurrentSession->LoadNew( filename, lTrackFile, lNbLap, lAllowWeapons, mVideoBuffer );
+      }
 
-   //       lSuccess = lCurrentSession->LoadNew( lCurrentTrack, lTrackFile, lNbLap, lAllowWeapons, mVideoBuffer );
-   //    }
+      // Create the main character
+      if( lSuccess )
+      {
+         lCurrentSession->SetSimulationTime( -6000 );
+      }
 
-   //    // Create the main character
-   //    if( lSuccess )
-   //    {
-   //       lCurrentSession->SetSimulationTime( -6000 );
-   //    }
+      // Create the main character
+      if( lSuccess )
+      {
+         lSuccess = lCurrentSession->CreateMainCharacter();
+      }
 
-   //    // Create the main character
-   //    if( lSuccess )
-   //    {
-   //       lSuccess = lCurrentSession->CreateMainCharacter();
-   //    }
-
-   //    if( !lSuccess )
-   //    {
-   //       // Clean everytings
-   //       Clean();
-   //       delete lCurrentSession;
-   //    }
-   //    else
-   //    {
-   //       mCurrentSession = lCurrentSession;
-   //    }
-   // }
+      if( !lSuccess )
+      {
+         // Clean everytings
+         Clean();
+         delete lCurrentSession;
+      }
+      else
+      {
+         mCurrentSession = lCurrentSession;
+      }
+   }
 }
 
 void MR_SDLGameApp::DrawBackground()

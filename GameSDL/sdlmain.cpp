@@ -43,30 +43,30 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
     // game->ReadAssyncInputControler();
-     game->Simulate();
-     game->RefreshView();
+    game->Simulate();
+    game->RefreshView();
 
    // SDL_RenderClear(renderer);
     SDL_RenderTexture(renderer, texture, NULL, NULL);
     // SDL_RenderPresent(renderer);
         
-    const char *message = "HoverRace";
-    int w = 0, h = 0;
-    float x, y;
-    const float scale = 2.0f;
+    // const char *message = "HoverRace";
+    // int w = 0, h = 0;
+    // float x, y;
+    // const float scale = 2.0f;
 
-    /* Center the message and scale it up */
-    SDL_GetRenderOutputSize(renderer, &w, &h);
-    SDL_SetRenderScale(renderer, scale, scale);
-    x = ((w / scale) - SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * SDL_strlen(message)) / 2;
-    y = ((h / scale) - SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE) / 2;
+    // /* Center the message and scale it up */
+    // SDL_GetRenderOutputSize(renderer, &w, &h);
+    // SDL_SetRenderScale(renderer, scale, scale);
+    // x = ((w / scale) - SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE * SDL_strlen(message)) / 2;
+    // y = ((h / scale) - SDL_DEBUG_TEXT_FONT_CHARACTER_SIZE) / 2;
 
-    /* Draw the message */
-    // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    // SDL_RenderClear(renderer);
+    // /* Draw the message */
+    // // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    // // SDL_RenderClear(renderer);
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_RenderDebugText(renderer, x, y, message);
+    // SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    // SDL_RenderDebugText(renderer, x, y, message);
 
     SDL_RenderPresent(renderer);
 

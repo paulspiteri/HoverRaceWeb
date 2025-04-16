@@ -98,7 +98,7 @@ class MR_VideoBuffer
 
       // Buffers manipulation
       MR_DllDeclare BOOL Lock();   // Must be called before drawing
-      MR_DllDeclare void Unlock();
+      MR_DllDeclare void Unlock(/* SDL_Texture* */ void* texture);
 
       // Buffer access functions
       MR_DllDeclare int        GetXRes()const;
