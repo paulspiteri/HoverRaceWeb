@@ -79,7 +79,7 @@ class MR_Missile:public MR_FreeElementBase, protected MR_CylinderShape
       void               SetNetState( int pDataLen, const MR_UInt8* pData );
 
       // Sounds 
-      void MR_Missile::PlayExternalSounds( int pDB, int pPan );
+      void PlayExternalSounds( int pDB, int pPan );
 };
 
 #endif
