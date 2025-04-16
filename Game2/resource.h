@@ -1,7 +1,3 @@
-//{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by Game2.rc
-//
 #define IDC_ADD                         3
 #define IDC_DEFAULT                     3
 #define IDC_REGISTER_PAGE               3
