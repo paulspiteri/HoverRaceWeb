@@ -4,9 +4,6 @@ project(HoverRace)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
 
-# Enable MFC globally for all projects
-set(CMAKE_MFC_FLAG 2)  # Use MFC in a shared DLL
-
 set(SDL_STATIC ON CACHE BOOL "Build SDL3 as a static library" FORCE)
 set(SDL_SHARED OFF CACHE BOOL "Disable building SDL3 as a shared library" FORCE)
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
@@ -17,5 +14,4 @@ add_subdirectory(ObjFacTools)
 add_subdirectory(ObjFac1)
 add_subdirectory(VideoServices)
 add_subdirectory(MainCharacter)
-add_subdirectory(Game2)
 add_subdirectory(GameSDL)
