@@ -6,6 +6,7 @@
 
 #ifndef _WINDEF_
 using INT = int32_t;
+using WORD = uint16_t;
 using DWORD = uint32_t;
 using LONG = int32_t;
 using UINT = uint32_t;

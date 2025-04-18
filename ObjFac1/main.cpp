@@ -58,6 +58,11 @@ void ObjFac1RegisterFactory()
    MR_InitModule();
 }
 
+void DeleteObjFac1()
+{
+   MR_CleanModule();
+}
+
 // Functions implementations
 void MR_InitModule()
 {

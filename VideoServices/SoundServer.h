@@ -39,7 +39,7 @@ class MR_ContinuousSound;
 namespace MR_SoundServer
 {   
 
-   MR_DllDeclare BOOL Init( HWND pWindow );
+   MR_DllDeclare BOOL Init();
    MR_DllDeclare void Close();
 
 

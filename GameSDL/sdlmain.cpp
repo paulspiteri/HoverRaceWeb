@@ -13,6 +13,8 @@ static int lControlState = 0;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
+    MR_SoundServer::Init();
+
     if (!SDL_CreateWindowAndRenderer("HoverRace SDL", 640, 400, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
         SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;

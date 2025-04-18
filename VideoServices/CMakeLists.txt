@@ -6,8 +6,7 @@ add_library(VideoServices STATIC
     ColorPalette.cpp         
     ColorTab.cpp                      
     Patch.cpp
-    #SoundServer.cpp          
-    StubSoundServer.cpp
+    SDLSoundServer.cpp
     Sprite.cpp               
     VideoBuffer.cpp          
     VideoBuffer2DDraw.cpp    

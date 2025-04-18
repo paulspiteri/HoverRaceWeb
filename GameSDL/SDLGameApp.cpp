@@ -53,6 +53,7 @@ MR_SDLGameApp::~MR_SDLGameApp()
 {
    Clean();
    MR_DllObjectFactory::Clean( FALSE );
+   DeleteObjFac1();
    MR_SoundServer::Close();
    delete mVideoBuffer;
 }
@@ -205,7 +206,6 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
 
    if( lSuccess )
    {
-      MR_SoundServer::Init( NULL );
       mObserver1 = MR_Observer::New();
 
       // Create the new session
