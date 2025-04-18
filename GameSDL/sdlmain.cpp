@@ -60,7 +60,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
                 case SDLK_DOWN:
                     lControlState |= MR_MainCharacter::eBreakDirection;
                     break;
-                case SDLK_SPACE:
+                case SDLK_UP:
                     lControlState |= MR_MainCharacter::eJump;
                     break;
                 case SDLK_LCTRL:
@@ -89,7 +89,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
                 case SDLK_DOWN:
                     lControlState &= ~MR_MainCharacter::eBreakDirection;
                     break;
-                case SDLK_SPACE:
+                case SDLK_UP:
                     lControlState &= ~MR_MainCharacter::eJump;
                     break;
                 case SDLK_LCTRL:

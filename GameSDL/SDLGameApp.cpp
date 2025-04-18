@@ -8,6 +8,7 @@
 #include "../ObjFac1/ObjFac1.h"
 #include <SDL3/SDL.h>
 #include <future>
+#include <filesystem>
 
 // global registration variables
 static BOOL         gKeyFilled        = TRUE;   // disabled demo mode
@@ -168,21 +169,27 @@ struct DialogCallbackContext {
 
 void MR_SDLGameApp::NewLocalSession()
 {   
-   std::promise<void> dialogPromise;
-   std::future<void> dialogFuture = dialogPromise.get_future();
-   DialogCallbackContext context { this, &dialogPromise };
-
-   SDL_ShowOpenFileDialog([](void* userdata, const char* const* filelist, int filter) 
-      {
-         DialogCallbackContext* context = static_cast<DialogCallbackContext*>(userdata);
-         if (filelist && *filelist) 
+   std::string defaultTrackFile = ".\\Tracks\\ClassicH.trk";
+   if (std::filesystem::exists(defaultTrackFile)) {
+      LoadSelectedTrack(defaultTrackFile.c_str());
+   } 
+   else 
+   {
+      std::promise<void> dialogPromise;
+      std::future<void> dialogFuture = dialogPromise.get_future();
+      DialogCallbackContext context { this, &dialogPromise };
+      SDL_ShowOpenFileDialog([](void* userdata, const char* const* filelist, int filter) 
          {
-           context->app->LoadSelectedTrack(filelist[0]);
-         }
-         context->promise->set_value();
-      }, &context, NULL, NULL, 0, NULL, FALSE);
+            DialogCallbackContext* context = static_cast<DialogCallbackContext*>(userdata);
+            if (filelist && *filelist) 
+            {
+            context->app->LoadSelectedTrack(filelist[0]);
+            }
+            context->promise->set_value();
+         }, &context, NULL, NULL, 0, NULL, FALSE);
 
-      dialogFuture.get();
+         dialogFuture.get();
+   }
 }
 
 void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
@@ -210,9 +217,10 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
       {
          MR_RecordFile* lTrackFile = new MR_RecordFile();
          lTrackFile->OpenForRead(trackFile);
-         char* filename = "Unknown Track"; //;std::filesystem::path(trackFile).filename();
-         lSuccess = lCurrentSession->LoadNew( filename, lTrackFile, lNbLap, lAllowWeapons, mVideoBuffer );
-      }
+         auto trackFileName = std::filesystem::path(trackFile).stem().string();
+         const char* trackTitle = trackFileName.c_str();
+         lSuccess = lCurrentSession->LoadNew(trackTitle, lTrackFile, lNbLap, lAllowWeapons, mVideoBuffer);
+        }
 
       // Create the main character
       if( lSuccess )
