@@ -1,6 +1,7 @@
 #include "SoundServer.h"
-#include <vector>
 #include <SDL3/SDL.h>
+#include <algorithm>
+#include <list>
 
 #define MR_MAX_SOUND_COPY 6
 
@@ -25,9 +26,13 @@ class MR_SoundBuffer
         int mNbCopy;
         SDL_AudioStream* mSoundBuffer[MR_MAX_SOUND_COPY];
 
+        virtual void OnStreamHungry(SDL_AudioStream* stream)
+        {
+        }
+
    public:
-       MR_SoundBuffer(const char* pData, int pNbCopy)
-       {
+        MR_SoundBuffer(const char* pData, int pNbCopy)
+        {
             if(pNbCopy > MR_MAX_SOUND_COPY)
             {
                 ASSERT(FALSE);
@@ -35,7 +40,7 @@ class MR_SoundBuffer
             }
             mNbCopy = pNbCopy;
 
-            mSoundDataLen = *(uint32_t*)pData;
+            mSoundDataLen = (*(uint32_t*)pData) - 4;    /* I cannot explain this -4 but otherwise there is some corrupt popping up at the end of the continuous sound */
             WAVEFORMATEX* lWaveFormat = (WAVEFORMATEX*)(pData + sizeof(mSoundDataLen));
             mSoundData = const_cast<char*>(pData + sizeof(uint32_t) + sizeof(WAVEFORMATEX));
             if (lWaveFormat->wBitsPerSample != 8)
@@ -50,24 +55,30 @@ class MR_SoundBuffer
 
             for(int lCounter = 0; lCounter < mNbCopy; lCounter++)
             {
-                auto audioStream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &sdlAudioSpec, nullptr, nullptr);
-                if (!audioStream) {
+                mSoundBuffer[lCounter] = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &sdlAudioSpec, StreamHungryCallback, this);
+                if (!mSoundBuffer[lCounter]) {
                     SDL_LogError(SDL_LOG_CATEGORY_AUDIO, "SDL_OpenAudioDeviceStream failed: %s", SDL_GetError());
                 }
-                mSoundBuffer[lCounter] = audioStream;
             }
-      }
+        }
 
-         ~MR_SoundBuffer()
-         {
+        static void SDLCALL StreamHungryCallback(void* userdata, SDL_AudioStream* stream, int bytesNeeded, int bytesQueued)
+        {
+            MR_SoundBuffer* soundBuffer = static_cast<MR_SoundBuffer*>(userdata);
+            soundBuffer->OnStreamHungry(stream);
+        }
+
+        ~MR_SoundBuffer()
+        {
             for(int lCounter = 0; lCounter < mNbCopy; lCounter++)
             {
-                if (mSoundBuffer[lCounter]) {
+                if (mSoundBuffer[lCounter]) 
+                {
                     SDL_DestroyAudioStream(mSoundBuffer[lCounter]);
                     mSoundBuffer[lCounter] = nullptr;
                 }
             }
-          }
+        }
 };
 
 class MR_ShortSound : public MR_SoundBuffer
@@ -100,77 +111,168 @@ class MR_ShortSound : public MR_SoundBuffer
 
 class MR_ContinuousSound : public MR_SoundBuffer
 {
+    private:
+        BOOL   mOn[MR_MAX_SOUND_COPY];
+        int    mMaxDB[MR_MAX_SOUND_COPY];
+        double mMaxSpeed[MR_MAX_SOUND_COPY];
+
+        void ResetCumStat()
+        {
+            for( int lCounter = 0; lCounter < mNbCopy; lCounter++ )
+            {
+               mOn[ lCounter ] = FALSE;
+               mMaxSpeed[ lCounter ] = 0;
+               mMaxDB[ lCounter ] = -10000;
+            }
+        }
+
+        void SetParams( int pCopy, int pDB, double pSpeed, int pPan )
+        {
+            if( pCopy >= mNbCopy )
+            {
+                pCopy = mNbCopy-1;
+            }
+
+            if( mSoundBuffer[ pCopy ] != NULL )
+            {
+                // set speed
+                SDL_SetAudioStreamFrequencyRatio(mSoundBuffer[pCopy], pSpeed);
+
+                // set volume
+                // convert decibel value used by old DirectSound to linear value expected by SDL
+                float attenuation_db = pDB / 100.0f;
+                float gain = powf(10.0f, attenuation_db / 20.0f);
+                gain = (gain < 0.0f) ? 0.0f : (gain > 1.0f) ? 1.0f : gain;
+                SDL_SetAudioStreamGain(mSoundBuffer[pCopy], gain);
+            }
+        }
+
+
+    protected:
+        void OnStreamHungry(SDL_AudioStream* stream) override
+        {
+            SDL_PutAudioStreamData(stream, this->mSoundData, this->mSoundDataLen);
+        }
+
     public:
         MR_ContinuousSound(const char* pData, int pNbCopy) 
         : MR_SoundBuffer(pData, pNbCopy)
         {
+            ResetCumStat();
+        }
+
+        void CumPlay(int pCopy, int pDB, double pSpeed)
+        {
+            if( pCopy >= mNbCopy )
+            {
+                pCopy = mNbCopy-1;
+            }
+
+            mOn[ pCopy ]       = TRUE;
+            mMaxDB[ pCopy ]    = std::max( mMaxDB   [ pCopy ], pDB );
+            mMaxSpeed[ pCopy ] = std::max( mMaxSpeed[ pCopy ], pSpeed );
+        }
+
+        inline static std::list<MR_ContinuousSound*> mContinuousSounds;
+
+        void ApplyCumCommand()
+        {
+            for( int lCounter = 0; lCounter < mNbCopy; lCounter++ )
+            {
+                if( mOn[ lCounter ] )
+                {
+                    std::cout << "ApplyCumCommand speed " << mMaxSpeed[ lCounter ] << std::endl;
+                    std::cout << "ApplyCumCommand db" << mMaxDB[ lCounter ] << std::endl;
+                    SetParams( lCounter, mMaxDB[ lCounter ], mMaxSpeed[ lCounter ], 0 );
+                    Restart(lCounter);
+                }
+                else
+                {
+                    Pause(lCounter);
+                }
+            }
+            ResetCumStat();
+        }
+
+        void Restart( int pCopy )
+        {
+            if( pCopy >= mNbCopy )
+            {
+                pCopy = mNbCopy-1;
+            }
+            if (mSoundBuffer[pCopy]) {
+                SDL_ResumeAudioStreamDevice(mSoundBuffer[pCopy]);
+            }
+        }
+
+        void Pause(int pCopy)
+        {
+            if( pCopy >= mNbCopy )
+            {
+               pCopy = mNbCopy-1;
+            }
+         
+            SDL_PauseAudioStreamDevice(mSoundBuffer[pCopy]);
         }
 };
 
 namespace MR_SoundServer
 {
-    std::vector <MR_SoundBuffer*> mSoundBufferList;
-    MR_SoundBuffer* mSoundBuffer = nullptr;
-
-   BOOL Init()
-   {
-    if (!SDL_Init(SDL_INIT_AUDIO)) 
+    BOOL Init()
     {
-        SDL_LogError(SDL_LOG_CATEGORY_AUDIO, "SDL_Init failed: %s", SDL_GetError());
-        return FALSE;
+        if (!SDL_Init(SDL_INIT_AUDIO)) 
+        {
+            SDL_LogError(SDL_LOG_CATEGORY_AUDIO, "SDL_Init failed: %s", SDL_GetError());
+            return FALSE;
+        }
+        return TRUE;
     }
-      return TRUE;
-   }
 
-   void Close()
-   {
-      // Do nothing
-   }
+    MR_ShortSound* CreateShortSound(const char* pData, int pNbCopy)
+    {
+        return new MR_ShortSound(pData, pNbCopy);
+    }
 
-   MR_ShortSound* CreateShortSound(const char* pData, int pNbCopy)
-   {
-        auto soundBuffer = new MR_ShortSound(pData, pNbCopy);
-        mSoundBufferList.push_back(soundBuffer);
-        return soundBuffer;
-   }
-
-   void DeleteShortSound(MR_ShortSound* pSound)
-   {
+    void DeleteShortSound(MR_ShortSound* pSound)
+    {
         delete pSound;
-   }
+    }
 
-   void Play(MR_ShortSound* pSound, int pDB, double pSpeed, int pPan)
-   {
-        pSound->Play();
-   }
+    void Play(MR_ShortSound* pSound, int pDB, double pSpeed, int pPan)
+    {
+        if (pSound != NULL)
+        {
+            pSound->Play();
+        }
+    }
 
-   int GetNbCopy(MR_ShortSound* pSound)
-   {
-      return 0; // TODO 
-   }
+    MR_ContinuousSound* CreateContinuousSound(const char* pData, int pNbCopy)
+    {
+        auto sound =  new MR_ContinuousSound(pData, pNbCopy);
+        MR_ContinuousSound::mContinuousSounds.push_back(sound);
+        return sound;
+    }
 
-   MR_ContinuousSound* CreateContinuousSound(const char* pData, int pNbCopy)
-   {
-        return new MR_ContinuousSound(pData, pNbCopy);
-   }
-
-   void DeleteContinuousSound(MR_ContinuousSound* pSound)
-   {
+    void DeleteContinuousSound(MR_ContinuousSound* pSound)
+    {
+        MR_ContinuousSound::mContinuousSounds.remove(pSound);
         delete pSound;
-   }
+    }
 
-   void Play(MR_ContinuousSound* pSound, int pCopy, int pDB, double pSpeed, int pPan)
-   {
-        // pSound->Play();
-   }
+    void Play(MR_ContinuousSound* pSound, int pCopy, int pDB, double pSpeed, int pPan)
+    {
+        if (pSound != NULL)
+        {
+            pSound->CumPlay( pCopy, pDB, pSpeed );
+        }
+    }
 
-   int GetNbCopy(MR_ContinuousSound* pSound)
-   {
-        return 0; // TODO
-   }
-
-   void ApplyContinuousPlay()
-   {
-   }
+    void ApplyContinuousPlay()
+    {
+        for (auto it = MR_ContinuousSound::mContinuousSounds.begin(); it != MR_ContinuousSound::mContinuousSounds.end(); ++it)
+        {
+            MR_ContinuousSound* mCurrent = *it;
+            mCurrent->ApplyCumCommand();
+        }
+    }
 }
-

@@ -54,7 +54,6 @@ MR_SDLGameApp::~MR_SDLGameApp()
    Clean();
    MR_DllObjectFactory::Clean( FALSE );
    DeleteObjFac1();
-   MR_SoundServer::Close();
    delete mVideoBuffer;
 }
 
