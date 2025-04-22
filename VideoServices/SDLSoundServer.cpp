@@ -2,6 +2,7 @@
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <list>
+#include <cmath>
 
 #define MR_MAX_SOUND_COPY 6
 
