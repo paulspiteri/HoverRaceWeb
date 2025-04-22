@@ -4,12 +4,47 @@
 
 #include "SDLGameApp.h"
 #include <bitset>
+#include <future>
+#include <optional>
+#include <filesystem>
 
 static SDL_Window *window = NULL;
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
 static MR_SDLGameApp *game = NULL;
 static int lControlState = 0;
+
+std::optional<std::string> GetTrack() 
+{
+    std::string defaultTrackFile = "ClassicH.trk";
+    if (std::filesystem::exists(defaultTrackFile))
+    {
+       std::cout << "Selected default track: " << defaultTrackFile << std::endl;
+       return defaultTrackFile.c_str();
+    } 
+    else 
+    {
+        std::cout << "Attempting to choose a track... " << std::endl;
+        std::promise<std::optional<std::string>> dialogPromise;
+        std::future<std::optional<std::string>> dialogFuture = dialogPromise.get_future();
+    
+        SDL_ShowOpenFileDialog([](void* userdata, const char* const* filelist, int filter) 
+        {
+            auto dialogPromise = static_cast<std::promise<std::optional<std::string>>*>(userdata);
+            if (filelist && *filelist && filelist[0][0] != '\0')
+            {
+                std::cout << "Chose track " << filelist[0] << std::endl;
+                dialogPromise->set_value(filelist[0]);
+            } else
+            {
+                std::cout << "Did not select a track file." << std::endl;
+                dialogPromise->set_value(std::nullopt);
+            }
+        }, &dialogPromise, NULL, NULL, 0, NULL, FALSE);
+ 
+        return dialogFuture.get();
+    }
+}
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -29,9 +64,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     game = new MR_SDLGameApp( texture );
     game->InitGame();
     std::cout << "Init Game completed" << std::endl;
-    game->NewLocalSession();
-    std::cout << "New Local Session created" << std::endl;
-    return SDL_APP_CONTINUE;
+    auto track = GetTrack();
+    if(track.has_value()) 
+    {
+        game->LoadSelectedTrack(track.value().c_str());
+        std::cout << "New Local Session created" << std::endl;
+        return SDL_APP_CONTINUE;
+    }
+    return SDL_APP_FAILURE;
 }
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)

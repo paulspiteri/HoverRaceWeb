@@ -39,7 +39,6 @@ class MR_SDLGameApp
 
       void Clean();
       void DrawBackground( );
-      void LoadSelectedTrack(const char* trackFile);
 
    public:
 
@@ -48,8 +47,7 @@ class MR_SDLGameApp
 
       BOOL InitApplication();
       BOOL InitGame();
-
-      void NewLocalSession();
+      void LoadSelectedTrack(const char* trackFile);
       void RefreshView();
       void Simulate();
       void SetControlState(int pState1);

@@ -182,8 +182,6 @@ class MR_ContinuousSound : public MR_SoundBuffer
             {
                 if( mOn[ lCounter ] )
                 {
-                    std::cout << "ApplyCumCommand speed " << mMaxSpeed[ lCounter ] << std::endl;
-                    std::cout << "ApplyCumCommand db" << mMaxDB[ lCounter ] << std::endl;
                     SetParams( lCounter, mMaxDB[ lCounter ], mMaxSpeed[ lCounter ], 0 );
                     Restart(lCounter);
                 }

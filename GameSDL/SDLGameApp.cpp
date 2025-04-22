@@ -7,7 +7,6 @@
 #include "../Util/StrRes.h"
 #include "../ObjFac1/ObjFac1.h"
 #include <SDL3/SDL.h>
-#include <future>
 #include <filesystem>
 
 // global registration variables
@@ -162,39 +161,6 @@ void MR_SDLGameApp::RefreshView()
    }
 }
 
-struct DialogCallbackContext {
-   MR_SDLGameApp* app;
-   std::promise<void>* promise;
-};
-
-void MR_SDLGameApp::NewLocalSession()
-{   
-   std::string defaultTrackFile = "ClassicH.trk";
-   if (std::filesystem::exists(defaultTrackFile))
-   {
-      std::cout << "Loading default track: " << defaultTrackFile << std::endl;
-      LoadSelectedTrack(defaultTrackFile.c_str());
-   } 
-   else 
-   {
-      std::cout << "Attempting to choose a track... " << std::endl;
-      std::promise<void> dialogPromise;
-      std::future<void> dialogFuture = dialogPromise.get_future();
-      DialogCallbackContext context { this, &dialogPromise };
-      SDL_ShowOpenFileDialog([](void* userdata, const char* const* filelist, int filter) 
-         {
-            DialogCallbackContext* context = static_cast<DialogCallbackContext*>(userdata);
-            if (filelist && *filelist) 
-            {
-            context->app->LoadSelectedTrack(filelist[0]);
-            }
-            context->promise->set_value();
-         }, &context, NULL, NULL, 0, NULL, FALSE);
-
-         dialogFuture.get();
-   }
-}
-
 void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
 {
    BOOL lSuccess = TRUE;
@@ -284,5 +250,5 @@ void MR_SDLGameApp::DrawBackground()
 void MR_SDLGameApp::SetControlState(int pState1)
 {
    ASSERT( mCurrentSession != NULL );
-   mCurrentSession->SetControlState( pState1, NULL );
+   mCurrentSession->SetControlState( pState1, 0 );
 }
