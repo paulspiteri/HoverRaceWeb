@@ -25,10 +25,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_TEXTUREACCESS_STREAMING,
         640, 400);
 
+    std::cout << "Created Window and Renderer" << std::endl;
     game = new MR_SDLGameApp( texture );
     game->InitGame();
+    std::cout << "Init Game completed" << std::endl;
     game->NewLocalSession();
-    
+    std::cout << "New Local Session created" << std::endl;
     return SDL_APP_CONTINUE;
 }
 
@@ -73,7 +75,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
                     lControlState |= MR_MainCharacter::eSelectWeapon;
                     break;
             }
-            std::clog << "DOWN " << std::bitset<16>(lControlState) << std::endl;
         }
         else if (event->type == SDL_EVENT_KEY_UP)
         {
@@ -102,7 +103,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
                     lControlState &= ~MR_MainCharacter::eSelectWeapon;
                     break;
             }
-            std::clog << "UP   " << std::bitset<16>(lControlState) << std::endl;
         }
         game->SetControlState(lControlState);
     }

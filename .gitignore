@@ -414,5 +414,5 @@ _deps
 CMakeUserPresets.json
 
 build/
-
+buildweb/
 .vscode/

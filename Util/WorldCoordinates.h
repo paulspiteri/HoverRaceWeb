@@ -22,6 +22,8 @@
 
 #include "MR_Types.h"
 #include "RecordFile.h"
+#include <cmath>
+#include <numbers>
 
 #ifndef WORLD_COORDINATES_H
 #define WORLD_COORDINATES_H
@@ -79,7 +81,21 @@ typedef MR_Int16 MR_Angle;
 
 #define MR_NORMALIZE_ANGLE( pAngle ) ( (MR_Angle) (( 2*MR_2PI+(pAngle) )%MR_2PI) )
 
-#define RAD_2_MR_ANGLE( pAngle ) ((MR_Angle)( ((unsigned int)(pAngle*(double)MR_2PI*0.5/3.1415926536)+MR_2PI)%(unsigned int)MR_2PI ))
+// rewritten due to emscripten precision issue
+inline MR_Angle RAD_2_MR_ANGLE(double radians) 
+{
+   // convert to engine‑units (double)
+   double units = radians * (double(MR_2PI) / (2.0 * std::numbers::pi));
+
+   // round to nearest integer
+   long rounded = std::lround(units);
+
+   // wrap into [0, MR_2PI)
+   rounded %= MR_2PI;
+   if (rounded < 0) rounded += MR_2PI;
+
+   return static_cast<MR_Angle>(rounded);
+}
 
 // Temporal unities
 typedef MR_Int32  MR_SimulationTime; // In 1/1000th of seconds

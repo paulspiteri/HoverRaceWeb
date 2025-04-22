@@ -169,12 +169,15 @@ struct DialogCallbackContext {
 
 void MR_SDLGameApp::NewLocalSession()
 {   
-   std::string defaultTrackFile = ".\\Tracks\\ClassicH.trk";
-   if (std::filesystem::exists(defaultTrackFile)) {
+   std::string defaultTrackFile = "ClassicH.trk";
+   if (std::filesystem::exists(defaultTrackFile))
+   {
+      std::cout << "Loading default track: " << defaultTrackFile << std::endl;
       LoadSelectedTrack(defaultTrackFile.c_str());
    } 
    else 
    {
+      std::cout << "Attempting to choose a track... " << std::endl;
       std::promise<void> dialogPromise;
       std::future<void> dialogFuture = dialogPromise.get_future();
       DialogCallbackContext context { this, &dialogPromise };
@@ -209,16 +212,21 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
 
       // Create the new session
       MR_ClientSession* lCurrentSession = new MR_ClientSession;
-
+      std::cout << "ClientSession created " << std::endl;
 
       // Load the selected maze
       if( lSuccess )
       {
          MR_RecordFile* lTrackFile = new MR_RecordFile();
          lTrackFile->OpenForRead(trackFile);
+         std::cout << "Track file opened" << std::endl;
          auto trackFileName = std::filesystem::path(trackFile).stem().string();
          const char* trackTitle = trackFileName.c_str();
          lSuccess = lCurrentSession->LoadNew(trackTitle, lTrackFile, lNbLap, lAllowWeapons, mVideoBuffer);
+         if (lSuccess) 
+         {
+            std::cout << "Track file loaded" << std::endl;
+         }
         }
 
       // Create the main character
@@ -231,10 +239,12 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
       if( lSuccess )
       {
          lSuccess = lCurrentSession->CreateMainCharacter();
+         std::cout << "Main Character created" << std::endl;
       }
 
       if( !lSuccess )
       {
+         std::cout << "Deleting session due to failure" << std::endl;
          // Clean everytings
          Clean();
          delete lCurrentSession;
