@@ -70,7 +70,6 @@ MR_VideoBuffer::~MR_VideoBuffer()
 void MR_VideoBuffer::DeleteInternalSurfaces()
 {
    PRINT_LOG( "DeleteInternalSurfaces" );
-   TRACE("DeleteInternalSurfaces\n");
 
    delete []mZBuffer;
    mZBuffer = NULL;
@@ -82,7 +81,6 @@ void MR_VideoBuffer::DeleteInternalSurfaces()
 void MR_VideoBuffer::CreatePalette( double pGamma, double pContrast, double pBrightness )
 {
    PRINT_LOG( "CreatePalette" );
-   TRACE("CreatePalette\n");
 
    NoMFC::PALETTEENTRY lPalette[256];
 

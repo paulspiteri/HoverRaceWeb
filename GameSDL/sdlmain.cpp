@@ -49,7 +49,7 @@ std::optional<std::string> GetTrack()
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
     MR_SoundServer::Init();
-
+    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
     if (!SDL_CreateWindowAndRenderer("HoverRace SDL", 640, 400, SDL_WINDOW_RESIZABLE, &window, &renderer)) {
         SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;

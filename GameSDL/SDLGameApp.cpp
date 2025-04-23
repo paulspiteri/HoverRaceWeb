@@ -185,7 +185,6 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
       {
          MR_RecordFile* lTrackFile = new MR_RecordFile();
          lTrackFile->OpenForRead(trackFile);
-         std::cout << "Track file opened" << std::endl;
          auto trackFileName = std::filesystem::path(trackFile).stem().string();
          const char* trackTitle = trackFileName.c_str();
          lSuccess = lCurrentSession->LoadNew(trackTitle, lTrackFile, lNbLap, lAllowWeapons, mVideoBuffer);

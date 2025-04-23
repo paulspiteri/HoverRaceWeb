@@ -19,20 +19,31 @@ typedef struct WAVEFORMATEX
 
 } WAVEFORMATEX;
 
+class MR_SoundBuffer;
+
+struct StreamHungryCallbackData
+{
+    MR_SoundBuffer* soundBuffer;
+    int copyIndex;
+};
+
 class MR_SoundBuffer
 {
+    private:
+        StreamHungryCallbackData callbackData;
+
     protected:
         uint32_t mSoundDataLen;
         const char* mSoundData;
         int mNbCopy;
         SDL_AudioStream* mSoundBuffer[MR_MAX_SOUND_COPY];
 
-        virtual void OnStreamHungry(SDL_AudioStream* stream)
+        virtual void OnStreamHungry(SDL_AudioStream* stream, int copyIndex, int bytesNeeded)
         {
         }
 
    public:
-        MR_SoundBuffer(const char* pData, int pNbCopy)
+        MR_SoundBuffer(const char* pData, int pNbCopy, bool isHungry)
         {
             if(pNbCopy > MR_MAX_SOUND_COPY)
             {
@@ -56,7 +67,9 @@ class MR_SoundBuffer
 
             for(int lCounter = 0; lCounter < mNbCopy; lCounter++)
             {
-                mSoundBuffer[lCounter] = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &sdlAudioSpec, StreamHungryCallback, this);
+                callbackData.soundBuffer = this;
+                callbackData.copyIndex = lCounter;
+                mSoundBuffer[lCounter] = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &sdlAudioSpec, isHungry ? StreamHungryCallback : nullptr, &callbackData);
                 if (!mSoundBuffer[lCounter]) {
                     SDL_LogError(SDL_LOG_CATEGORY_AUDIO, "SDL_OpenAudioDeviceStream failed: %s", SDL_GetError());
                 }
@@ -65,8 +78,8 @@ class MR_SoundBuffer
 
         static void SDLCALL StreamHungryCallback(void* userdata, SDL_AudioStream* stream, int bytesNeeded, int bytesQueued)
         {
-            MR_SoundBuffer* soundBuffer = static_cast<MR_SoundBuffer*>(userdata);
-            soundBuffer->OnStreamHungry(stream);
+            StreamHungryCallbackData* cbData = static_cast<StreamHungryCallbackData*>(userdata);
+            cbData->soundBuffer->OnStreamHungry(stream, cbData->copyIndex, bytesNeeded);
         }
 
         ~MR_SoundBuffer()
@@ -89,7 +102,7 @@ class MR_ShortSound : public MR_SoundBuffer
 
     public:
         MR_ShortSound(const char* pData, int pNbCopy) 
-            : MR_SoundBuffer(pData, pNbCopy)
+            : MR_SoundBuffer(pData, pNbCopy, false)
         {
             mCurrentCopy = 0;
         }
@@ -116,6 +129,7 @@ class MR_ContinuousSound : public MR_SoundBuffer
         BOOL   mOn[MR_MAX_SOUND_COPY];
         int    mMaxDB[MR_MAX_SOUND_COPY];
         double mMaxSpeed[MR_MAX_SOUND_COPY];
+        int    mLooping[MR_MAX_SOUND_COPY];
 
         void ResetCumStat()
         {
@@ -150,16 +164,27 @@ class MR_ContinuousSound : public MR_SoundBuffer
 
 
     protected:
-        void OnStreamHungry(SDL_AudioStream* stream) override
+        void OnStreamHungry(SDL_AudioStream* stream, int copyIndex, int bytesNeeded) override
         {
-            SDL_PutAudioStreamData(stream, this->mSoundData, this->mSoundDataLen);
+            // loop the sound
+            const char* pos = this->mSoundData + this->mLooping[copyIndex];
+            auto sizeput = std::min(this->mSoundDataLen - this->mLooping[copyIndex], static_cast<uint32_t>(bytesNeeded));
+            SDL_PutAudioStreamData(stream, pos, sizeput);
+            this->mLooping[copyIndex] += sizeput;
+            if (this->mLooping[copyIndex] >= this->mSoundDataLen) {
+                this->mLooping[copyIndex] = 0;
+            }
         }
 
     public:
         MR_ContinuousSound(const char* pData, int pNbCopy) 
-        : MR_SoundBuffer(pData, pNbCopy)
+        : MR_SoundBuffer(pData, pNbCopy, true)
         {
             ResetCumStat();
+            for( int lCounter = 0; lCounter < mNbCopy; lCounter++ )
+            {
+               mLooping[ lCounter ] = 0;
+            }
         }
 
         void CumPlay(int pCopy, int pDB, double pSpeed)
