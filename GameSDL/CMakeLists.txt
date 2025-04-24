@@ -9,8 +9,16 @@ target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util Video
 )
 
 if(EMSCRIPTEN)
-    set_target_properties(GameSDL PROPERTIES OUTPUT_NAME "hover" SUFFIX ".html")
-    set_target_properties(GameSDL PROPERTIES LINK_FLAGS "--preload-file ${CMAKE_SOURCE_DIR}\\ObjFac1.dat@ObjFac1.dat --preload-file ${CMAKE_SOURCE_DIR}\\Tracks\\ClassicH.trk@ClassicH.trk")
+    set_target_properties(GameSDL PROPERTIES OUTPUT_NAME "hover"  SUFFIX ".html"   
+    LINK_FLAGS "-s EXPORTED_FUNCTIONS=['_main','_ChangeToTrack'] -s EXPORTED_RUNTIME_METHODS=['ccall']")
+    target_link_options(GameSDL PRIVATE
+    "--shell-file=${CMAKE_SOURCE_DIR}/Emscripten/Hover.html"
+    "--preload-file=${CMAKE_SOURCE_DIR}/ObjFac1.dat@ObjFac1.dat"
+    "--preload-file=${CMAKE_SOURCE_DIR}/Tracks/ClassicH.trk@ClassicH.trk"
+    "--preload-file=${CMAKE_SOURCE_DIR}/Tracks/Steeplechase.trk@Steeplechase.trk"
+    "--preload-file=${CMAKE_SOURCE_DIR}/Tracks/The Alley2.trk@The Alley2.trk"
+    "--preload-file=${CMAKE_SOURCE_DIR}/Tracks/The River.trk@The River.trk"
+  )
 elseif(WIN32)
     if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         target_link_options(GameSDL PRIVATE "/subsystem:windows")

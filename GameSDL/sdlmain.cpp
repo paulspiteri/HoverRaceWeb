@@ -14,9 +14,22 @@ static SDL_Texture *texture = NULL;
 static MR_SDLGameApp *game = NULL;
 static int lControlState = 0;
 
+extern "C" 
+{
+    void ChangeToTrack(const char* trackFile) 
+    {
+        printf("ChangeToTrack: %s\n", trackFile);
+        if (game != nullptr)
+        {
+            game->Clean();
+            game->LoadSelectedTrack(trackFile);
+        }
+    }
+}
+
 std::optional<std::string> GetTrack() 
 {
-    std::string defaultTrackFile = "ClassicH.trk";
+    std::string defaultTrackFile = "Steeplechase.trk";
     if (std::filesystem::exists(defaultTrackFile))
     {
        std::cout << "Selected default track: " << defaultTrackFile << std::endl;
@@ -24,7 +37,7 @@ std::optional<std::string> GetTrack()
     } 
     else 
     {
-        std::cout << "Attempting to choose a track... " << std::endl;
+        std::cout << "Attempting to select a track... " << std::endl;
         std::promise<std::optional<std::string>> dialogPromise;
         std::future<std::optional<std::string>> dialogFuture = dialogPromise.get_future();
     
@@ -33,7 +46,7 @@ std::optional<std::string> GetTrack()
             auto dialogPromise = static_cast<std::promise<std::optional<std::string>>*>(userdata);
             if (filelist && *filelist && filelist[0][0] != '\0')
             {
-                std::cout << "Chose track " << filelist[0] << std::endl;
+                std::cout << "Track selected " << filelist[0] << std::endl;
                 dialogPromise->set_value(filelist[0]);
             } else
             {
@@ -64,11 +77,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     game = new MR_SDLGameApp( texture );
     game->InitGame();
     std::cout << "Init Game completed" << std::endl;
+
+    #ifdef __EMSCRIPTEN__
+        // don't attempt to default a track on web
+        return SDL_APP_CONTINUE;
+    #endif
+
     auto track = GetTrack();
     if(track.has_value()) 
     {
         game->LoadSelectedTrack(track.value().c_str());
-        std::cout << "New Local Session created" << std::endl;
         return SDL_APP_CONTINUE;
     }
     return SDL_APP_FAILURE;

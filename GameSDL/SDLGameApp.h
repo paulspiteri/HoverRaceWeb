@@ -37,14 +37,14 @@ class MR_SDLGameApp
       double mContrast;
       double mBrightness;
 
-      void Clean();
-      void DrawBackground( );
+      void DrawBackground();
 
    public:
 
       MR_SDLGameApp(SDL_Texture* texture);
       ~MR_SDLGameApp();
 
+      void Clean();
       BOOL InitApplication();
       BOOL InitGame();
       void LoadSelectedTrack(const char* trackFile);

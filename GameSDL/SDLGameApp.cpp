@@ -96,14 +96,14 @@ BOOL MR_SDLGameApp::InitGame()
 
 void MR_SDLGameApp::Simulate()
 {
-   ASSERT( mCurrentSession != NULL );
-   mCurrentSession->Process();
+   if (mCurrentSession != nullptr) 
+   {
+      mCurrentSession->Process();
+   }
 }
 
 void MR_SDLGameApp::RefreshView()
 {
-   static int lColor = 0;
-
    // Game processing
    if( mVideoBuffer != NULL )
    {
@@ -143,7 +143,7 @@ void MR_SDLGameApp::RefreshView()
          }
          else
          {
-            mVideoBuffer->Clear( lColor++ );
+            mVideoBuffer->Clear(0);
          }
          mVideoBuffer->Unlock(mTexture);
       }
@@ -217,6 +217,7 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
       else
       {
          mCurrentSession = lCurrentSession;
+         std::cout << "New Local Session created" << std::endl;
       }
    }
 }
@@ -248,6 +249,8 @@ void MR_SDLGameApp::DrawBackground()
 
 void MR_SDLGameApp::SetControlState(int pState1)
 {
-   ASSERT( mCurrentSession != NULL );
-   mCurrentSession->SetControlState( pState1, 0 );
+   if (mCurrentSession != nullptr) 
+   {
+      mCurrentSession->SetControlState( pState1, 0 );
+   }
 }
