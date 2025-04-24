@@ -9,7 +9,7 @@ target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util Video
 )
 
 if(EMSCRIPTEN)
-    set_target_properties(GameSDL PROPERTIES OUTPUT_NAME "hover"  SUFFIX ".html"   
+    set_target_properties(GameSDL PROPERTIES OUTPUT_NAME "index" SUFFIX ".html"   
     LINK_FLAGS "-s EXPORTED_FUNCTIONS=['_main','_ChangeToTrack'] -s EXPORTED_RUNTIME_METHODS=['ccall']")
     target_link_options(GameSDL PRIVATE
     "--shell-file=${CMAKE_SOURCE_DIR}/Emscripten/Hover.html"
