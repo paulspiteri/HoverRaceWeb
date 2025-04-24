@@ -298,7 +298,15 @@ void MR_3DViewPort::RenderAlternateWallSurface( const MR_3DCoordinate& pUpperLef
       lDYTop_4096    = ((lScreenY1Top-lScreenY0Top)*4096)/(lScreenX1-lScreenX0 /*-1*/);
       lDYBottom_4096 = ((lScreenY1Bottom-lScreenY0Bottom)*4096)/(lScreenX1-lScreenX0/*-1*/);
       
-      lRatioVariationPerColumn_16384 = ((lScreenY0Bottom-lScreenY0Top)-(lScreenY1Bottom-lScreenY1Top))*16384/((lScreenY0Bottom-lScreenY0Top)*(lScreenX1-lScreenX0));
+      auto ratioDivisor = (lScreenY0Bottom-lScreenY0Top)*(lScreenX1-lScreenX0);
+      if (ratioDivisor != 0)
+      {
+         lRatioVariationPerColumn_16384 = ((lScreenY0Bottom-lScreenY0Top)-(lScreenY1Bottom-lScreenY1Top))*16384 / ratioDivisor;
+      }
+      else
+      {
+         lRatioVariationPerColumn_16384 = 0;
+      }
    }
    else
    {
