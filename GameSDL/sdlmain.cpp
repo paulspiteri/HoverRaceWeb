@@ -17,7 +17,7 @@
 #include "sokol_log.h"
 #define SOKOL_GFX_IMPL
 #include "sokol_gfx.h"
-#include "triangle-sapp.h"
+#include "quad-sapp.h"
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
@@ -136,26 +136,36 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     std::cout << "Initialized sokol_gfx" << std::endl;
 
     float vertices[] = {
-        // positions            // colors
-        0.0f,  0.5f, 0.5f,     1.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, 0.5f,     0.0f, 1.0f, 0.0f, 1.0f,
-       -0.5f, -0.5f, 0.5f,     0.0f, 0.0f, 1.0f, 1.0f
-   };
+        // positions            colors
+        -0.5f,  0.5f, 0.5f,     1.0f, 0.0f, 0.0f, 1.0f,
+         0.5f,  0.5f, 0.5f,     0.0f, 1.0f, 0.0f, 1.0f,
+         0.5f, -0.5f, 0.5f,     0.0f, 0.0f, 1.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 0.0f, 1.0f,
+    };
 
     sg_buffer_desc buf_desc = {
         .data = SG_RANGE(vertices),
-        .label = "triangle-vertices"
+        .label = "quad-vertices"
     };
     state.bind.vertex_buffers[0] = sg_make_buffer(&buf_desc);
 
-    // create shader from code-generated sg_shader_desc
-    sg_shader shd = sg_make_shader(triangle_shader_desc(sg_query_backend()));
+    uint16_t indices[] = { 0, 1, 2,  0, 2, 3 };
+    sg_buffer_desc index_buf_desc = {
+        .type = SG_BUFFERTYPE_INDEXBUFFER,
+        .data = SG_RANGE(indices),
+        .label = "quad-indices"
+    };
+    state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
 
-    sg_pipeline_desc pipeline_desc {};
-    pipeline_desc.shader = shd;
-    pipeline_desc.label = "triangle-pipeline";
-    pipeline_desc.layout.attrs[ATTR_triangle_position].format = SG_VERTEXFORMAT_FLOAT3;
-    pipeline_desc.layout.attrs[ATTR_triangle_color0].format = SG_VERTEXFORMAT_FLOAT4;
+    sg_shader shd = sg_make_shader(quad_shader_desc(sg_query_backend()));
+
+    sg_pipeline_desc pipeline_desc {
+        .index_type = SG_INDEXTYPE_UINT16,
+        .shader = shd,
+        .label="quad-pipeline",
+        .layout.attrs[ATTR_quad_position].format = SG_VERTEXFORMAT_FLOAT3,
+        .layout.attrs[ATTR_quad_color0].format = SG_VERTEXFORMAT_FLOAT4
+    };
 
     state.pip = sg_make_pipeline(&pipeline_desc);
 
@@ -287,7 +297,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     sg_begin_pass(&pass);
     sg_apply_pipeline(state.pip);
     sg_apply_bindings(&state.bind);
-    sg_draw(0, 3, 1);
+    sg_draw(0, 6, 1);
     sg_end_pass();
     sg_commit();
     SDL_GL_SwapWindow(glWindow);
