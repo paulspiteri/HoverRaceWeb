@@ -5,7 +5,7 @@ add_executable(GameSDL
     sdlmain.cpp
 )
 
-target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3-static
+target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3-static sokol
 )
 
 if(EMSCRIPTEN)
@@ -19,11 +19,16 @@ if(EMSCRIPTEN)
     "--preload-file=${CMAKE_SOURCE_DIR}/Tracks/The Alley2.trk@The Alley2.trk"
     "--preload-file=${CMAKE_SOURCE_DIR}/Tracks/The River.trk@The River.trk"
   )
-elseif(WIN32)
-    if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-        target_link_options(GameSDL PRIVATE "/subsystem:windows")
-    else()
-        target_link_options(GameSDL PRIVATE "-mwindows")
+else()
+    find_package(OpenGL REQUIRED)
+    target_link_libraries(GameSDL PRIVATE OpenGL::GL)
+
+    if(WIN32)
+        if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+            target_link_options(GameSDL PRIVATE "/subsystem:windows")
+        else()
+            target_link_options(GameSDL PRIVATE "-mwindows")
+        endif()
+        set_target_properties(GameSDL PROPERTIES WIN32_EXECUTABLE TRUE)
     endif()
-    set_target_properties(GameSDL PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()

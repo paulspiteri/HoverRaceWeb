@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
 
+add_library(sokol INTERFACE)
+target_include_directories(sokol INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/vendored/sokol)
+
 set(SDL_STATIC ON CACHE BOOL "Build SDL3 as a static library" FORCE)
 set(SDL_SHARED OFF CACHE BOOL "Disable building SDL3 as a shared library" FORCE)
 add_subdirectory(vendored/SDL EXCLUDE_FROM_ALL)
