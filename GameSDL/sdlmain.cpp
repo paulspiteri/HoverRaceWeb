@@ -16,8 +16,11 @@
 #define SOKOL_LOG_IMPL
 #include "sokol_log.h"
 #define SOKOL_GFX_IMPL
+#include "Camera.h"
 #include "sokol_gfx.h"
 #include "quad-sapp.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
@@ -26,6 +29,7 @@ SDL_Window* glWindow = nullptr;
 SDL_GLContext glContext = nullptr;
 MR_SDLGameApp* game = nullptr;
 int lControlState = 0;
+Camera camera(90);
 
 static struct {
     sg_pipeline pip;
@@ -82,9 +86,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
     MR_SoundServer::Init();
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     window = SDL_CreateWindow("HoverRace SDL",
         640, 400,
@@ -100,9 +101,15 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
     glWindow = SDL_CreateWindow("GLHoverRace",
     640, 400,
-    SDL_WINDOW_OPENGL);
+    SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY
+);
     if (!glWindow) {
         SDL_Log("Couldn't create gl window =: %s", SDL_GetError());
         return SDL_APP_FAILURE;
@@ -118,15 +125,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         .func = slog_func
     };
 
-    sg_desc desc = {
-        .environment.defaults = {
-            .color_format = SG_PIXELFORMAT_RGBA8,
-            .depth_format = SG_PIXELFORMAT_DEPTH,
-            .sample_count = 1,
-        },
-        .logger = logger,
-        .disable_validation = false
-    };
+    sg_desc desc = {0};  // Zero-initialize first
+    desc.environment.defaults.color_format = SG_PIXELFORMAT_RGBA8;
+    desc.environment.defaults.depth_format = SG_PIXELFORMAT_DEPTH;
+    desc.environment.defaults.sample_count = 4;
+    desc.logger = logger;
     sg_setup(&desc);
 
     if (!sg_isvalid()) {
@@ -157,16 +160,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     };
     state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
 
-    sg_shader shd = sg_make_shader(quad_shader_desc(sg_query_backend()));
+    const sg_shader_desc* shader_desc = quad_shader_desc(sg_query_backend());
+    sg_shader shd = sg_make_shader(shader_desc);
 
-    sg_pipeline_desc pipeline_desc {
-        .index_type = SG_INDEXTYPE_UINT16,
-        .shader = shd,
-        .label="quad-pipeline",
-        .layout.attrs[ATTR_quad_position].format = SG_VERTEXFORMAT_FLOAT3,
-        .layout.attrs[ATTR_quad_color0].format = SG_VERTEXFORMAT_FLOAT4
-    };
-
+    sg_pipeline_desc pipeline_desc = {};
+    pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
+    pipeline_desc.shader = shd;
+    pipeline_desc.sample_count = 4;
+    pipeline_desc.label = "quad-pipeline";
+    pipeline_desc.layout.attrs[ATTR_quad_position].format = SG_VERTEXFORMAT_FLOAT3;
+    pipeline_desc.layout.attrs[ATTR_quad_color0].format = SG_VERTEXFORMAT_FLOAT4;
     state.pip = sg_make_pipeline(&pipeline_desc);
 
     state.pass_action.colors[0] = {
@@ -237,6 +240,15 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
                 case SDLK_TAB:
                     lControlState |= MR_MainCharacter::eSelectWeapon;
                     break;
+            case SDLK_1:
+                    camera.moveForward(0.1);
+                    break;
+            case SDLK_2:
+                camera.moveRight(0.1);
+                break;
+            case SDLK_3:
+                camera.rotate(1.0f,0);
+                break;
             }
         }
         else if (event->type == SDL_EVENT_KEY_UP)
@@ -282,10 +294,17 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     SDL_RenderTexture(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
 
+    float aspect = 640.0f / 400.0f;
+    glm::mat4 view = camera.getViewMatrix();
+    glm::mat4 projection = camera.getProjectionMatrix(aspect);
+    Uniforms_t uniforms;
+    std::memcpy(uniforms.view, &view, sizeof(view));
+    std::memcpy(uniforms.proj, &projection, sizeof(projection));
+
     sg_swapchain swapchain = {
         .width = 640,
         .height = 400,
-        .sample_count = 1,
+        .sample_count = 4,
         .color_format = SG_PIXELFORMAT_RGBA8,
         .depth_format = SG_PIXELFORMAT_DEPTH,
     };
@@ -297,6 +316,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     sg_begin_pass(&pass);
     sg_apply_pipeline(state.pip);
     sg_apply_bindings(&state.bind);
+    sg_apply_uniforms(0, SG_RANGE(uniforms));
     sg_draw(0, 6, 1);
     sg_end_pass();
     sg_commit();

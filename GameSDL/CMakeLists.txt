@@ -21,7 +21,7 @@ if(EMSCRIPTEN)
   )
 else()
     find_package(OpenGL REQUIRED)
-    target_link_libraries(GameSDL PRIVATE OpenGL::GL)
+    target_link_libraries(GameSDL PRIVATE OpenGL::GL glm::glm)
 
     if(WIN32)
         if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
