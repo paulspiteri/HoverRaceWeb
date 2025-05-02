@@ -35,6 +35,7 @@ static struct {
     sg_pipeline pip;
     sg_bindings bind;
     sg_pass_action pass_action;
+    sg_swapchain swapchain;
 } state;
 
 extern "C" 
@@ -177,6 +178,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         .clear_value={0.0f, 0.0f, 0.0f, 1.0f }
     };
 
+    state.swapchain = {
+        .width = 640,
+        .height = 400,
+        .sample_count = 4,
+        .color_format = SG_PIXELFORMAT_RGBA8,
+        .depth_format = SG_PIXELFORMAT_DEPTH,
+    };
+
     texture = SDL_CreateTexture(renderer,
         SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING,
@@ -301,16 +310,9 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     std::memcpy(uniforms.view, &view, sizeof(view));
     std::memcpy(uniforms.proj, &projection, sizeof(projection));
 
-    sg_swapchain swapchain = {
-        .width = 640,
-        .height = 400,
-        .sample_count = 4,
-        .color_format = SG_PIXELFORMAT_RGBA8,
-        .depth_format = SG_PIXELFORMAT_DEPTH,
-    };
     sg_pass pass = {
         .action = state.pass_action,
-        .swapchain = swapchain
+        .swapchain = state.swapchain
     };
     SDL_GL_MakeCurrent(glWindow, glContext);
     sg_begin_pass(&pass);
@@ -330,5 +332,14 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result)
     delete game;
     game = nullptr;
 
+    sg_destroy_buffer(state.bind.vertex_buffers[0]);
+    sg_destroy_buffer(state.bind.index_buffer);
+    sg_destroy_pipeline(state.pip);
     sg_shutdown();
+
+    SDL_GL_DestroyContext(glContext);
+    SDL_DestroyWindow(glWindow);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+
 }
