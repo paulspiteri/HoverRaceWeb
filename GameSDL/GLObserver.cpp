@@ -3,7 +3,6 @@
 void MR_Observer::RenderGLView( const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage)
 {
     const MR_Level* lLevel = pSession->GetCurrentLevel();
-    mWireFrameView.Clear( 0 );
 
     MR_3DCoordinate lCharacterPos   = pViewingCharacter->mPosition;
     MR_Angle        lOrientation    = pViewingCharacter->mOrientation;
@@ -11,7 +10,7 @@ void MR_Observer::RenderGLView( const MR_ClientSession* pSession, const MR_MainC
 
     lCharacterPos.mZ += 1800; // Fix the eyes at 1m80
 
-    mWireFrameView.SetupCameraPosition(lCharacterPos, lOrientation, mScroll);
+    mGLView.SetCameraPosition(lCharacterPos, lOrientation);
 
     // Draw the walls and features of the visible rooms
     int        lRoomCount;
@@ -33,7 +32,7 @@ void MR_Observer::RenderGLView( const MR_ClientSession* pSession, const MR_MainC
         // Draw the room and all the features
         for( int lCounter2 = -1; lCounter2 < lLevel->GetFeatureCount( lRoom ); lCounter2++ )
         {
-            MR_SectionId lSectionId;
+            MR_SectionId lSectionId{};
             if( lCounter2 == -1 )
             {
                 lSectionId.mType  = MR_SectionId::eRoom;
@@ -85,13 +84,13 @@ void MR_Observer::DrawGLSection( const MR_Level* pLevel, const MR_SectionId& pSe
       // horizontal line (top)
       //mWireFrameView.DrawWFLine( topLineFrom, topLineTo, pColor );
 
-      MR_3DCoordinate bottomLineFrom, BottomLineTo;
+      MR_3DCoordinate bottomLineFrom, bottomLineTo;
       bottomLineFrom.mX = previous.mX;
       bottomLineFrom.mY = previous.mY;
       bottomLineFrom.mZ = lSectionShape->ZMin();
-      BottomLineTo.mX = current.mX;
-      BottomLineTo.mY = current.mY;
-      BottomLineTo.mZ = lSectionShape->ZMin();
+      bottomLineTo.mX = current.mX;
+      bottomLineTo.mY = current.mY;
+      bottomLineTo.mZ = lSectionShape->ZMin();
       // horizontal line (bottom)
       //mWireFrameView.DrawWFLine( bottomLineFrom, BottomLineTo, pColor );
 

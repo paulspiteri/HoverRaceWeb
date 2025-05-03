@@ -11,6 +11,8 @@ add_library(VideoServices STATIC
     VideoBuffer.cpp          
     VideoBuffer2DDraw.cpp
     GL/GLRenderer.cpp
+        GL/GLViewport.cpp
+        GL/GLViewport.h
 )
 
 target_compile_definitions(VideoServices PRIVATE

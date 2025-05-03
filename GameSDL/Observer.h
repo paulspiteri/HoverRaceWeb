@@ -27,7 +27,7 @@
 #include "ClientSession.h"
 #include "../MainCharacter/MainCharacter.h"
 #include "../ObjFacTools/SpriteHandle.h"
-
+#include "../VideoServices/GL/GLViewport.h"
 
 
 class MR_Observer
@@ -49,6 +49,7 @@ class MR_Observer
       MR_2DViewPort m2DDebugView;
       MR_3DViewPort mWireFrameView;
       MR_3DViewPort m3DView;
+      GLViewport    mGLView;
 
       eSplitMode    mSplitMode;
 
@@ -108,7 +109,7 @@ class MR_Observer
       
       // Rendering function
       void RenderDebugDisplay( MR_VideoBuffer* pDest, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
-      void RenderNormalDisplay( MR_VideoBuffer* pDest, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
+      void RenderNormalDisplay( MR_VideoBuffer* pDest, GLRenderer* glRenderer, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
 
       void PlaySounds( const MR_Level* pLevel, MR_MainCharacter* pViewingCharacter );
 

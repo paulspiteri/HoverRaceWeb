@@ -5,8 +5,6 @@
 
 class GLRenderer
 {
-    Camera camera = Camera(90);
-
 public:
     GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext);
     ~GLRenderer();

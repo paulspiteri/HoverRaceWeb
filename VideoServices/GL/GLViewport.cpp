@@ -1,0 +1,24 @@
+#include "GLViewport.h"
+#include <cstring>
+
+GLViewport::GLViewport(): sizeX(0), sizeY(0), camera(90)
+{
+}
+
+void GLViewport::Setup(GLRenderer* pGlRenderer, int pSizeX, int pSizeY)
+{
+    glRenderer = pGlRenderer;
+    sizeX = pSizeX;
+    sizeY = pSizeY;
+}
+
+void GLViewport::SetCameraPosition(const MR_3DCoordinate& pPosition, MR_Angle pOrientation)
+{
+    float aspect = static_cast<float>(sizeX) / static_cast<float>(sizeY);
+
+
+    glm::mat4 view = camera.getViewMatrix();
+    glm::mat4 projection = camera.getProjectionMatrix(aspect);
+    std::memcpy(glRenderer->state.uniforms.view, &view, sizeof(view));
+    std::memcpy(glRenderer->state.uniforms.proj, &projection, sizeof(projection));
+}

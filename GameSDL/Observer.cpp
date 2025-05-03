@@ -1193,7 +1193,7 @@ void MR_Observer::RenderDebugDisplay( MR_VideoBuffer* pDest, const MR_ClientSess
 
 }
 
-void MR_Observer::RenderNormalDisplay( MR_VideoBuffer* pDest, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage )
+void MR_Observer::RenderNormalDisplay( MR_VideoBuffer* pDest, GLRenderer* glRenderer, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage )
 {
    MR_SAMPLE_CONTEXT( "RenderNormalDisplay" );
 
@@ -1231,6 +1231,7 @@ void MR_Observer::RenderNormalDisplay( MR_VideoBuffer* pDest, const MR_ClientSes
 
 
    m3DView.Setup( pDest, lXMargin, lYOffset+lYMargin, lXRes-2*lXMargin, lYRes-2*lYMargin, mApperture );
+   mGLView.Setup(glRenderer, lXRes, lYRes);
 
    // Clear screen if needed
    if( lXMargin > 0 )

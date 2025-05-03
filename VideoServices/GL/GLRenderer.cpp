@@ -6,14 +6,14 @@
 #include "SDL3/SDL_video.h"
 
 GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext)
-: glWindow(glWindow), glContext(glContext), state{}
+    : glWindow(glWindow), glContext(glContext), state{}
 {
     float vertices[] = {
         // positions            colors
-        -0.5f,  0.5f, 0.5f,     1.0f, 0.0f, 0.0f, 1.0f,
-         0.5f,  0.5f, 0.5f,     0.0f, 1.0f, 0.0f, 1.0f,
-         0.5f, -0.5f, 0.5f,     0.0f, 0.0f, 1.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 0.0f, 1.0f,
+        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 1.0f,
     };
 
     sg_buffer_desc buf_desc = {
@@ -26,38 +26,38 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext)
 
     state.bind.vertex_buffers[0] = sg_make_buffer(&buf_desc);
 
-   uint16_t indices[] = { 0, 1, 2,  0, 2, 3 };
-   sg_buffer_desc index_buf_desc = {
-       .type = SG_BUFFERTYPE_INDEXBUFFER,
-       .data = SG_RANGE(indices),
-       .label = "quad-indices"
-   };
-   state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
+    uint16_t indices[] = {0, 1, 2, 0, 2, 3};
+    sg_buffer_desc index_buf_desc = {
+        .type = SG_BUFFERTYPE_INDEXBUFFER,
+        .data = SG_RANGE(indices),
+        .label = "quad-indices"
+    };
+    state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
 
-   const sg_shader_desc* shader_desc = quad_shader_desc(sg_query_backend());
-   sg_shader shd = sg_make_shader(shader_desc);
+    const sg_shader_desc* shader_desc = quad_shader_desc(sg_query_backend());
+    sg_shader shd = sg_make_shader(shader_desc);
 
-   sg_pipeline_desc pipeline_desc = {};
-   pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
-   pipeline_desc.shader = shd;
-   pipeline_desc.sample_count = 4;
-   pipeline_desc.label = "quad-pipeline";
-   pipeline_desc.layout.attrs[ATTR_quad_position].format = SG_VERTEXFORMAT_FLOAT3;
-   pipeline_desc.layout.attrs[ATTR_quad_color0].format = SG_VERTEXFORMAT_FLOAT4;
-   state.pip = sg_make_pipeline(&pipeline_desc);
+    sg_pipeline_desc pipeline_desc = {};
+    pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
+    pipeline_desc.shader = shd;
+    pipeline_desc.sample_count = 4;
+    pipeline_desc.label = "quad-pipeline";
+    pipeline_desc.layout.attrs[ATTR_quad_position].format = SG_VERTEXFORMAT_FLOAT3;
+    pipeline_desc.layout.attrs[ATTR_quad_color0].format = SG_VERTEXFORMAT_FLOAT4;
+    state.pip = sg_make_pipeline(&pipeline_desc);
 
-   state.pass_action.colors[0] = {
-       .load_action=SG_LOADACTION_CLEAR,
-       .clear_value={0.0f, 0.0f, 0.0f, 1.0f }
-   };
+    state.pass_action.colors[0] = {
+        .load_action = SG_LOADACTION_CLEAR,
+        .clear_value = {0.0f, 0.0f, 0.0f, 1.0f}
+    };
 
-   state.swapchain = {
-       .width = 640,
-       .height = 400,
-       .sample_count = 4,
-       .color_format = SG_PIXELFORMAT_RGBA8,
-       .depth_format = SG_PIXELFORMAT_DEPTH,
-   };
+    state.swapchain = {
+        .width = 640,
+        .height = 400,
+        .sample_count = 4,
+        .color_format = SG_PIXELFORMAT_RGBA8,
+        .depth_format = SG_PIXELFORMAT_DEPTH,
+    };
 }
 
 GLRenderer::~GLRenderer()
@@ -70,18 +70,11 @@ GLRenderer::~GLRenderer()
 
 void GLRenderer::Render()
 {
-    float aspect = 640.0f / 400.0f;
-    glm::mat4 view = camera.getViewMatrix();
-    glm::mat4 projection = camera.getProjectionMatrix(aspect);
-
-    std::memcpy(state.uniforms.view, &view, sizeof(view));
-    std::memcpy(state.uniforms.proj, &projection, sizeof(projection));
-
     sg_pass pass = {
         .action = state.pass_action,
         .swapchain = state.swapchain
-   };
-   SDL_GL_MakeCurrent(glWindow, glContext);
+    };
+    SDL_GL_MakeCurrent(glWindow, glContext);
     sg_begin_pass(&pass);
     sg_apply_pipeline(state.pip);
     sg_apply_bindings(&state.bind);
