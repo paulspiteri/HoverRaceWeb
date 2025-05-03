@@ -1,6 +1,7 @@
 add_executable(GameSDL
     ClientSession.cpp
     Observer.cpp
+    GLObserver.cpp
     SDLGameApp.cpp
     sdlmain.cpp
 )

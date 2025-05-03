@@ -1222,6 +1222,7 @@ void MR_Observer::RenderNormalDisplay( MR_VideoBuffer* pDest, const MR_ClientSes
    if( pViewingCharacter->mRoom != -1 )
    {
       Render3DView( pSession, pViewingCharacter, pTime, pBackImage );
+      RenderGLView( pSession, pViewingCharacter, pTime, pBackImage );
    }
 }
 

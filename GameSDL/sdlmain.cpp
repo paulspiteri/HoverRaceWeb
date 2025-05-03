@@ -7,7 +7,7 @@
 #include <future>
 #include <optional>
 #include <filesystem>
-
+#define SOKOL_DEBUG
 #ifdef __EMSCRIPTEN__
     #define SOKOL_GLES3
 #else
@@ -16,11 +16,8 @@
 #define SOKOL_LOG_IMPL
 #include "sokol_log.h"
 #define SOKOL_GFX_IMPL
-#include "Camera.h"
 #include "sokol_gfx.h"
-#include "quad-sapp.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
+#include "../VideoServices/GL/SokolState.h"
 
 SDL_Window* window = nullptr;
 SDL_Renderer* renderer = nullptr;
@@ -29,16 +26,8 @@ SDL_Window* glWindow = nullptr;
 SDL_GLContext glContext = nullptr;
 MR_SDLGameApp* game = nullptr;
 int lControlState = 0;
-Camera camera(90);
 
-static struct {
-    sg_pipeline pip;
-    sg_bindings bind;
-    sg_pass_action pass_action;
-    sg_swapchain swapchain;
-} state;
-
-extern "C" 
+extern "C"
 {
     void ChangeToTrack(const char* trackFile) 
     {
@@ -101,6 +90,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_Log("Couldn't create renderer =: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+    texture = SDL_CreateTexture(renderer,
+    SDL_PIXELFORMAT_ARGB8888,
+    SDL_TEXTUREACCESS_STREAMING,
+    640, 400);
+
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -126,7 +120,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         .func = slog_func
     };
 
-    sg_desc desc = {0};  // Zero-initialize first
+    sg_desc desc = {};
     desc.environment.defaults.color_format = SG_PIXELFORMAT_RGBA8;
     desc.environment.defaults.depth_format = SG_PIXELFORMAT_DEPTH;
     desc.environment.defaults.sample_count = 4;
@@ -139,59 +133,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     }
     std::cout << "Initialized sokol_gfx" << std::endl;
 
-    float vertices[] = {
-        // positions            colors
-        -0.5f,  0.5f, 0.5f,     1.0f, 0.0f, 0.0f, 1.0f,
-         0.5f,  0.5f, 0.5f,     0.0f, 1.0f, 0.0f, 1.0f,
-         0.5f, -0.5f, 0.5f,     0.0f, 0.0f, 1.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 0.0f, 1.0f,
-    };
 
-    sg_buffer_desc buf_desc = {
-        .data = SG_RANGE(vertices),
-        .label = "quad-vertices"
-    };
-    state.bind.vertex_buffers[0] = sg_make_buffer(&buf_desc);
-
-    uint16_t indices[] = { 0, 1, 2,  0, 2, 3 };
-    sg_buffer_desc index_buf_desc = {
-        .type = SG_BUFFERTYPE_INDEXBUFFER,
-        .data = SG_RANGE(indices),
-        .label = "quad-indices"
-    };
-    state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
-
-    const sg_shader_desc* shader_desc = quad_shader_desc(sg_query_backend());
-    sg_shader shd = sg_make_shader(shader_desc);
-
-    sg_pipeline_desc pipeline_desc = {};
-    pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
-    pipeline_desc.shader = shd;
-    pipeline_desc.sample_count = 4;
-    pipeline_desc.label = "quad-pipeline";
-    pipeline_desc.layout.attrs[ATTR_quad_position].format = SG_VERTEXFORMAT_FLOAT3;
-    pipeline_desc.layout.attrs[ATTR_quad_color0].format = SG_VERTEXFORMAT_FLOAT4;
-    state.pip = sg_make_pipeline(&pipeline_desc);
-
-    state.pass_action.colors[0] = {
-        .load_action=SG_LOADACTION_CLEAR,
-        .clear_value={0.0f, 0.0f, 0.0f, 1.0f }
-    };
-
-    state.swapchain = {
-        .width = 640,
-        .height = 400,
-        .sample_count = 4,
-        .color_format = SG_PIXELFORMAT_RGBA8,
-        .depth_format = SG_PIXELFORMAT_DEPTH,
-    };
-
-    texture = SDL_CreateTexture(renderer,
-        SDL_PIXELFORMAT_ARGB8888,
-        SDL_TEXTUREACCESS_STREAMING,
-        640, 400);
-
-    game = new MR_SDLGameApp( texture );
+    game = new MR_SDLGameApp( texture, glWindow, glContext );
     game->InitGame();
     std::cout << "Init Game completed" << std::endl;
 
@@ -249,15 +192,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
                 case SDLK_TAB:
                     lControlState |= MR_MainCharacter::eSelectWeapon;
                     break;
-            case SDLK_1:
-                    camera.moveForward(0.1);
-                    break;
-            case SDLK_2:
-                camera.moveRight(0.1);
-                break;
-            case SDLK_3:
-                camera.rotate(1.0f,0);
-                break;
             }
         }
         else if (event->type == SDL_EVENT_KEY_UP)
@@ -303,27 +237,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     SDL_RenderTexture(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
 
-    float aspect = 640.0f / 400.0f;
-    glm::mat4 view = camera.getViewMatrix();
-    glm::mat4 projection = camera.getProjectionMatrix(aspect);
-    Uniforms_t uniforms;
-    std::memcpy(uniforms.view, &view, sizeof(view));
-    std::memcpy(uniforms.proj, &projection, sizeof(projection));
-
-    sg_pass pass = {
-        .action = state.pass_action,
-        .swapchain = state.swapchain
-    };
-    SDL_GL_MakeCurrent(glWindow, glContext);
-    sg_begin_pass(&pass);
-    sg_apply_pipeline(state.pip);
-    sg_apply_bindings(&state.bind);
-    sg_apply_uniforms(0, SG_RANGE(uniforms));
-    sg_draw(0, 6, 1);
-    sg_end_pass();
-    sg_commit();
-    SDL_GL_SwapWindow(glWindow);
-
     return SDL_APP_CONTINUE;
 }
 
@@ -332,14 +245,8 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result)
     delete game;
     game = nullptr;
 
-    sg_destroy_buffer(state.bind.vertex_buffers[0]);
-    sg_destroy_buffer(state.bind.index_buffer);
-    sg_destroy_pipeline(state.pip);
-    sg_shutdown();
-
     SDL_GL_DestroyContext(glContext);
     SDL_DestroyWindow(glWindow);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-
 }

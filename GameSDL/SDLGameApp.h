@@ -4,13 +4,17 @@
 #include "ClientSession.h"
 #include <SDL3/SDL.h>
 
+#include "../VideoServices/GL/GLRenderer.h"
+
 class MR_SDLGameApp
 {   
    private:
       static MR_SDLGameApp* This; // unique instance pointer
-    
+      SDL_Window*              mGLWindow;
+      SDL_GLContext            mGLContext;
       SDL_Texture*             mTexture;
       MR_VideoBuffer*          mVideoBuffer;
+      GLRenderer*              mGLRenderer;
       MR_Observer*             mObserver1;
       MR_ClientSession*        mCurrentSession;
 
@@ -41,7 +45,7 @@ class MR_SDLGameApp
 
    public:
 
-      MR_SDLGameApp(SDL_Texture* texture);
+      MR_SDLGameApp(SDL_Texture* texture, SDL_Window* glWindow, SDL_GLContext glContext);
       ~MR_SDLGameApp();
 
       void Clean();

@@ -15,16 +15,18 @@ static BOOL         gKeyFilled        = TRUE;   // disabled demo mode
 MR_SDLGameApp* MR_SDLGameApp::This;
 
 
-MR_SDLGameApp::MR_SDLGameApp(SDL_Texture* texture)
+MR_SDLGameApp::MR_SDLGameApp(SDL_Texture* texture, SDL_Window* glWindow, SDL_GLContext glContext)
 {
    This             = this;
    mVideoBuffer     = NULL;
    mObserver1       = NULL;
    mCurrentSession  = NULL;
+   mGLWindow = glWindow;
+   mGLContext = glContext;
    mTexture         = texture;
    mClrScrTodo = 2;
 
-      // Built-in defaults
+   // Built-in defaults
    // Controls
    mMotorOn1   = 1;
    mRight1     = 5;
@@ -48,12 +50,14 @@ MR_SDLGameApp::MR_SDLGameApp(SDL_Texture* texture)
    mBrightness  = 0.95;
 
 }
+
 MR_SDLGameApp::~MR_SDLGameApp()
 {
    Clean();
    MR_DllObjectFactory::Clean( FALSE );
    DeleteObjFac1();
    delete mVideoBuffer;
+   delete mGLRenderer;
 }
 
 void MR_SDLGameApp::Clean()
@@ -90,6 +94,8 @@ BOOL MR_SDLGameApp::InitGame()
    {
        mVideoBuffer->SetVideoMode();
    }
+
+   mGLRenderer = new GLRenderer(mGLWindow, mGLContext);
 
    return lReturnValue;
 }
@@ -147,7 +153,12 @@ void MR_SDLGameApp::RefreshView()
          }
          mVideoBuffer->Unlock(mTexture);
       }
-   }  
+   }
+
+   if (mGLRenderer)
+   {
+      mGLRenderer->Render();
+   }
 
    // Sound refresh
    if( mCurrentSession != NULL )

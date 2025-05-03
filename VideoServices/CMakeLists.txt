@@ -9,12 +9,14 @@ add_library(VideoServices STATIC
     SDLSoundServer.cpp
     Sprite.cpp               
     VideoBuffer.cpp          
-    VideoBuffer2DDraw.cpp    
+    VideoBuffer2DDraw.cpp
+    GL/GLRenderer.cpp
 )
 
 target_compile_definitions(VideoServices PRIVATE
     MR_VIDEO_SERVICES
 )
 
-target_link_libraries(VideoServices PRIVATE ColorTools Util SDL3::SDL3-static
+find_package(OpenGL REQUIRED)
+target_link_libraries(VideoServices PRIVATE ColorTools Util SDL3::SDL3-static OpenGL::GL sokol glm::glm
 )
