@@ -394,37 +394,60 @@ void MR_Observer::DrawWFSection( const MR_Level* pLevel, const MR_SectionId& pSe
    // Draw the contour
 
    int lVertexCount = lSectionShape->VertexCount();
-   MR_3DCoordinate lP0;
-   MR_3DCoordinate lP1;
-
-   lP1.mX = lSectionShape->X( lVertexCount-1 );
-   lP1.mY = lSectionShape->Y( lVertexCount-1 );
+   MR_3DCoordinate previous;
+   previous.mX = lSectionShape->X( lVertexCount-1 );
+   previous.mY = lSectionShape->Y( lVertexCount-1 );
 
    for( int lVertex = 0; lVertex < lVertexCount; lVertex++ )
    {
-      MR_3DCoordinate lP0Top;
+      MR_3DCoordinate current;
+      current.mX = lSectionShape->X( lVertex );
+      current.mY = lSectionShape->Y( lVertex );
 
-      lP0.mX = lSectionShape->X( lVertex );
-      lP0.mY = lSectionShape->Y( lVertex );
+      MR_3DCoordinate topLineFrom, topLineTo;
+      topLineFrom.mX = previous.mX;
+      topLineFrom.mY = previous.mY;
+      topLineFrom.mZ = lSectionShape->ZMax();
+      topLineTo.mX = current.mX;
+      topLineTo.mY = current.mY;
+      topLineTo.mZ = lSectionShape->ZMax();
+      // horizontal line (top)
+      mWireFrameView.DrawWFLine( topLineFrom, topLineTo, pColor );
 
+      MR_3DCoordinate bottomLineFrom, BottomLineTo;
+      bottomLineFrom.mX = previous.mX;
+      bottomLineFrom.mY = previous.mY;
+      bottomLineFrom.mZ = lSectionShape->ZMin();
+      BottomLineTo.mX = current.mX;
+      BottomLineTo.mY = current.mY;
+      BottomLineTo.mZ = lSectionShape->ZMin();
+      // horizontal line (bottom)
+      mWireFrameView.DrawWFLine( bottomLineFrom, BottomLineTo, pColor );
 
-      lP0.mZ    = lSectionShape->ZMax();
-      lP1.mZ    = lP0.mZ;
-      lP0Top    = lP0;
+      MR_3DCoordinate rightLineFrom, rightLineTo;
+      rightLineFrom.mX = previous.mX;
+      rightLineFrom.mY = previous.mY;
+      rightLineFrom.mZ = lSectionShape->ZMax();
+      rightLineTo.mX = previous.mX;
+      rightLineTo.mY = previous.mY;
+      rightLineTo.mZ = lSectionShape->ZMin();
+      // vertical line (right)
+      mWireFrameView.DrawWFLine( rightLineFrom, rightLineTo, pColor );
 
-      mWireFrameView.DrawWFLine( lP0, lP1, pColor );
+      MR_3DCoordinate leftLineFrom, leftLineTo;
+      leftLineFrom.mX = current.mX;
+      leftLineFrom.mY = current.mY;
+      leftLineFrom.mZ = lSectionShape->ZMax();
+      leftLineTo.mX = current.mX;
+      leftLineTo.mY = current.mY;
+      leftLineTo.mZ = lSectionShape->ZMin();
+      // vertical line (left)
+      mWireFrameView.DrawWFLine( leftLineFrom, leftLineTo, pColor );
 
-      lP0.mZ = lSectionShape->ZMin();
-      lP1.mZ = lP0.mZ;
-
-      mWireFrameView.DrawWFLine( lP0, lP1, pColor );
-      mWireFrameView.DrawWFLine( lP0, lP0Top, pColor );
-
-      lP1 = lP0;
+      previous = current;
    }
 
    delete lSectionShape;
-
 }
 
 void MR_Observer::Render3DView( const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage )
