@@ -1158,7 +1158,7 @@ void MR_Observer::RenderFloorOrCeiling( const MR_Level* pLevel, const MR_Section
 }
 
 
-void MR_Observer::RenderDebugDisplay( MR_VideoBuffer* pDest, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage )
+void MR_Observer::RenderDebugDisplay( MR_VideoBuffer* pDest, GLRenderer* glRenderer, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage )
 {
    int lXRes    = pDest->GetXRes();
    int lYRes    = pDest->GetYRes();
@@ -1181,6 +1181,7 @@ void MR_Observer::RenderDebugDisplay( MR_VideoBuffer* pDest, const MR_ClientSess
    mWireFrameView.Setup( pDest, 0,       lYOffset        , lXRes/2, lYRes/2, mApperture );
    m3DView.Setup(        pDest, 0,       lYOffset+lYRes/2, lXRes/2, lYRes/2, mApperture );
    m2DDebugView.Setup(   pDest, lXRes/2, lYOffset,         lXRes/2, lYRes );
+   mGLView.Setup(glRenderer, lXRes, lYRes);
 
    if( pViewingCharacter->mRoom != -1 )
    {
@@ -1189,6 +1190,7 @@ void MR_Observer::RenderDebugDisplay( MR_VideoBuffer* pDest, const MR_ClientSess
       Render2DDebugView( pDest, lLevel, pViewingCharacter );
       RenderWireFrameView(      lLevel, pViewingCharacter );
       Render3DView(             pSession, pViewingCharacter, pTime, pBackImage );
+      RenderGLView( pSession, pViewingCharacter, pTime, pBackImage );
    }
 
 }

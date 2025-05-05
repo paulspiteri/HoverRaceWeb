@@ -4,12 +4,12 @@ layout(binding = 0) uniform Uniforms {
     mat4 proj;
 };
 
-in vec4 position;
+in ivec4 position;
 in vec4 color0;
 out vec4 color;
 
 void main() {
-    gl_Position = proj * view * position;
+    gl_Position = proj * view * vec4(position);
     color = color0;
 }
 @end

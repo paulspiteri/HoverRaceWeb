@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+
 #include "sokol_gfx.h"
 #include "quad-sapp.h"
 
@@ -10,3 +12,8 @@ struct Sokol_State {
 
     Uniforms_t uniforms;
 };
+
+template<typename T>
+sg_range make_sg_range(const std::vector<T>& vec) {
+    return { .ptr = vec.data(), .size = vec.size() * sizeof(T) };
+}

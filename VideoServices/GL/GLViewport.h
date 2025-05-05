@@ -1,4 +1,6 @@
 #pragma once
+#include <vector>
+
 #include "Camera.h"
 #include "GLRenderer.h"
 #include "../../Util/WorldCoordinates.h"
@@ -6,11 +8,13 @@
 class GLViewport
 {
     int sizeX, sizeY;
-    Camera camera;
+    Camera camera = Camera(90);
     GLRenderer* glRenderer{};
 
 public:
     GLViewport();
     void Setup(GLRenderer* pGlRenderer, int pSizeX, int pSizeY);
     void SetCameraPosition(const MR_3DCoordinate& pPosition, MR_Angle pOrientation);
+
+    void SetWallVertices(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& vertexIndexes) const;
 };

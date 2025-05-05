@@ -76,7 +76,7 @@ class MR_Observer
       void RenderWireFrameView( const MR_Level* pLevel, const MR_MainCharacter* pViewingCharacter );
       void Render3DView(        const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
       void RenderGLView(        const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
-      void DrawGLSection(const MR_Level* pLevel, const MR_SectionId& pSectionId);
+      void DrawGLSection(const MR_Level* pLevel, const MR_SectionId& pSectionId, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdx) const;
 
       void DrawWFSection       ( const MR_Level* pLevel, const MR_SectionId& pSectionId, MR_UInt8 pColor );
       void RenderRoomWalls     ( const MR_Level* pLevel, int pRoomId, MR_SimulationTime pTime );
@@ -108,7 +108,7 @@ class MR_Observer
       void SetSplitMode( eSplitMode pMode );
       
       // Rendering function
-      void RenderDebugDisplay( MR_VideoBuffer* pDest, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
+      void RenderDebugDisplay( MR_VideoBuffer* pDest, GLRenderer* glRenderer, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
       void RenderNormalDisplay( MR_VideoBuffer* pDest, GLRenderer* glRenderer, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
 
       void PlaySounds( const MR_Level* pLevel, MR_MainCharacter* pViewingCharacter );

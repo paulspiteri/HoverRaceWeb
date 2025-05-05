@@ -8,31 +8,42 @@
 GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext)
     : glWindow(glWindow), glContext(glContext), state{}
 {
-    float vertices[] = {
-        // positions            colors
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f,
-        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
-        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
-        -0.5f, -0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 1.0f,
-    };
-
-    sg_buffer_desc buf_desc = {
-        .size = sizeof(vertices),
-        .type = SG_BUFFERTYPE_VERTEXBUFFER,
-        .usage = SG_USAGE_IMMUTABLE,
-        .data = SG_RANGE(vertices),
-        .label = "quad-vertices"
-    };
-
-    state.bind.vertex_buffers[0] = sg_make_buffer(&buf_desc);
-
-    uint16_t indices[] = {0, 1, 2, 0, 2, 3};
-    sg_buffer_desc index_buf_desc = {
-        .type = SG_BUFFERTYPE_INDEXBUFFER,
-        .data = SG_RANGE(indices),
-        .label = "quad-indices"
-    };
-    state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
+    // float vertices[] = {
+    //     // positions            colors
+    //     -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 1.0f,
+    //     0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f,
+    //     0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f,
+    //     -0.5f, -0.5f, 0.5f, 1.0f, 1.0f, 0.0f, 1.0f,
+    // };
+    // Vertex vertices[] = {
+    //    makeVertex(-10.5, 10.5,10.5, 1.0f,0.0f),
+    //     makeVertex(10.5, 10.5,10.5),
+    //    makeVertex(10.5, -10.5,10.5,0,0,1.0f),
+    //    makeVertex(-10.5, -10.5,10.5,0,0,1.0f),
+    // };
+    // Vertex vertices[] = {
+    //     makeVertex(364932, 40639,4000),
+    //     makeVertex(364932, 40639,0),
+    //     makeVertex(362498, 71283,4000),
+    //     makeVertex(362498, 71283,0),
+    //  };
+    // sg_buffer_desc buf_desc = {
+    //     .size = sizeof(vertices),
+    //     .type = SG_BUFFERTYPE_VERTEXBUFFER,
+    //     .usage = SG_USAGE_IMMUTABLE,
+    //     .data = SG_RANGE(vertices),
+    //     .label = "quad-vertices"
+    // };
+    //
+    // state.bind.vertex_buffers[0] = sg_make_buffer(&buf_desc);
+    //
+    // uint16_t indices[] = {0, 1, 2, 1, 2, 3};
+    // sg_buffer_desc index_buf_desc = {
+    //     .type = SG_BUFFERTYPE_INDEXBUFFER,
+    //     .data = SG_RANGE(indices),
+    //     .label = "quad-indices"
+    // };
+    // state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
 
     const sg_shader_desc* shader_desc = quad_shader_desc(sg_query_backend());
     sg_shader shd = sg_make_shader(shader_desc);
@@ -42,8 +53,9 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext)
     pipeline_desc.shader = shd;
     pipeline_desc.sample_count = 4;
     pipeline_desc.label = "quad-pipeline";
-    pipeline_desc.layout.attrs[ATTR_quad_position].format = SG_VERTEXFORMAT_FLOAT3;
+    pipeline_desc.layout.attrs[ATTR_quad_position].format = SG_VERTEXFORMAT_INT3;
     pipeline_desc.layout.attrs[ATTR_quad_color0].format = SG_VERTEXFORMAT_FLOAT4;
+    pipeline_desc.cull_mode = SG_CULLMODE_NONE;                                     // CULLING DISABLED
     state.pip = sg_make_pipeline(&pipeline_desc);
 
     state.pass_action.colors[0] = {
@@ -68,7 +80,7 @@ GLRenderer::~GLRenderer()
     sg_shutdown();
 }
 
-void GLRenderer::Render()
+void GLRenderer::Render() const
 {
     sg_pass pass = {
         .action = state.pass_action,
