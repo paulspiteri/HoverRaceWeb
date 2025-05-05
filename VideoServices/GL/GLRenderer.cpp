@@ -86,12 +86,13 @@ void GLRenderer::Render() const
         .action = state.pass_action,
         .swapchain = state.swapchain
     };
+
     SDL_GL_MakeCurrent(glWindow, glContext);
     sg_begin_pass(&pass);
     sg_apply_pipeline(state.pip);
     sg_apply_bindings(&state.bind);
     sg_apply_uniforms(0, SG_RANGE(state.uniforms));
-    sg_draw(0, 6, 1);
+    sg_draw(0, state.wallVertexCount, 1);
     sg_end_pass();
     sg_commit();
     SDL_GL_SwapWindow(glWindow);

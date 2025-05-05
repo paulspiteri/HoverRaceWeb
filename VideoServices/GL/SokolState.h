@@ -11,6 +11,8 @@ struct Sokol_State {
     sg_swapchain swapchain;
 
     Uniforms_t uniforms;
+
+    size_t wallVertexCount;
 };
 
 template<typename T>

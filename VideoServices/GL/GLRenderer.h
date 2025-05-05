@@ -12,7 +12,7 @@ struct Vertex
 inline Vertex makeVertex(int32_t x, int32_t y, int32_t z, float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.f)
 {
     return Vertex{
-        .position = {x,  z,y,},
+        .position = {x, z, y,},
         .color = {r, g, b, a}
     };
     return Vertex{
