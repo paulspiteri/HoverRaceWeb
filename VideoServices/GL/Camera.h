@@ -13,7 +13,7 @@ class Camera
 
 public:
     explicit Camera(float fovDegrees) :
-        position(glm::vec3(0.0f, 0.0f, 60.0f)),
+        position(glm::vec3(0.0f, 0.0f, 0.0f)),
         front(glm::vec3(0.0f, 0.0f, -1.0f)),
         up(glm::vec3(0.0f, 1.0f, 0.0f)),
         fov(fovDegrees)
@@ -22,10 +22,6 @@ public:
 
     glm::mat4 getViewMatrix() const
     {
-        std::cout << "Camera pos: " << position.x << ", " << position.y << ", " << position.z << "\n";
-        std::cout << "Front: " << front.x << ", " << front.y << ", " << front.z << "\n";
-        std::cout << "Up: " << up.x << ", " << up.y << ", " << up.z << "\n";
-
         return glm::lookAt(position, position + front, up);
     }
 
@@ -47,22 +43,6 @@ public:
     float getFov() const { return fov; }
 
     void setPosition(const glm::vec3& pos) { position = pos; }
-    //
-    // void moveForward(float distance)
-    // {
-    //     position += front * distance;
-    // }
-    //
-    // void moveRight(float distance)
-    // {
-    //     glm::vec3 right = glm::normalize(glm::cross(front, up));
-    //     position += right * distance;
-    // }
-    //
-    // void moveUp(float distance)
-    // {
-    //     position += up * distance;
-    // }
 
     void rotate(float yaw)
     {

@@ -58,13 +58,13 @@ void MR_Observer::DrawGLSection(const MR_Level* pLevel, const MR_SectionId& pSec
 
     int lVertexCount = lSectionShape->VertexCount();
 
-    vertices.push_back(SwapYZ(makeVertex(lSectionShape->X(lVertexCount-1 ), lSectionShape->Y(lVertexCount-1 ), lSectionShape->ZMax(), 1,0,0)));
     vertices.push_back(SwapYZ(makeVertex(lSectionShape->X(lVertexCount-1 ), lSectionShape->Y(lVertexCount-1), lSectionShape->ZMin())));
+    vertices.push_back(SwapYZ(makeVertex(lSectionShape->X(lVertexCount-1 ), lSectionShape->Y(lVertexCount-1 ), lSectionShape->ZMax(), 1,0,0)));
 
     for (int lVertex = 0; lVertex < lVertexCount; lVertex++)
     {
-        vertices.push_back(SwapYZ(makeVertex(lSectionShape->X(lVertex), lSectionShape->Y(lVertex), lSectionShape->ZMax(),1,0,0)));
         vertices.push_back(SwapYZ(makeVertex(lSectionShape->X(lVertex), lSectionShape->Y(lVertex), lSectionShape->ZMin())));
+        vertices.push_back(SwapYZ(makeVertex(lSectionShape->X(lVertex), lSectionShape->Y(lVertex), lSectionShape->ZMax(),1,0,0)));
         uint16_t latestVertexIdx = vertices.size() - 1;
 
         vertexIdxs.push_back(latestVertexIdx - 3);
