@@ -20,7 +20,7 @@ void GLViewport::Setup(GLRenderer* pGlRenderer, int pSizeX, int pSizeY)
 
 void GLViewport::SetCameraPosition(const MR_3DCoordinate& pPosition, MR_Angle pOrientation)
 {
-    camera.setPosition(glm::vec3(pPosition.mX, pPosition.mZ, pPosition.mY));
+    camera.setPosition(SwapYZ(glm::vec3(pPosition.mX, pPosition.mY, pPosition.mZ)));
 
     float orientationYaw = MR_ANGLE_TO_DEGREES(pOrientation);
     camera.rotate(orientationYaw);
