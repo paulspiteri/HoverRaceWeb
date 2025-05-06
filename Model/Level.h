@@ -66,7 +66,7 @@ class MR_DllDeclare  MR_Level
    public:
       enum { eNonClassified  = -1, eMustBeDeleted = -2 };
 
-   protected: 
+
 
       // Class pre-declaration
       class Section;
@@ -96,7 +96,6 @@ class MR_DllDeclare  MR_Level
             MR_Int32  SideLen( int pIndex )const;
             
       };
-
 
       // Private structures
       
@@ -141,6 +140,7 @@ class MR_DllDeclare  MR_Level
             void SerializeStructure(  NoMFC::CArchive& pArchive );
       };
 
+   public:
       class MR_DllDeclare Room: public Section
       {
          public:
@@ -196,6 +196,7 @@ class MR_DllDeclare  MR_Level
 
       };
 
+   protected:
       class FreeElement
       {
          public:
@@ -267,6 +268,10 @@ class MR_DllDeclare  MR_Level
 
       // Strucre Interrocation functions
       int GetRoomCount()const;
+      Room* GetRoom(int pRoomId) const
+      {
+         return &mRoomList[pRoomId];
+      }
 
       // Starting pos related stuff
       int                    GetPlayerCount()const;

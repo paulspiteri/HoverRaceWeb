@@ -1,4 +1,5 @@
 #include "Observer.h"
+#include "../Model/Level.h"
 
 void MR_Observer::RenderGLView(const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter,
                                MR_SimulationTime pTime, const MR_UInt8* pBackImage)
@@ -8,10 +9,10 @@ void MR_Observer::RenderGLView(const MR_ClientSession* pSession, const MR_MainCh
     MR_Angle lOrientation = pViewingCharacter->mOrientation;
 
     int lDist = 3400;
-    if( pTime < -3000 )
+    if (pTime < -3000)
     {
-        int lFactor = (-pTime-3000)*2/3;
-        int rotateMRDegrees = lFactor*MR_2PI/11000; // some fraction of a game circle
+        int lFactor = (-pTime - 3000) * 2 / 3;
+        int rotateMRDegrees = lFactor * MR_2PI / 11000; // some fraction of a game circle
         lOrientation = static_cast<MR_Int16>((lOrientation + rotateMRDegrees) % MR_2PI);
 
         lDist += lFactor;
@@ -19,10 +20,10 @@ void MR_Observer::RenderGLView(const MR_ClientSession* pSession, const MR_MainCh
 
     MR_3DCoordinate lCameraPos;
     MR_3DCoordinate lCharacterPos = pViewingCharacter->mPosition;
-    lCameraPos.mX  =lCharacterPos.mX - cos(lDist);
-    lCameraPos.mY  = lCharacterPos.mY - sin(lDist);
-    lCameraPos.mZ  = lCharacterPos.mZ + 1700;
-    if( mLastGlCameraPos.has_value())
+    lCameraPos.mX = lCharacterPos.mX - cos(lDist);
+    lCameraPos.mY = lCharacterPos.mY - sin(lDist);
+    lCameraPos.mZ = lCharacterPos.mZ + 1700;
+    if (mLastGlCameraPos.has_value())
     {
         constexpr float XY_SMOOTHING = 0.75f;
         constexpr float Z_SMOOTHING = 0.667f;
@@ -36,13 +37,11 @@ void MR_Observer::RenderGLView(const MR_ClientSession* pSession, const MR_MainCh
     std::vector<Vertex> vertices;
     std::vector<uint16_t> vertexIdxs;
 
-    int lTotalSections = lLevel->GetNbVisibleSurface(lRoom);
-    const MR_SectionId* lFloorList = lLevel->GetVisibleFloorList(lRoom);
-    const MR_SectionId* lCeilingList = lLevel->GetVisibleCeilingList(lRoom);
-    for (int lCounter = 0; lCounter < lTotalSections; lCounter++)
+    int totalRooms = lLevel->GetRoomCount();
+    for (int i = 0; i < totalRooms; i++)
     {
-        DrawGLFloorOrCeiling(lLevel, lFloorList[lCounter], true, vertices, vertexIdxs);
-        DrawGLFloorOrCeiling(lLevel, lCeilingList[lCounter], false, vertices, vertexIdxs);
+        MR_Level::Room* room = lLevel->GetRoom(i);
+        DrawGLRoomFloor(room, vertices, vertexIdxs);
     }
 
 
@@ -114,6 +113,33 @@ void MR_Observer::DrawGLSection(const MR_Level* pLevel, const MR_SectionId& pSec
     delete lSectionShape;
 }
 
+void MR_Observer::DrawGLRoomFloor(MR_Level::Room* room, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs)
+{
+    MR_Level::SectionShape roomShape = MR_Level::SectionShape(room);
+    MR_Int32 height = roomShape.ZMin();
+    MR_SurfaceElement* lElement = room->mFloorTexture;
+
+    if (lElement != nullptr)
+    {
+        uint16_t lNbVertex = roomShape.VertexCount();
+        uint16_t baseIndex = vertices.size();
+
+        // Add all vertices (assuming counter-clockwise order)
+        for (uint16_t i = 0; i < lNbVertex; i++)
+        {
+            vertices.push_back(
+                SwapYZ(makeVertex(roomShape.X(i), roomShape.Y(i), height, 0.25, 0.25, 0.25)));
+        }
+        // Triangulate using fan
+        for (uint16_t j = 1; j < lNbVertex - 1; ++j)
+        {
+            vertexIdxs.push_back(baseIndex); // Center
+            vertexIdxs.push_back(baseIndex + j); // Current
+            vertexIdxs.push_back(baseIndex + j + 1); // Next
+        }
+    }
+}
+
 void MR_Observer::DrawGLFloorOrCeiling(const MR_Level* pLevel, const MR_SectionId pSectionId, bool pFloor,
                                        std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs)
 {
@@ -159,7 +185,7 @@ void MR_Observer::DrawGLFloorOrCeiling(const MR_Level* pLevel, const MR_SectionI
         for (uint16_t i = 0; i < lNbVertex; i++)
         {
             vertices.push_back(
-                SwapYZ(makeVertex(lShape->X(i), lShape->Y(i), lLevel, pFloor ? 0.25 : 0 , 0.25, pFloor ? 0.2 : 0)));
+                SwapYZ(makeVertex(lShape->X(i), lShape->Y(i), lLevel, pFloor ? 0.25 : 0, 0.25, pFloor ? 0.2 : 0)));
         }
         // Triangulate using fan
         for (uint16_t j = 1; j < lNbVertex - 1; ++j)
