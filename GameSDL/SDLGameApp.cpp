@@ -144,7 +144,7 @@ void MR_SDLGameApp::RefreshView()
 
             if( mObserver1 != NULL )
             {
-               mObserver1->RenderDebugDisplay( mVideoBuffer, mGLRenderer, mCurrentSession, mCurrentSession->GetMainCharacter(), lTime, mCurrentSession->GetBackImage() );
+               mObserver1->RenderNormalDisplay( mVideoBuffer, mGLRenderer, mCurrentSession, mCurrentSession->GetMainCharacter(), lTime, mCurrentSession->GetBackImage() );
             }
          }
          else

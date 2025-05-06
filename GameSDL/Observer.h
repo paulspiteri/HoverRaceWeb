@@ -77,6 +77,7 @@ class MR_Observer
       void Render3DView(        const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
       void RenderGLView(        const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
       void DrawGLSection(const MR_Level* pLevel, const MR_SectionId& pSectionId, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdx) const;
+      void DrawGLFloorOrCeiling(const MR_Level* pLevel, const MR_SectionId pSectionId, bool pFloor, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs);
 
       void DrawWFSection       ( const MR_Level* pLevel, const MR_SectionId& pSectionId, MR_UInt8 pColor );
       void RenderRoomWalls     ( const MR_Level* pLevel, int pRoomId, MR_SimulationTime pTime );
