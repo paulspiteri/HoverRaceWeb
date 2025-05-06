@@ -79,8 +79,8 @@ class MR_Observer
       void RenderWireFrameView( const MR_Level* pLevel, const MR_MainCharacter* pViewingCharacter );
       void Render3DView(        const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
       void RenderGLView(        const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
-      void DrawGLSection(const MR_Level* pLevel, const MR_SectionId& pSectionId, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdx) const;
-      void DrawGLRoomFloor(MR_Level::Room* room, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs);
+      void DrawGLSection(const MR_PolygonShape* sectionShape, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs) const;
+      void DrawGLRoomFloor(const MR_PolygonShape* sectionShape, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs);
       void DrawGLFloorOrCeiling(const MR_Level* pLevel, const MR_SectionId pSectionId, bool pFloor, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs);
 
       void DrawWFSection       ( const MR_Level* pLevel, const MR_SectionId& pSectionId, MR_UInt8 pColor );

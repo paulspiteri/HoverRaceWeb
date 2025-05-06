@@ -38,67 +38,39 @@ void MR_Observer::RenderGLView(const MR_ClientSession* pSession, const MR_MainCh
     std::vector<uint16_t> vertexIdxs;
 
     int totalRooms = lLevel->GetRoomCount();
-    for (int i = 0; i < totalRooms; i++)
+    for (int roomIdx = 0; roomIdx < totalRooms; roomIdx++)
     {
-        MR_Level::Room* room = lLevel->GetRoom(i);
-        DrawGLRoomFloor(room, vertices, vertexIdxs);
-    }
+        auto roomShape = lLevel->GetRoomShape(roomIdx);
+        DrawGLRoomFloor(roomShape, vertices, vertexIdxs);
+        DrawGLSection(roomShape, vertices, vertexIdxs);
 
-
-    // Draw the walls and features of the visible rooms
-    int lRoomCount;
-    lLevel->GetVisibleZones(lRoom, lRoomCount);
-
-    for (int lCounter = -1; lCounter < lRoomCount; lCounter++)
-    {
-        // Draw the room and all the features
-        for (int lCounter2 = -1; lCounter2 < lLevel->GetFeatureCount(lRoom); lCounter2++)
+        int totalRoomFeatures = lLevel->GetFeatureCount(roomIdx);
+        for (int roomFeatureIdx = 0; roomFeatureIdx < totalRoomFeatures; roomFeatureIdx++)
         {
-            MR_SectionId lSectionId{};
-            if (lCounter2 == -1)
-            {
-                lSectionId.mType = MR_SectionId::eRoom;
-                lSectionId.mId = lRoom;
-            }
-            else
-            {
-                lSectionId.mType = MR_SectionId::eFeature;
-                lSectionId.mId = lLevel->GetFeature(lRoom, lCounter2);
-            }
-            DrawGLSection(lLevel, lSectionId, vertices, vertexIdxs);
+            auto roomFeatureId = lLevel->GetFeature(roomIdx, roomFeatureIdx);
+            auto roomFeatureShape = lLevel->GetFeatureShape(roomFeatureId);
+            //DrawGLSection(roomFeatureShape, vertices, vertexIdxs);
         }
     }
 
     mGLView.SetWallVertices(vertices, vertexIdxs);
 }
 
-void MR_Observer::DrawGLSection(const MR_Level* pLevel, const MR_SectionId& pSectionId, std::vector<Vertex>& vertices,
-                                std::vector<uint16_t>& vertexIdxs) const
+void MR_Observer::DrawGLSection(const MR_PolygonShape* sectionShape, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs) const
 {
-    MR_PolygonShape* lSectionShape;
+    int lVertexCount = sectionShape->VertexCount();
 
-    if (pSectionId.mType == MR_SectionId::eRoom)
-    {
-        lSectionShape = pLevel->GetRoomShape(pSectionId.mId);
-    }
-    else
-    {
-        lSectionShape = pLevel->GetFeatureShape(pSectionId.mId);
-    }
-
-    int lVertexCount = lSectionShape->VertexCount();
-
-    vertices.push_back(SwapYZ(makeVertex(lSectionShape->X(lVertexCount - 1), lSectionShape->Y(lVertexCount - 1),
-                                         lSectionShape->ZMin())));
-    vertices.push_back(SwapYZ(makeVertex(lSectionShape->X(lVertexCount - 1), lSectionShape->Y(lVertexCount - 1),
-                                         lSectionShape->ZMax(), 1, 0, 0)));
+    vertices.push_back(SwapYZ(makeVertex(sectionShape->X(lVertexCount - 1), sectionShape->Y(lVertexCount - 1),
+                                         sectionShape->ZMin())));
+    vertices.push_back(SwapYZ(makeVertex(sectionShape->X(lVertexCount - 1), sectionShape->Y(lVertexCount - 1),
+                                         sectionShape->ZMax(), 1, 0, 0)));
 
     for (int lVertex = 0; lVertex < lVertexCount; lVertex++)
     {
-        vertices.push_back(SwapYZ(makeVertex(lSectionShape->X(lVertex), lSectionShape->Y(lVertex),
-                                             lSectionShape->ZMin())));
-        vertices.push_back(SwapYZ(makeVertex(lSectionShape->X(lVertex), lSectionShape->Y(lVertex),
-                                             lSectionShape->ZMax(), 1, 0, 0)));
+        vertices.push_back(SwapYZ(makeVertex(sectionShape->X(lVertex), sectionShape->Y(lVertex),
+                                             sectionShape->ZMin())));
+        vertices.push_back(SwapYZ(makeVertex(sectionShape->X(lVertex), sectionShape->Y(lVertex),
+                                             sectionShape->ZMax(), 1, 0, 0)));
         uint16_t latestVertexIdx = vertices.size() - 1;
 
         vertexIdxs.push_back(latestVertexIdx - 3);
@@ -109,26 +81,23 @@ void MR_Observer::DrawGLSection(const MR_Level* pLevel, const MR_SectionId& pSec
         vertexIdxs.push_back(latestVertexIdx);
         vertexIdxs.push_back(latestVertexIdx - 1);
     }
-
-    delete lSectionShape;
 }
 
-void MR_Observer::DrawGLRoomFloor(MR_Level::Room* room, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs)
+void MR_Observer::DrawGLRoomFloor(const MR_PolygonShape* roomShape, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs)
 {
-    MR_Level::SectionShape roomShape = MR_Level::SectionShape(room);
-    MR_Int32 height = roomShape.ZMin();
-    MR_SurfaceElement* lElement = room->mFloorTexture;
+    MR_Int32 height = roomShape->ZMin();
+ //   MR_SurfaceElement* lElement = room->mFloorTexture;
 
-    if (lElement != nullptr)
+   // if (lElement != nullptr)
     {
-        uint16_t lNbVertex = roomShape.VertexCount();
+        uint16_t lNbVertex = roomShape->VertexCount();
         uint16_t baseIndex = vertices.size();
 
         // Add all vertices (assuming counter-clockwise order)
         for (uint16_t i = 0; i < lNbVertex; i++)
         {
             vertices.push_back(
-                SwapYZ(makeVertex(roomShape.X(i), roomShape.Y(i), height, 0.25, 0.25, 0.25)));
+                SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height, 0.25, 0.25, 0.25)));
         }
         // Triangulate using fan
         for (uint16_t j = 1; j < lNbVertex - 1; ++j)
