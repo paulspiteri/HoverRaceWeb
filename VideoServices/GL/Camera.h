@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
+#include "../../Util/WorldCoordinates.h""
 
 class Camera
 {
@@ -51,3 +51,9 @@ public:
         front.z = sin(glm::radians(yaw));
     }
 };
+
+inline float MR_ANGLE_TO_DEGREES(MR_Angle angle)
+{
+    float degrees = (static_cast<float>(angle) * 360.0f) / static_cast<float>(MR_2PI);
+    return degrees;
+}

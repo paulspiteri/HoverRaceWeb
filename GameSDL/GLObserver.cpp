@@ -4,14 +4,34 @@ void MR_Observer::RenderGLView(const MR_ClientSession* pSession, const MR_MainCh
                                MR_SimulationTime pTime, const MR_UInt8* pBackImage)
 {
     const MR_Level* lLevel = pSession->GetCurrentLevel();
-
-    MR_3DCoordinate lCharacterPos = pViewingCharacter->mPosition;
-    MR_Angle lOrientation = pViewingCharacter->mOrientation;
     int lRoom = pViewingCharacter->mRoom;
+    MR_Angle lOrientation = pViewingCharacter->mOrientation;
 
-    // NOTE - some camera position code has been removed
-    lCharacterPos.mZ += 1800; // Fix the eyes at 1m80
-    mGLView.SetCameraPosition(lCharacterPos, lOrientation);
+    int lDist = 3400;
+    if( pTime < -3000 )
+    {
+        int lFactor = (-pTime-3000)*2/3;
+        int rotateMRDegrees = lFactor*MR_2PI/11000; // some fraction of a game circle
+        lOrientation = static_cast<MR_Int16>((lOrientation + rotateMRDegrees) % MR_2PI);
+
+        lDist += lFactor;
+    }
+
+    MR_3DCoordinate lCameraPos;
+    MR_3DCoordinate lCharacterPos = pViewingCharacter->mPosition;
+    lCameraPos.mX  =lCharacterPos.mX - cos(lDist);
+    lCameraPos.mY  = lCharacterPos.mY - sin(lDist);
+    lCameraPos.mZ  = lCharacterPos.mZ + 1700;
+    if( mLastGlCameraPos.has_value())
+    {
+        constexpr float XY_SMOOTHING = 0.75f;
+        constexpr float Z_SMOOTHING = 0.667f;
+        lCameraPos.mX = std::lerp(mLastGlCameraPos.value().mX, lCameraPos.mX, XY_SMOOTHING);
+        lCameraPos.mY = std::lerp(mLastGlCameraPos.value().mY, lCameraPos.mY, XY_SMOOTHING);
+        lCameraPos.mZ = std::lerp(mLastGlCameraPos.value().mZ, lCameraPos.mZ, Z_SMOOTHING);
+    }
+    mLastGlCameraPos = lCameraPos;
+    mGLView.SetCameraPosition(lCameraPos, lOrientation);
 
     std::vector<Vertex> vertices;
     std::vector<uint16_t> vertexIdxs;
@@ -139,9 +159,9 @@ void MR_Observer::DrawGLFloorOrCeiling(const MR_Level* pLevel, const MR_SectionI
         for (uint16_t i = 0; i < lNbVertex; i++)
         {
             vertices.push_back(
-                SwapYZ(makeVertex(lShape->X(i), lShape->Y(i), lLevel, 0.25, pFloor ? 0.2 : 0, !pFloor ? 0.25 : 0)));
+                SwapYZ(makeVertex(lShape->X(i), lShape->Y(i), lLevel, pFloor ? 0.25 : 0 , 0.25, pFloor ? 0.2 : 0)));
         }
-        // Triangulate using triangle fan
+        // Triangulate using fan
         for (uint16_t j = 1; j < lNbVertex - 1; ++j)
         {
             vertexIdxs.push_back(baseIndex); // Center

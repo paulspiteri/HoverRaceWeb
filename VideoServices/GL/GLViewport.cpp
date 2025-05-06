@@ -1,12 +1,6 @@
 #include "GLViewport.h"
 #include <cstring>
 
-inline float MR_ANGLE_TO_DEGREES(MR_Angle angle)
-{
-    float degrees = (angle * 360.0f) / (float)MR_2PI;
-    return degrees;
-}
-
 GLViewport::GLViewport(): sizeX(0), sizeY(0), camera(90)
 {
 }
