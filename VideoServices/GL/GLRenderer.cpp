@@ -18,7 +18,9 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext)
     pipeline_desc.label = "quad-pipeline";
     pipeline_desc.layout.attrs[ATTR_quad_position].format = SG_VERTEXFORMAT_INT3;
     pipeline_desc.layout.attrs[ATTR_quad_color0].format = SG_VERTEXFORMAT_FLOAT4;
-    pipeline_desc.cull_mode = SG_CULLMODE_NONE;
+    pipeline_desc.cull_mode = SG_CULLMODE_BACK;
+    pipeline_desc.depth.write_enabled = true;
+    pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
     state.pip = sg_make_pipeline(&pipeline_desc);
 
     state.pass_action.colors[0] = {

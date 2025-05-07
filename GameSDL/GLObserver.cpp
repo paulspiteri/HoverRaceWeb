@@ -5,7 +5,6 @@ void MR_Observer::RenderGLView(const MR_ClientSession* pSession, const MR_MainCh
                                MR_SimulationTime pTime, const MR_UInt8* pBackImage)
 {
     const MR_Level* lLevel = pSession->GetCurrentLevel();
-    int lRoom = pViewingCharacter->mRoom;
     MR_Angle lOrientation = pViewingCharacter->mOrientation;
 
     int lDist = 3400;
@@ -38,140 +37,152 @@ void MR_Observer::RenderGLView(const MR_ClientSession* pSession, const MR_MainCh
     std::vector<uint16_t> vertexIdxs;
 
     int totalRooms = lLevel->GetRoomCount();
-    for (int roomIdx = 0; roomIdx < totalRooms; roomIdx++)
+    for (int roomId = 0; roomId < totalRooms; roomId++)
     {
-        auto roomShape = lLevel->GetRoomShape(roomIdx);
-        DrawGLRoomFloor(roomShape, vertices, vertexIdxs);
-        DrawGLSection(roomShape, vertices, vertexIdxs);
+        auto roomShape = lLevel->GetRoomShape(roomId);
+        DrawGLSection(lLevel, roomId, roomShape, vertices, vertexIdxs);
 
-        int totalRoomFeatures = lLevel->GetFeatureCount(roomIdx);
+        auto floorTexture = lLevel->GetRoomBottomElement(roomId);
+        if (floorTexture != nullptr)
+        {
+            DrawGLRoomFloor(roomShape, vertices, vertexIdxs);
+        }
+
+        auto ceilingTexture = lLevel->GetRoomTopElement(roomId);
+        if (ceilingTexture != nullptr)
+        {
+            DrawGLRoomCeiling(roomShape, vertices, vertexIdxs);
+        }
+
+
+        int totalRoomFeatures = lLevel->GetFeatureCount(roomId);
         for (int roomFeatureIdx = 0; roomFeatureIdx < totalRoomFeatures; roomFeatureIdx++)
         {
-            auto roomFeatureId = lLevel->GetFeature(roomIdx, roomFeatureIdx);
+            auto roomFeatureId = lLevel->GetFeature(roomId, roomFeatureIdx);
             auto roomFeatureShape = lLevel->GetFeatureShape(roomFeatureId);
             //DrawGLSection(roomFeatureShape, vertices, vertexIdxs);
+            delete roomFeatureShape;
         }
+        delete roomShape;
     }
 
     mGLView.SetWallVertices(vertices, vertexIdxs);
 }
 
-void MR_Observer::DrawGLSection(const MR_PolygonShape* sectionShape, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs) const
+void MR_Observer::AddWallVertices(std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs, MR_3DCoordinate lP0, MR_3DCoordinate lP1) const
 {
-    int lVertexCount = sectionShape->VertexCount();
+    vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0)));
+    vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP1.mZ,1, 0, 0)));
+    vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0)));
+    vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP1.mZ,1, 0, 0)));
+    uint16_t latestVertexIdx = vertices.size() - 1;
 
-    vertices.push_back(SwapYZ(makeVertex(sectionShape->X(lVertexCount - 1), sectionShape->Y(lVertexCount - 1),
-                                         sectionShape->ZMin())));
-    vertices.push_back(SwapYZ(makeVertex(sectionShape->X(lVertexCount - 1), sectionShape->Y(lVertexCount - 1),
-                                         sectionShape->ZMax(), 1, 0, 0)));
+    vertexIdxs.push_back(latestVertexIdx - 3);
+    vertexIdxs.push_back(latestVertexIdx - 1);
+    vertexIdxs.push_back(latestVertexIdx - 2);
+
+    vertexIdxs.push_back(latestVertexIdx - 2);
+    vertexIdxs.push_back(latestVertexIdx - 1);
+    vertexIdxs.push_back(latestVertexIdx);
+}
+
+void MR_Observer::DrawGLSection(const MR_Level* pLevel, int pRoomId, const MR_PolygonShape* sectionShape,
+                                std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs) const
+{
+    MR_3DCoordinate lP0;
+    MR_3DCoordinate lP1;
+
+    MR_Int32 lFloorLevel = sectionShape->ZMin();
+    MR_Int32 lCeilingLevel = sectionShape->ZMax();
+
+    lP0.mX = sectionShape->X(0);
+    lP0.mY = sectionShape->Y(0);
+
+    int lVertexCount = sectionShape->VertexCount();
 
     for (int lVertex = 0; lVertex < lVertexCount; lVertex++)
     {
-        vertices.push_back(SwapYZ(makeVertex(sectionShape->X(lVertex), sectionShape->Y(lVertex),
-                                             sectionShape->ZMin())));
-        vertices.push_back(SwapYZ(makeVertex(sectionShape->X(lVertex), sectionShape->Y(lVertex),
-                                             sectionShape->ZMax(), 1, 0, 0)));
-        uint16_t latestVertexIdx = vertices.size() - 1;
+        int lNext = lVertex + 1;
+        if (lNext == lVertexCount)
+        {
+            lNext = 0;
+        }
 
-        vertexIdxs.push_back(latestVertexIdx - 3);
-        vertexIdxs.push_back(latestVertexIdx - 2);
-        vertexIdxs.push_back(latestVertexIdx - 1);
+        lP1.mX = sectionShape->X(lNext);
+        lP1.mY = sectionShape->Y(lNext);
 
-        vertexIdxs.push_back(latestVertexIdx - 2);
-        vertexIdxs.push_back(latestVertexIdx);
-        vertexIdxs.push_back(latestVertexIdx - 1);
+        MR_SurfaceElement* lElement = pLevel->GetRoomWallElement(pRoomId, lVertex);
+        if (lElement != nullptr)
+        {
+            int lNeighbor = pLevel->GetNeighbor(pRoomId, lVertex);
+            if (lNeighbor == -1)
+            {
+                lP0.mZ = lCeilingLevel;
+                lP1.mZ = lFloorLevel;
+                AddWallVertices(vertices, vertexIdxs, lP0, lP1);
+            }
+            else
+            {
+                MR_Int32 lNeighborFloor = pLevel->GetRoomBottomLevel(lNeighbor);
+                MR_Int32 lNeighborCeiling = pLevel->GetRoomTopLevel(lNeighbor);
+
+                if (lFloorLevel < lNeighborFloor)
+                {
+                    lP0.mZ = lNeighborFloor;
+                    lP1.mZ = lFloorLevel;
+                    AddWallVertices(vertices, vertexIdxs, lP0, lP1);
+                }
+
+                if (lCeilingLevel > lNeighborCeiling)
+                {
+                    lP0.mZ = lCeilingLevel;
+                    lP1.mZ = lNeighborCeiling;
+                    AddWallVertices(vertices, vertexIdxs, lP0, lP1);
+                }
+            }
+        }
+
+        lP0.mX = lP1.mX;
+        lP0.mY = lP1.mY;
     }
 }
 
 void MR_Observer::DrawGLRoomFloor(const MR_PolygonShape* roomShape, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs)
 {
-    MR_Int32 height = roomShape->ZMin();
- //   MR_SurfaceElement* lElement = room->mFloorTexture;
+    auto height = roomShape->ZMin();
+    auto lNbVertex = roomShape->VertexCount();
+    auto baseIndex = vertices.size();
 
-   // if (lElement != nullptr)
+    for (auto i = 0; i < lNbVertex; i++)
     {
-        uint16_t lNbVertex = roomShape->VertexCount();
-        uint16_t baseIndex = vertices.size();
-
-        // Add all vertices (assuming counter-clockwise order)
-        for (uint16_t i = 0; i < lNbVertex; i++)
-        {
-            vertices.push_back(
-                SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height, 0.25, 0.25, 0.25)));
-        }
-        // Triangulate using fan
-        for (uint16_t j = 1; j < lNbVertex - 1; ++j)
-        {
-            vertexIdxs.push_back(baseIndex); // Center
-            vertexIdxs.push_back(baseIndex + j); // Current
-            vertexIdxs.push_back(baseIndex + j + 1); // Next
-        }
+        vertices.push_back(
+            SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height, 0.8, 0.8, 0.8)));
+    }
+    // Triangulate using fan
+    for (auto j = 1; j < lNbVertex - 1; ++j)
+    {
+        vertexIdxs.push_back(baseIndex); // Center
+        vertexIdxs.push_back(baseIndex + j);
+        vertexIdxs.push_back(baseIndex + j + 1);
     }
 }
 
-void MR_Observer::DrawGLFloorOrCeiling(const MR_Level* pLevel, const MR_SectionId pSectionId, bool pFloor,
-                                       std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs)
+void MR_Observer::DrawGLRoomCeiling(const MR_PolygonShape* roomShape, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs)
 {
-    MR_Int32 lLevel;
-    MR_PolygonShape* lShape;
-    MR_SurfaceElement* lElement;
+    auto height = roomShape->ZMax();
+    auto lNbVertex = roomShape->VertexCount();
+    auto baseIndex = vertices.size();
 
-    if (pSectionId.mType == MR_SectionId::eRoom)
+    for (auto i = 0; i < lNbVertex; i++)
     {
-        lShape = pLevel->GetRoomShape(pSectionId.mId);
-        if (pFloor)
-        {
-            lLevel = lShape->ZMin();
-            lElement = pLevel->GetRoomBottomElement(pSectionId.mId);
-        }
-        else
-        {
-            lLevel = lShape->ZMax();
-            lElement = pLevel->GetRoomTopElement(pSectionId.mId);
-        }
+        vertices.push_back(
+            SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height, 0.2, 0.2, 0.2)));
     }
-    else
+    // Triangulate using fan
+    for (auto j = 1; j < lNbVertex - 1; ++j)
     {
-        lShape = pLevel->GetFeatureShape(pSectionId.mId);
-        if (!pFloor)
-        {
-            lLevel = lShape->ZMin();
-            lElement = pLevel->GetFeatureBottomElement(pSectionId.mId);
-        }
-        else
-        {
-            lLevel = lShape->ZMax();
-            lElement = pLevel->GetFeatureTopElement(pSectionId.mId);
-        }
+        vertexIdxs.push_back(baseIndex); // Center
+        vertexIdxs.push_back(baseIndex + j + 1);
+        vertexIdxs.push_back(baseIndex + j);
     }
-
-    if (lElement != nullptr)
-    {
-        uint16_t lNbVertex = lShape->VertexCount();
-        uint16_t baseIndex = vertices.size();
-
-        // Add all vertices (assuming counter-clockwise order)
-        for (uint16_t i = 0; i < lNbVertex; i++)
-        {
-            vertices.push_back(
-                SwapYZ(makeVertex(lShape->X(i), lShape->Y(i), lLevel, pFloor ? 0.25 : 0, 0.25, pFloor ? 0.2 : 0)));
-        }
-        // Triangulate using fan
-        for (uint16_t j = 1; j < lNbVertex - 1; ++j)
-        {
-            vertexIdxs.push_back(baseIndex); // Center
-            if (pFloor)
-            {
-                vertexIdxs.push_back(baseIndex + j); // Current
-                vertexIdxs.push_back(baseIndex + j + 1); // Next
-            }
-            else
-            {
-                vertexIdxs.push_back(baseIndex + j + 1); // Next
-                vertexIdxs.push_back(baseIndex + j); // Current
-            }
-        }
-    }
-
-    delete lShape;
 }

@@ -50,6 +50,6 @@ void GLViewport::SetWallVertices(const std::vector<Vertex>& vertices, const std:
     };
     glRenderer->state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
 
-    glRenderer->state.wallVertexCount = static_cast<uint32_t>(vertices.size());
+    glRenderer->state.wallVertexCount = static_cast<uint32_t>(vertexIdxs.size());
     firstTime = false;
 }
