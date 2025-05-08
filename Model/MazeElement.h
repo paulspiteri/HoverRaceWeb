@@ -50,6 +50,7 @@
 #include "ContactEffect.h"
 #include "../Util/DllObjectFactory.h"
 #include "../VideoServices/3DViewport.h"
+#include "../ObjFacTools/ResBitmap.h"
 
 #ifdef MR_MODEL
    #define MR_DllDeclare //   __declspec( dllexport )
@@ -112,7 +113,10 @@ class MR_DllDeclare MR_SurfaceElement: public MR_Element
 
       virtual void RenderWallSurface(       MR_3DViewPort* pDest, const MR_3DCoordinate& pUpperLeft, const MR_3DCoordinate& pLowerRight, MR_Int32 pLen, MR_SimulationTime pTime );
       virtual void RenderHorizontalSurface( MR_3DViewPort* pDest, int pNbVertex, const MR_2DCoordinate* pVertexList, MR_Int32 pLevel, BOOL pTop, MR_SimulationTime pTime );
-
+      virtual MR_ResBitmap* GetResBitmap()const
+      {
+         return nullptr;
+      }
 
 };
 

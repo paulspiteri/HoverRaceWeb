@@ -23,7 +23,8 @@ MR_SDLGameApp::MR_SDLGameApp(SDL_Texture* texture, SDL_Window* glWindow, SDL_GLC
    mCurrentSession  = NULL;
    mGLWindow = glWindow;
    mGLContext = glContext;
-   mTexture         = texture;
+   mTexture   = texture;
+   mGLLevelLoader = nullptr;
    mClrScrTodo = 2;
 
    // Built-in defaults
@@ -58,6 +59,7 @@ MR_SDLGameApp::~MR_SDLGameApp()
    DeleteObjFac1();
    delete mVideoBuffer;
    delete mGLRenderer;
+   delete mGLLevelLoader;
 }
 
 void MR_SDLGameApp::Clean()
@@ -67,6 +69,8 @@ void MR_SDLGameApp::Clean()
    
    mObserver1->Delete();
    mObserver1 = NULL;
+
+   // unload GLLevelLoader here
 
    MR_DllObjectFactory::Clean( TRUE );
 
@@ -96,6 +100,7 @@ BOOL MR_SDLGameApp::InitGame()
    }
 
    mGLRenderer = new GLRenderer(mGLWindow, mGLContext);
+   mGLLevelLoader = new GLLevelLoader(mGLRenderer);
 
    return lReturnValue;
 }
@@ -208,6 +213,9 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
       // Create the main character
       if( lSuccess )
       {
+         auto level = lCurrentSession->GetCurrentLevel();
+         mGLLevelLoader->LoadLevel(level);
+
          lCurrentSession->SetSimulationTime( -6000 );
       }
 

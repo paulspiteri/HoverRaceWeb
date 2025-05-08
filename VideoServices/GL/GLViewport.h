@@ -15,6 +15,4 @@ public:
     GLViewport();
     void Setup(GLRenderer* pGlRenderer, int pSizeX, int pSizeY);
     void SetCameraPosition(const MR_3DCoordinate& pPosition, MR_Angle pOrientation);
-
-    void SetWallVertices(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& vertexIndexes) const;
 };

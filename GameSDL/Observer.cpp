@@ -1190,7 +1190,7 @@ void MR_Observer::RenderDebugDisplay( MR_VideoBuffer* pDest, GLRenderer* glRende
       Render2DDebugView( pDest, lLevel, pViewingCharacter );
       RenderWireFrameView(      lLevel, pViewingCharacter );
       Render3DView(             pSession, pViewingCharacter, pTime, pBackImage );
-      RenderGLView( pSession, pViewingCharacter, pTime, pBackImage );
+      RenderGLView(pViewingCharacter, pTime);
    }
 
 }
@@ -1248,7 +1248,7 @@ void MR_Observer::RenderNormalDisplay( MR_VideoBuffer* pDest, GLRenderer* glRend
    if( pViewingCharacter->mRoom != -1 )
    {
       Render3DView( pSession, pViewingCharacter, pTime, pBackImage );
-      RenderGLView( pSession, pViewingCharacter, pTime, pBackImage );
+      RenderGLView(pViewingCharacter, pTime);
    }
 }
 

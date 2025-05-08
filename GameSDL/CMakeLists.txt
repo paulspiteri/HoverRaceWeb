@@ -4,6 +4,7 @@ add_executable(GameSDL
     GLObserver.cpp
     SDLGameApp.cpp
     sdlmain.cpp
+    GLLevelLoader.cpp
 )
 
 target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3-static sokol

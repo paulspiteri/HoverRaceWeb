@@ -78,12 +78,7 @@ class MR_Observer
       void Render2DDebugView(   MR_VideoBuffer* pDest,  const MR_Level* pLevel, const MR_MainCharacter* pViewingCharacter );
       void RenderWireFrameView( const MR_Level* pLevel, const MR_MainCharacter* pViewingCharacter );
       void Render3DView(        const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
-      void RenderGLView(        const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
-      void AddWallVertices(std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs, MR_3DCoordinate lP0,
-                           MR_3DCoordinate lP1) const;
-      void DrawGLSection(const MR_Level* pLevel, int pRoomId, const MR_PolygonShape* sectionShape, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs) const;
-      void DrawGLRoomFloor(const MR_PolygonShape* sectionShape, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs);
-      void DrawGLRoomCeiling(const MR_PolygonShape* roomShape, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs);
+      void RenderGLView(        const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime);
 
       void DrawWFSection       ( const MR_Level* pLevel, const MR_SectionId& pSectionId, MR_UInt8 pColor );
       void RenderRoomWalls     ( const MR_Level* pLevel, int pRoomId, MR_SimulationTime pTime );

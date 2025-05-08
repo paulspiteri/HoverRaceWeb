@@ -26,30 +26,3 @@ void GLViewport::SetCameraPosition(const MR_3DCoordinate& pPosition, MR_Angle pO
     std::memcpy(glRenderer->state.uniforms.view, &view, sizeof(view));
     std::memcpy(glRenderer->state.uniforms.proj, &projection, sizeof(projection));
 }
-
-void GLViewport::SetWallVertices(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& vertexIdxs) const
-{
-    static bool firstTime = true;
-    if (!firstTime)
-    {
-        return;
-    }
-    sg_buffer_desc buf_desc = {
-        .type = SG_BUFFERTYPE_VERTEXBUFFER,
-        .usage = SG_USAGE_IMMUTABLE,
-        .data = make_sg_range(vertices),
-        .label = "wall-vertices"
-    };
-
-    glRenderer->state.bind.vertex_buffers[0] = sg_make_buffer(&buf_desc);
-
-    sg_buffer_desc index_buf_desc = {
-        .type = SG_BUFFERTYPE_INDEXBUFFER,
-        .data = make_sg_range(vertexIdxs),
-        .label = "wall-indices"
-    };
-    glRenderer->state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
-
-    glRenderer->state.wallVertexCount = static_cast<uint32_t>(vertexIdxs.size());
-    firstTime = false;
-}

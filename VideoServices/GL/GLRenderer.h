@@ -10,6 +10,11 @@ struct Vertex
     glm::vec2 texcoord;
 };
 
+struct VerticesData {
+    std::vector<Vertex> vertices;
+    std::vector<uint16_t> indices;
+};
+
 inline Vertex makeVertex(
     int32_t x, int32_t y, int32_t z,
     float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f,
@@ -44,5 +49,6 @@ public:
     SDL_Window* glWindow;
     SDL_GLContext glContext;
 
+    void SetVertices(const VerticesData& vertices);
     void Render() const;
 };

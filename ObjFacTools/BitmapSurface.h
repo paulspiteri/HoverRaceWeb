@@ -64,6 +64,10 @@ class MR_DllDeclare MR_BitmapSurface:public MR_SurfaceElement
       // Logic stuff
       const MR_ContactEffectList* GetEffectList();
 
+      MR_ResBitmap* GetResBitmap()const override
+      {
+         return mBitmap;
+      }
 };
 
 class MR_DllDeclare MR_VStretchBitmapSurface:public MR_BitmapSurface

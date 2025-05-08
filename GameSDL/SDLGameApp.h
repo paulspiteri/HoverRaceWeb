@@ -4,6 +4,7 @@
 #include "ClientSession.h"
 #include <SDL3/SDL.h>
 
+#include "GLLevelLoader.h"
 #include "../VideoServices/GL/GLRenderer.h"
 
 class MR_SDLGameApp
@@ -15,6 +16,7 @@ class MR_SDLGameApp
       SDL_Texture*             mTexture;
       MR_VideoBuffer*          mVideoBuffer;
       GLRenderer*              mGLRenderer;
+      GLLevelLoader*           mGLLevelLoader;
       MR_Observer*             mObserver1;
       MR_ClientSession*        mCurrentSession;
 

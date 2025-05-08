@@ -89,3 +89,25 @@ void GLRenderer::Render() const
     sg_commit();
     SDL_GL_SwapWindow(glWindow);
 }
+
+
+void GLRenderer::SetVertices(const VerticesData& vertices)
+{
+    sg_buffer_desc buf_desc = {
+        .type = SG_BUFFERTYPE_VERTEXBUFFER,
+        .usage = SG_USAGE_IMMUTABLE,
+        .data = make_sg_range(vertices.vertices),
+        .label = "wall-vertices"
+    };
+
+    this->state.bind.vertex_buffers[0] = sg_make_buffer(&buf_desc);
+
+    sg_buffer_desc index_buf_desc = {
+        .type = SG_BUFFERTYPE_INDEXBUFFER,
+        .data = make_sg_range(vertices.indices),
+        .label = "wall-indices"
+    };
+    this->state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
+
+    this->state.wallVertexCount = static_cast<uint32_t>(vertices.indices.size());
+}
