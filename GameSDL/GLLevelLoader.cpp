@@ -13,7 +13,7 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
     for (int roomId = 0; roomId < totalRooms; roomId++)
     {
         auto roomShape = level->GetRoomShape(roomId);
-        DrawGLSection(level, roomId, roomShape, verts);
+        LoadRoom(level, roomId, roomShape, verts);
 
         auto floorTexture = level->GetRoomBottomElement(roomId);
         if (floorTexture != nullptr)
@@ -21,14 +21,14 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
             auto bitmap = floorTexture->GetResBitmap();
             if (bitmap != nullptr)
             {
-                DrawGLRoomFloor(roomShape,verts, bitmap);
+                LoadRoomFloor(roomShape, verts, bitmap);
             }
         }
 
         auto ceilingTexture = level->GetRoomTopElement(roomId);
         if (ceilingTexture != nullptr)
         {
-            DrawGLRoomCeiling(roomShape, verts);
+            LoadRoomCeiling(roomShape, verts);
         }
 
         int totalRoomFeatures = level->GetFeatureCount(roomId);
@@ -45,8 +45,8 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
     glRenderer->SetVertices(verts);
 }
 
-void GLLevelLoader::DrawGLSection(const MR_Level* pLevel, int pRoomId, const MR_PolygonShape* sectionShape,
-                                  VerticesData& verts) const
+void GLLevelLoader::LoadRoom(const MR_Level* pLevel, int pRoomId, const MR_PolygonShape* sectionShape,
+                               VerticesData& verts) const
 {
     MR_3DCoordinate lP0;
     MR_3DCoordinate lP1;
@@ -106,7 +106,7 @@ void GLLevelLoader::DrawGLSection(const MR_Level* pLevel, int pRoomId, const MR_
     }
 }
 
-void GLLevelLoader::DrawGLRoomFloor(const MR_PolygonShape* roomShape, VerticesData& verts, MR_ResBitmap* bitmap) const
+void GLLevelLoader::LoadRoomFloor(const MR_PolygonShape* roomShape, VerticesData& verts, MR_ResBitmap* bitmap) const
 {
     auto height = roomShape->ZMin();
     auto lNbVertex = roomShape->VertexCount();
@@ -114,8 +114,10 @@ void GLLevelLoader::DrawGLRoomFloor(const MR_PolygonShape* roomShape, VerticesDa
 
 
     auto imgBuffer = bitmap->GetBuffer(0);
+    if (imgBuffer != nullptr)
+    {
 
-
+    }
     for (auto i = 0; i < lNbVertex; i++)
     {
         float u = roomShape->X(i) / bitmap->GetWidth();
@@ -136,7 +138,7 @@ void GLLevelLoader::DrawGLRoomFloor(const MR_PolygonShape* roomShape, VerticesDa
     }
 }
 
-void GLLevelLoader::DrawGLRoomCeiling(const MR_PolygonShape* roomShape, VerticesData& verts) const
+void GLLevelLoader::LoadRoomCeiling(const MR_PolygonShape* roomShape, VerticesData& verts) const
 {
     auto height = roomShape->ZMax();
     auto lNbVertex = roomShape->VertexCount();
