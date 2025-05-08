@@ -54,7 +54,6 @@ void MR_Observer::RenderGLView(const MR_ClientSession* pSession, const MR_MainCh
             DrawGLRoomCeiling(roomShape, vertices, vertexIdxs);
         }
 
-
         int totalRoomFeatures = lLevel->GetFeatureCount(roomId);
         for (int roomFeatureIdx = 0; roomFeatureIdx < totalRoomFeatures; roomFeatureIdx++)
         {
@@ -153,18 +152,25 @@ void MR_Observer::DrawGLRoomFloor(const MR_PolygonShape* roomShape, std::vector<
     auto lNbVertex = roomShape->VertexCount();
     auto baseIndex = vertices.size();
 
-    for (auto i = 0; i < lNbVertex; i++)
-    {
+    const float TILE_SIZE = 1000.0f;  // One tile every 1000 units
+
+    for (auto i = 0; i < lNbVertex; i++) {
+        float u = roomShape->X(i) / TILE_SIZE;
+        float v = roomShape->Y(i) / TILE_SIZE;
+
         vertices.push_back(
-            SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height, 0.8, 0.8, 0.8)));
+            SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height,
+                   1.0f, 1.0f, 1.0f, 1.0f,
+                   u, v)));
     }
+
     // Triangulate using fan
-    for (auto j = 1; j < lNbVertex - 1; ++j)
-    {
-        vertexIdxs.push_back(baseIndex); // Center
+    for (auto j = 1; j < lNbVertex - 1; ++j) {
+        vertexIdxs.push_back(baseIndex);
         vertexIdxs.push_back(baseIndex + j);
         vertexIdxs.push_back(baseIndex + j + 1);
     }
+
 }
 
 void MR_Observer::DrawGLRoomCeiling(const MR_PolygonShape* roomShape, std::vector<Vertex>& vertices, std::vector<uint16_t>& vertexIdxs)

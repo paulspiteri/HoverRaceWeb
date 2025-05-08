@@ -7,13 +7,18 @@ struct Vertex
 {
     glm::i32vec3 position;
     float color[4];
+    glm::vec2 texcoord;
 };
 
-inline Vertex makeVertex(int32_t x, int32_t y, int32_t z, float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)
+inline Vertex makeVertex(
+    int32_t x, int32_t y, int32_t z,
+    float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f,
+    float u = 0.0f, float v = 0.0f)
 {
     return Vertex{
         .position = glm::i32vec3(x, y, z),
-        .color = {r, g, b, a}
+        .color = {r, g, b, a},
+        .texcoord = glm::vec2(u, v)
     };
 }
 
