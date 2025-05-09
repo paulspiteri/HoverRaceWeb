@@ -1,12 +1,11 @@
 #pragma once
-#include <unordered_map>
+#include <vector>
 
 #include "Camera.h"
 #include "SokolState.h"
 #include "SDL3/SDL.h"
 #include "../../ObjFacTools/ResBitmap.h"
 #include "../ColorPaletteEntry.h"
-
 
 struct Vertex
 {
@@ -52,6 +51,8 @@ struct AtlasCoords {
 };
 
 struct TextureData {
+    MR_UInt16 id;
+
     sg_image img;
  //   sg_sampler sampler;
     int width;
@@ -63,7 +64,7 @@ struct TextureData {
 
 class GLRenderer
 {
-    std::unordered_map<MR_UInt16, TextureData> textures;
+    std::vector<TextureData> textures;
     NoMFC::PALETTEENTRY* colorPalette;
 
 private:
@@ -78,6 +79,6 @@ public:
 
     void BindTextures();
     void BindVertices(const VerticesData& vertices);
-    void LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap);
+    unsigned long LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap);
     void Render() const;
 };

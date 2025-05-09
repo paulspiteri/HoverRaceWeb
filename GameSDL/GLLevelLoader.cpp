@@ -21,8 +21,7 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
             auto bitmap = floorTexture->GetResBitmap();
             if (bitmap != nullptr)
             {
-                glRenderer->LoadTexture(floorTexture->mId.mClassId, bitmap);
-                LoadRoomFloor(roomShape, verts, bitmap);
+                LoadRoomFloor(roomShape, verts, floorTexture);
             }
         }
 
@@ -108,8 +107,11 @@ void GLLevelLoader::LoadRoom(const MR_Level* pLevel, int pRoomId, const MR_Polyg
     }
 }
 
-void GLLevelLoader::LoadRoomFloor(const MR_PolygonShape* roomShape, VerticesData& verts, MR_ResBitmap* bitmap) const
+void GLLevelLoader::LoadRoomFloor(const MR_PolygonShape* roomShape, VerticesData& verts, MR_SurfaceElement* surfaceElement) const
 {
+    auto bitmap = surfaceElement->GetResBitmap();
+    auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+
     auto height = roomShape->ZMin();
     auto lNbVertex = roomShape->VertexCount();
     auto baseIndex = verts.vertices.size();
@@ -122,7 +124,7 @@ void GLLevelLoader::LoadRoomFloor(const MR_PolygonShape* roomShape, VerticesData
         verts.vertices.push_back(
             SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height,
                               1.0f, 1.0f, 1.0f, 1.0f,
-                              u, v, 4)));
+                              u, v, textureAtlasId)));
     }
 
     // Triangulate using fan

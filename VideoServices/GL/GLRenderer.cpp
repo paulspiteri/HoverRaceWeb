@@ -5,6 +5,8 @@
 #include "SDL3/SDL_video.h"
 
 #define STB_RECT_PACK_IMPLEMENTATION
+#include <algorithm>
+
 #include "stb_rect_pack.h"
 
 
@@ -54,7 +56,7 @@ GLRenderer::~GLRenderer()
 {
     sg_destroy_buffer(state.bind.vertex_buffers[0]);
     sg_destroy_buffer(state.bind.index_buffer);
-  //  sg_destroy_image(state.bind.images[1]);
+    //  sg_destroy_image(state.bind.images[1]);
     sg_destroy_sampler(state.bind.samplers[3]);
     sg_destroy_pipeline(state.pip);
 
@@ -87,9 +89,10 @@ void GLRenderer::BindTextures()
     rects.reserve(textures.size());
 
     int max_dim = 0;
-    for (const auto& [id, texture] : textures) {
+    for (const auto& texture : textures)
+    {
         stbrp_rect rect;
-        rect.id = id;
+        rect.id = texture.id;
         rect.w = texture.width;
         rect.h = texture.height;
         max_dim = std::max(max_dim, std::max(rect.w, rect.h));
@@ -99,13 +102,16 @@ void GLRenderer::BindTextures()
     int atlas_width = max_dim;
     int atlas_height = max_dim;
     bool success = false;
-    while (!success) {
+    while (!success)
+    {
         std::vector<stbrp_node> nodes(atlas_width);
         stbrp_context context;
         stbrp_init_target(&context, atlas_width, atlas_height, nodes.data(), atlas_width);
-        if (stbrp_pack_rects(&context, rects.data(), rects.size())) {
+        if (stbrp_pack_rects(&context, rects.data(), rects.size()))
+        {
             success = true;
-        } else
+        }
+        else
         {
             // If packing failed, double both dimensions
             atlas_width *= 2;
@@ -117,11 +123,17 @@ void GLRenderer::BindTextures()
     auto atlas_pixels = new uint32_t[atlas_width * atlas_height]{};
 
     // Copy all textures to their positions in the atlas
-    for (const auto& rect : rects) {
-        auto& texture = textures[rect.id];
+    for (auto [rectIt, texIt] = std::tuple{rects.begin(), textures.begin()};
+         rectIt != rects.end();
+         ++rectIt, ++texIt)
+    {
+        const auto& rect = *rectIt;
+        auto& texture = *texIt;
 
-        for (int y = 0; y < rect.h; y++) {
-            for (int x = 0; x < rect.w; x++) {
+        for (int y = 0; y < rect.h; y++)
+        {
+            for (int x = 0; x < rect.w; x++)
+            {
                 int atlas_idx = (rect.y + y) * atlas_width + (rect.x + x);
                 int tex_idx = y * texture.width + x;
                 atlas_pixels[atlas_idx] = texture.pixels[tex_idx];
@@ -133,7 +145,7 @@ void GLRenderer::BindTextures()
         texture.atlas_coords.u2 = static_cast<float>(rect.x + rect.w) / atlas_width;
         texture.atlas_coords.v2 = static_cast<float>(rect.y + rect.h) / atlas_height;
 
-        delete[] texture.pixels;    // todo
+        delete[] texture.pixels; // todo
         texture.pixels = nullptr;
     }
 
@@ -150,7 +162,8 @@ void GLRenderer::BindTextures()
     state.bind.images[2] = atlas_texture;
 
     int i = 0;
-    for (const auto& [_, texture] : textures) {
+    for (const auto& texture : textures)
+    {
         if (i >= 64) break;
         state.atlas_coords[i] = glm::vec4(
             texture.atlas_coords.u1,
@@ -159,8 +172,8 @@ void GLRenderer::BindTextures()
             texture.atlas_coords.v2
         );
         std::cout << "Texture " << " (index " << i << "): "
-           << "(" << texture.atlas_coords.u1 << ", " << texture.atlas_coords.v1 << ") to "
-           << "(" << texture.atlas_coords.u2 << ", " << texture.atlas_coords.v2 << ")\n";
+            << "(" << texture.atlas_coords.u1 << ", " << texture.atlas_coords.v1 << ") to "
+            << "(" << texture.atlas_coords.u2 << ", " << texture.atlas_coords.v2 << ")\n";
 
         i++;
     }
@@ -186,23 +199,27 @@ void GLRenderer::BindVertices(const VerticesData& vertices)
 
     state.wallVertexCount = static_cast<uint32_t>(vertices.indices.size());
 
-    for (const auto& vertex : vertices.vertices) {
+    for (const auto& vertex : vertices.vertices)
+    {
         std::cout << "UV: (" << vertex.texcoord.x << ", " << vertex.texcoord.y
-                  << ") texIdx: " << vertex.textureIdx << std::endl;
+            << ") texIdx: " << vertex.textureIdx << std::endl;
     }
-
 }
 
-void GLRenderer::LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap)
+unsigned long GLRenderer::LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap)
 {
-    if (!textures.contains(id))
+    auto it = std::ranges::find_if(textures, [=](const auto& t) { return t.id == id; });
+    if (it == textures.end())
     {
         TextureData textureData = {};
+        textureData.id = id;
         textureData.width = bitmap->GetMaxXRes();
         textureData.height = bitmap->GetMaxYRes();
         textureData.pixels = ConvertTextureToRGBA8(bitmap);
-        textures[id] = textureData;
+        textures.push_back(textureData);
+        return textures.size() - 1;
     }
+    return std::distance(textures.begin(), it);
 }
 
 uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
@@ -212,13 +229,15 @@ uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
     MR_UInt8* lSrc = bitmap->GetBuffer(0);
     auto lDest = new uint32_t[width * height];
 
-    for( int y = 0; y < height; y++ )
+    for (int y = 0; y < height; y++)
     {
-        for (int x = 0; x < width; x++) {
+        for (int x = 0; x < width; x++)
+        {
             int pixelIdx = y * width + x;
             MR_UInt8 pixelColorPaletteIdx = lSrc[pixelIdx];
             NoMFC::PALETTEENTRY& paletteEntry = colorPalette[pixelColorPaletteIdx];
-            uint32_t color = 0xFF000000 | (paletteEntry.peRed << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peBlue;
+            uint32_t color = 0xFF000000 | (paletteEntry.peRed << 16) | (paletteEntry.peGreen << 8) | paletteEntry.
+                peBlue;
             lDest[pixelIdx] = color;
         }
     }
