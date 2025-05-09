@@ -16,11 +16,12 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
         LoadRoom(level, roomId, roomShape, verts);
 
         auto floorTexture = level->GetRoomBottomElement(roomId);
-        if (floorTexture != nullptr)
+        if (floorTexture != nullptr)    // these null checks may be superfluous
         {
             auto bitmap = floorTexture->GetResBitmap();
             if (bitmap != nullptr)
             {
+                glRenderer->LoadTexture(floorTexture->mId.mClassId, bitmap);
                 LoadRoomFloor(roomShape, verts, bitmap);
             }
         }
@@ -42,7 +43,8 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
         delete roomShape;
     }
 
-    glRenderer->SetVertices(verts);
+    glRenderer->BindVertices(verts);
+    glRenderer->BindTextures();
 }
 
 void GLLevelLoader::LoadRoom(const MR_Level* pLevel, int pRoomId, const MR_PolygonShape* sectionShape,
@@ -112,12 +114,6 @@ void GLLevelLoader::LoadRoomFloor(const MR_PolygonShape* roomShape, VerticesData
     auto lNbVertex = roomShape->VertexCount();
     auto baseIndex = verts.vertices.size();
 
-
-    auto imgBuffer = bitmap->GetBuffer(0);
-    if (imgBuffer != nullptr)
-    {
-
-    }
     for (auto i = 0; i < lNbVertex; i++)
     {
         float u = roomShape->X(i) / bitmap->GetWidth();
@@ -126,7 +122,7 @@ void GLLevelLoader::LoadRoomFloor(const MR_PolygonShape* roomShape, VerticesData
         verts.vertices.push_back(
             SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height,
                               1.0f, 1.0f, 1.0f, 1.0f,
-                              u, v)));
+                              u, v, 3)));
     }
 
     // Triangulate using fan
@@ -147,7 +143,7 @@ void GLLevelLoader::LoadRoomCeiling(const MR_PolygonShape* roomShape, VerticesDa
     for (auto i = 0; i < lNbVertex; i++)
     {
         verts.vertices.push_back(
-            SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height, 0.25f, 0.4f, 0.25f)));
+            SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height, 0.25f, 0.4f, 0.25f, 0)));
     }
     // Triangulate using fan
     for (auto j = 1; j < lNbVertex - 1; ++j)

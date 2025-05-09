@@ -280,7 +280,7 @@ void MR_VideoBuffer::Unlock(/* SDL_Texture* */ void* texture)
       {
           for (int x = 0; x < mXRes; x++) {
               MR_UInt8 colorIndex = lSrc[x];
-              NoMFC::PALETTEENTRY paletteEntry = mPaletteEntries[colorIndex];
+              NoMFC::PALETTEENTRY& paletteEntry = mPaletteEntries[colorIndex];
               uint32_t color = 0xFF000000 | (paletteEntry.peRed << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peBlue;
               lDest[x] = color;
           }

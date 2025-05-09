@@ -99,7 +99,7 @@ BOOL MR_SDLGameApp::InitGame()
        mVideoBuffer->SetVideoMode();
    }
 
-   mGLRenderer = new GLRenderer(mGLWindow, mGLContext);
+   mGLRenderer = new GLRenderer(mGLWindow, mGLContext, mVideoBuffer->GetPalette());
    mGLLevelLoader = new GLLevelLoader(mGLRenderer);
 
    return lReturnValue;

@@ -89,7 +89,7 @@ class MR_VideoBuffer
       MR_DllDeclare void CreatePalette(      double pGamma, double pContrast, double pBrightness );
       MR_DllDeclare void GetPaletteAttrib(   double& pGamma, double& pContrast, double& pBrightness );
       MR_DllDeclare void SetBackPalette(     MR_UInt8* pPalette );
-
+      NoMFC::PALETTEENTRY* GetPalette() { return mPaletteEntries; }
 
       // Buffers manipulation
       MR_DllDeclare BOOL Lock();   // Must be called before drawing
