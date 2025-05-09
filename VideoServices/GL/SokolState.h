@@ -11,6 +11,7 @@ struct Sokol_State {
     sg_swapchain swapchain;
 
     Uniforms_t uniforms;
+    glm::vec4 atlas_coords[64]{};
 
     size_t wallVertexCount;
 };

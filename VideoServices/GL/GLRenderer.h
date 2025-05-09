@@ -46,11 +46,18 @@ inline Vertex SwapYZ(Vertex vertex)
     return vertex;
 }
 
+struct AtlasCoords {
+    float u1, v1;  // Top-left
+    float u2, v2;  // Bottom-right
+};
+
 struct TextureData {
     sg_image img;
  //   sg_sampler sampler;
     int width;
     int height;
+    AtlasCoords atlas_coords;
+    uint32_t* pixels;
 };
 
 

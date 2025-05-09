@@ -4,9 +4,9 @@
 #include "sokol_gfx.h"
 #include "SDL3/SDL_video.h"
 
+#define STB_RECT_PACK_IMPLEMENTATION
+#include "stb_rect_pack.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
 GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, NoMFC::PALETTEENTRY* colorPalette)
     : glWindow(glWindow), glContext(glContext), state{}, colorPalette(colorPalette)
@@ -39,7 +39,7 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, NoMFC::PAL
     smp_desc.wrap_u = SG_WRAP_REPEAT;
     smp_desc.wrap_v = SG_WRAP_REPEAT;
     sg_sampler smp = sg_make_sampler(&smp_desc);
-    state.bind.samplers[1] = smp;
+    state.bind.samplers[3] = smp;
 
     state.swapchain = {
         .width = 640,
@@ -54,8 +54,8 @@ GLRenderer::~GLRenderer()
 {
     sg_destroy_buffer(state.bind.vertex_buffers[0]);
     sg_destroy_buffer(state.bind.index_buffer);
-    sg_destroy_image(state.bind.images[1]);
-    sg_destroy_sampler(state.bind.samplers[2]);
+  //  sg_destroy_image(state.bind.images[1]);
+    sg_destroy_sampler(state.bind.samplers[3]);
     sg_destroy_pipeline(state.pip);
 
     sg_shutdown();
@@ -73,6 +73,7 @@ void GLRenderer::Render() const
     sg_apply_pipeline(state.pip);
     sg_apply_bindings(&state.bind);
     sg_apply_uniforms(0, SG_RANGE(state.uniforms));
+    sg_apply_uniforms(1, SG_RANGE(state.atlas_coords));
     sg_draw(0, state.wallVertexCount, 1);
     sg_end_pass();
     sg_commit();
@@ -82,11 +83,86 @@ void GLRenderer::Render() const
 
 void GLRenderer::BindTextures()
 {
-    size_t slot = 0;
+    std::vector<stbrp_rect> rects;
+    rects.reserve(textures.size());
+
+    int max_dim = 0;
     for (const auto& [id, texture] : textures) {
-        if (slot >= 7) break;
-        state.bind.images[slot + 1] = texture.img;  // +2 because binding starts at 2
-        slot++;
+        stbrp_rect rect;
+        rect.id = id;
+        rect.w = texture.width;
+        rect.h = texture.height;
+        max_dim = std::max(max_dim, std::max(rect.w, rect.h));
+        rects.push_back(rect);
+    }
+
+    int atlas_width = max_dim;
+    int atlas_height = max_dim;
+    bool success = false;
+    while (!success) {
+        std::vector<stbrp_node> nodes(atlas_width);
+        stbrp_context context;
+        stbrp_init_target(&context, atlas_width, atlas_height, nodes.data(), atlas_width);
+        if (stbrp_pack_rects(&context, rects.data(), rects.size())) {
+            success = true;
+        } else
+        {
+            // If packing failed, double both dimensions
+            atlas_width *= 2;
+            atlas_height *= 2;
+        }
+    }
+
+    // Create the atlas texture
+    auto atlas_pixels = new uint32_t[atlas_width * atlas_height]{};
+
+    // Copy all textures to their positions in the atlas
+    for (const auto& rect : rects) {
+        auto& texture = textures[rect.id];
+
+        for (int y = 0; y < rect.h; y++) {
+            for (int x = 0; x < rect.w; x++) {
+                int atlas_idx = (rect.y + y) * atlas_width + (rect.x + x);
+                int tex_idx = y * texture.width + x;
+                atlas_pixels[atlas_idx] = texture.pixels[tex_idx];
+            }
+        }
+
+        texture.atlas_coords.u1 = static_cast<float>(rect.x) / atlas_width;
+        texture.atlas_coords.v1 = static_cast<float>(rect.y) / atlas_height;
+        texture.atlas_coords.u2 = static_cast<float>(rect.x + rect.w) / atlas_width;
+        texture.atlas_coords.v2 = static_cast<float>(rect.y + rect.h) / atlas_height;
+
+        delete[] texture.pixels;    // todo
+        texture.pixels = nullptr;
+    }
+
+    // Create the atlas texture
+    sg_image_desc img_desc = {};
+    img_desc.width = atlas_width;
+    img_desc.height = atlas_height;
+    img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
+    img_desc.data.subimage[0][0].ptr = atlas_pixels;
+    img_desc.data.subimage[0][0].size = atlas_width * atlas_height * 4;
+    auto atlas_texture = sg_make_image(&img_desc);
+    delete[] atlas_pixels;
+
+    state.bind.images[2] = atlas_texture;
+
+    int i = 0;
+    for (const auto& [_, texture] : textures) {
+        if (i >= 64) break;
+        state.atlas_coords[i] = glm::vec4(
+            texture.atlas_coords.u1,
+            texture.atlas_coords.v1,
+            texture.atlas_coords.u2,
+            texture.atlas_coords.v2
+        );
+        std::cout << "Texture " << " (index " << i << "): "
+           << "(" << texture.atlas_coords.u1 << ", " << texture.atlas_coords.v1 << ") to "
+           << "(" << texture.atlas_coords.u2 << ", " << texture.atlas_coords.v2 << ")\n";
+
+        i++;
     }
 }
 
@@ -109,28 +185,23 @@ void GLRenderer::BindVertices(const VerticesData& vertices)
     state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
 
     state.wallVertexCount = static_cast<uint32_t>(vertices.indices.size());
+
+    for (const auto& vertex : vertices.vertices) {
+        std::cout << "UV: (" << vertex.texcoord.x << ", " << vertex.texcoord.y
+                  << ") texIdx: " << vertex.textureIdx << std::endl;
+    }
+
 }
 
 void GLRenderer::LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap)
 {
     if (!textures.contains(id))
     {
-        auto convertedTexture = ConvertTextureToRGBA8(bitmap);
         TextureData textureData = {};
-
-        sg_image_desc img_desc = {};
-        img_desc.width = bitmap->GetMaxXRes();
-        img_desc.height = bitmap->GetMaxYRes();
-        img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
-        img_desc.data.subimage[0][0].ptr =convertedTexture;
-        img_desc.data.subimage[0][0].size = bitmap->GetMaxXRes() * bitmap->GetMaxYRes() * 4;
-        textureData.img = sg_make_image(&img_desc);
-        textureData.width = img_desc.width;
-        textureData.height = img_desc.height;
-
+        textureData.width = bitmap->GetMaxXRes();
+        textureData.height = bitmap->GetMaxYRes();
+        textureData.pixels = ConvertTextureToRGBA8(bitmap);
         textures[id] = textureData;
-
-        delete convertedTexture;    // todo
     }
 }
 

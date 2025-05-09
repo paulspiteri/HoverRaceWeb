@@ -122,7 +122,7 @@ void GLLevelLoader::LoadRoomFloor(const MR_PolygonShape* roomShape, VerticesData
         verts.vertices.push_back(
             SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height,
                               1.0f, 1.0f, 1.0f, 1.0f,
-                              u, v, 3)));
+                              u, v, 4)));
     }
 
     // Triangulate using fan
