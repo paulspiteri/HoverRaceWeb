@@ -10,8 +10,8 @@
 #include "stb_rect_pack.h"
 
 
-GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, NoMFC::PALETTEENTRY* colorPalette)
-    : glWindow(glWindow), glContext(glContext), state{}, colorPalette(colorPalette)
+GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer)
+    : glWindow(glWindow), glContext(glContext), state{}, videoBuffer(videoBuffer)
 {
     const sg_shader_desc* shader_desc = quad_shader_desc(sg_query_backend());
     sg_shader shd = sg_make_shader(shader_desc);
@@ -225,20 +225,19 @@ unsigned long GLRenderer::LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap)
 
 uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
 {
+    auto palette = videoBuffer->GetPalette();
     int width = bitmap->GetMaxXRes();
     int height = bitmap->GetMaxYRes();
     MR_UInt8* lSrc = bitmap->GetBuffer(0);
     auto lDest = new uint32_t[width * height];
-
     for (int y = 0; y < height; y++)
     {
         for (int x = 0; x < width; x++)
         {
             int pixelIdx = y * width + x;
             MR_UInt8 pixelColorPaletteIdx = lSrc[pixelIdx];
-            NoMFC::PALETTEENTRY& paletteEntry = colorPalette[pixelColorPaletteIdx];
-            uint32_t color = 0xFF000000 | (paletteEntry.peRed << 16) | (paletteEntry.peGreen << 8) | paletteEntry.
-                peBlue;
+            NoMFC::PALETTEENTRY& paletteEntry = palette[pixelColorPaletteIdx];
+            uint32_t color = (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
             lDest[pixelIdx] = color;
         }
     }

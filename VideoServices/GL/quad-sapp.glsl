@@ -13,13 +13,11 @@ in vec4 color0;
 in vec2 texcoord0;
 in uint textureIdx;
 
-out vec4 color;
 out vec2 world_uv;
 flat out vec4 atlas_coord;
 
 void main() {
     gl_Position = proj * view * vec4(position);
-    color = color0;
     world_uv = texcoord0;
     atlas_coord = atlas_coords[textureIdx];
 }
@@ -28,7 +26,6 @@ void main() {
 @fs fs
 layout(binding = 2) uniform texture2D atlas_tex;
 layout(binding = 3) uniform sampler smp;
-in vec4 color;
 in vec2 world_uv;
 flat in vec4 atlas_coord;
 out vec4 frag_color;

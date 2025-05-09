@@ -18,17 +18,13 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
         auto floorTexture = level->GetRoomBottomElement(roomId);
         if (floorTexture != nullptr)    // these null checks may be superfluous
         {
-            auto bitmap = floorTexture->GetResBitmap();
-            if (bitmap != nullptr)
-            {
-                LoadRoomFloor(roomShape, verts, floorTexture);
-            }
+            LoadRoomFloor(roomShape, verts, floorTexture);
         }
 
         auto ceilingTexture = level->GetRoomTopElement(roomId);
         if (ceilingTexture != nullptr)
         {
-           // LoadRoomCeiling(roomShape, verts);
+          //  LoadRoomCeiling(roomShape, verts);
         }
 
         int totalRoomFeatures = level->GetFeatureCount(roomId);

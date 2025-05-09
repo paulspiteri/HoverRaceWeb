@@ -6,6 +6,7 @@
 #include "SDL3/SDL.h"
 #include "../../ObjFacTools/ResBitmap.h"
 #include "../ColorPaletteEntry.h"
+#include "../VideoBuffer.h"
 
 struct Vertex
 {
@@ -65,13 +66,13 @@ struct TextureData {
 class GLRenderer
 {
     std::vector<TextureData> textures;
-    NoMFC::PALETTEENTRY* colorPalette;
+    MR_VideoBuffer* videoBuffer;
 
 private:
     uint32_t* ConvertTextureToRGBA8(const MR_ResBitmap* bitmap);
 
 public:
-    GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, NoMFC::PALETTEENTRY* colorPalette);
+    GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer);
     ~GLRenderer();
     Sokol_State state;
     SDL_Window* glWindow;
