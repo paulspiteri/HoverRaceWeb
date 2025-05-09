@@ -1,4 +1,5 @@
 @vs vs
+
 layout(binding = 0) uniform Uniforms {
     mat4 view;
     mat4 proj;
@@ -25,7 +26,6 @@ void main() {
 @end
 
 @fs fs
-
 layout(binding = 2) uniform texture2D atlas_tex;
 layout(binding = 3) uniform sampler smp;
 in vec4 color;
@@ -35,7 +35,7 @@ out vec4 frag_color;
 
 void main() {
     vec2 uv = fract(world_uv);
-    vec2 atlas_uv = atlas_coord.xy + uv * (atlas_coord.zw - atlas_coord.xy);
+    vec2 atlas_uv = mix(atlas_coord.xy, atlas_coord.zw, uv);
     frag_color = texture(sampler2D(atlas_tex, smp), atlas_uv);
 }
 @end

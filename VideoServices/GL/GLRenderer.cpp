@@ -19,7 +19,7 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, NoMFC::PAL
     sg_pipeline_desc pipeline_desc = {};
     pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
     pipeline_desc.shader = shd;
-    pipeline_desc.sample_count = 4;
+    pipeline_desc.sample_count = 16;
     pipeline_desc.label = "quad-pipeline";
     pipeline_desc.layout.attrs[ATTR_quad_position].format = SG_VERTEXFORMAT_INT3;
     pipeline_desc.layout.attrs[ATTR_quad_color0].format = SG_VERTEXFORMAT_FLOAT4;
@@ -46,7 +46,7 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, NoMFC::PAL
     state.swapchain = {
         .width = 640,
         .height = 400,
-        .sample_count = 4,
+        .sample_count = 16,
         .color_format = SG_PIXELFORMAT_RGBA8,
         .depth_format = SG_PIXELFORMAT_DEPTH,
     };
@@ -140,10 +140,11 @@ void GLRenderer::BindTextures()
             }
         }
 
-        texture.atlas_coords.u1 = static_cast<float>(rect.x) / atlas_width;
-        texture.atlas_coords.v1 = static_cast<float>(rect.y) / atlas_height;
-        texture.atlas_coords.u2 = static_cast<float>(rect.x + rect.w) / atlas_width;
-        texture.atlas_coords.v2 = static_cast<float>(rect.y + rect.h) / atlas_height;
+        float bleed_padding = 0.5f;
+        texture.atlas_coords.u1 = (rect.x + bleed_padding) / atlas_width;
+        texture.atlas_coords.v1 = (rect.y + bleed_padding) / atlas_height;
+        texture.atlas_coords.u2 = (rect.x + rect.w - bleed_padding) / atlas_width;
+        texture.atlas_coords.v2 = (rect.y + rect.h - bleed_padding) / atlas_height;
 
         delete[] texture.pixels; // todo
         texture.pixels = nullptr;

@@ -28,7 +28,7 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
         auto ceilingTexture = level->GetRoomTopElement(roomId);
         if (ceilingTexture != nullptr)
         {
-            LoadRoomCeiling(roomShape, verts);
+           // LoadRoomCeiling(roomShape, verts);
         }
 
         int totalRoomFeatures = level->GetFeatureCount(roomId);
