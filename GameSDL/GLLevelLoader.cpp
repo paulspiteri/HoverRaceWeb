@@ -94,11 +94,14 @@ void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId, VerticesDat
     auto roomShape = level->GetRoomShape(roomId);
     auto surfaceElement = level->GetRoomBottomElement(roomId);
     auto bitmap = surfaceElement->GetResBitmap();
-    auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
-
+    if (bitmap == nullptr)
+    {
+        return;
+    }
     auto height = roomShape->ZMin();
     auto lNbVertex = roomShape->VertexCount();
     auto baseIndex = verts.vertices.size();
+    auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
 
     for (auto i = 0; i < lNbVertex; i++)
     {
@@ -157,19 +160,21 @@ void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR
                                     MR_SurfaceElement* surfaceElement) const
 {
     auto bitmap = surfaceElement->GetResBitmap();
-    int textureAtlasId = 0;
-    if (bitmap != nullptr)
+    if (bitmap == nullptr)
     {
-        textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+        return;
     }
+    int textureAtlasId = textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+    float u0 = lP0.mX / bitmap->GetWidth();
+    float v0 = lP0.mZ / bitmap->GetHeight();
+    float u1 = lP1.mX / bitmap->GetWidth();
+    float v1 = lP1.mZ / bitmap->GetHeight();
 
-    float u = 0.5f;
-    float v = 0.5f;
 
-    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u, v, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0, 1, u, v, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0, 1, u, v, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP1.mZ, 1, 0, 0, 1, u, v, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u0, v0, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0, 1, u0, v1, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0, 1, u1, v0, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP1.mZ, 1, 0, 0, 1, u1, v1, textureAtlasId)));
     uint16_t latestVertexIdx = verts.vertices.size() - 1;
 
     verts.indices.push_back(latestVertexIdx - 3);
