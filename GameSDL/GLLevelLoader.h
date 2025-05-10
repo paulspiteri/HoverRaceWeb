@@ -11,11 +11,10 @@ public:
     void LoadLevel(const MR_Level* level);
 
 private:
-    void LoadRoom(const MR_Level* pLevel, int pRoomId, const MR_PolygonShape* sectionShape,
-                    VerticesData& verts) const;
-    void LoadRoomFloor(const MR_PolygonShape* sectionShape, VerticesData& verts, MR_SurfaceElement* floorTexture) const;
-    void LoadRoomCeiling(const MR_PolygonShape* roomShape, VerticesData& verts) const;
-    void AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR_3DCoordinate lP1) const;
+    void LoadRoomWalls(const MR_Level* level, int roomId, VerticesData& verts) const;
+    void LoadRoomFloor(const MR_Level* level, int roomId, VerticesData& verts) const;
+    void LoadRoomCeiling(const MR_Level* level, int roomId, VerticesData& verts) const;
+    void AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_SurfaceElement* surfaceElement) const;
 
     GLRenderer* glRenderer;
 };

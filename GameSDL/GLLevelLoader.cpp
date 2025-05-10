@@ -13,18 +13,13 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
     for (int roomId = 0; roomId < totalRooms; roomId++)
     {
         auto roomShape = level->GetRoomShape(roomId);
-        LoadRoom(level, roomId, roomShape, verts);
-
-        auto floorTexture = level->GetRoomBottomElement(roomId);
-        if (floorTexture != nullptr)    // these null checks may be superfluous
-        {
-            LoadRoomFloor(roomShape, verts, floorTexture);
-        }
+        LoadRoomWalls(level, roomId, verts);
+        LoadRoomFloor(level, roomId, verts);
 
         auto ceilingTexture = level->GetRoomTopElement(roomId);
         if (ceilingTexture != nullptr)
         {
-          //  LoadRoomCeiling(roomShape, verts);
+            //  LoadRoomCeiling(roomShape, verts);
         }
 
         int totalRoomFeatures = level->GetFeatureCount(roomId);
@@ -42,20 +37,16 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
     glRenderer->BindTextures();
 }
 
-void GLLevelLoader::LoadRoom(const MR_Level* pLevel, int pRoomId, const MR_PolygonShape* sectionShape,
-                               VerticesData& verts) const
+void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId, VerticesData& verts) const
 {
+    auto roomShape = level->GetRoomShape(roomId);
     MR_3DCoordinate lP0;
     MR_3DCoordinate lP1;
-
-    MR_Int32 lFloorLevel = sectionShape->ZMin();
-    MR_Int32 lCeilingLevel = sectionShape->ZMax();
-
-    lP0.mX = sectionShape->X(0);
-    lP0.mY = sectionShape->Y(0);
-
-    int lVertexCount = sectionShape->VertexCount();
-
+    MR_Int32 lFloorLevel = roomShape->ZMin();
+    MR_Int32 lCeilingLevel = roomShape->ZMax();
+    lP0.mX = roomShape->X(0);
+    lP0.mY = roomShape->Y(0);
+    int lVertexCount = roomShape->VertexCount();
     for (int lVertex = 0; lVertex < lVertexCount; lVertex++)
     {
         int lNext = lVertex + 1;
@@ -64,37 +55,35 @@ void GLLevelLoader::LoadRoom(const MR_Level* pLevel, int pRoomId, const MR_Polyg
             lNext = 0;
         }
 
-        lP1.mX = sectionShape->X(lNext);
-        lP1.mY = sectionShape->Y(lNext);
+        lP1.mX = roomShape->X(lNext);
+        lP1.mY = roomShape->Y(lNext);
 
-        MR_SurfaceElement* lElement = pLevel->GetRoomWallElement(pRoomId, lVertex);
-        if (lElement != nullptr)
+        auto surfaceElement = level->GetRoomWallElement(roomId, lVertex);
+
+        int lNeighbor = level->GetNeighbor(roomId, lVertex);
+        if (lNeighbor == -1)
         {
-            int lNeighbor = pLevel->GetNeighbor(pRoomId, lVertex);
-            if (lNeighbor == -1)
+            lP0.mZ = lCeilingLevel;
+            lP1.mZ = lFloorLevel;
+            AddWallVertices(verts, lP0, lP1, surfaceElement);
+        }
+        else
+        {
+            MR_Int32 lNeighborFloor = level->GetRoomBottomLevel(lNeighbor);
+            MR_Int32 lNeighborCeiling = level->GetRoomTopLevel(lNeighbor);
+
+            if (lFloorLevel < lNeighborFloor)
+            {
+                lP0.mZ = lNeighborFloor;
+                lP1.mZ = lFloorLevel;
+                AddWallVertices(verts, lP0, lP1, surfaceElement);
+            }
+
+            if (lCeilingLevel > lNeighborCeiling)
             {
                 lP0.mZ = lCeilingLevel;
-                lP1.mZ = lFloorLevel;
-                AddWallVertices(verts, lP0, lP1);
-            }
-            else
-            {
-                MR_Int32 lNeighborFloor = pLevel->GetRoomBottomLevel(lNeighbor);
-                MR_Int32 lNeighborCeiling = pLevel->GetRoomTopLevel(lNeighbor);
-
-                if (lFloorLevel < lNeighborFloor)
-                {
-                    lP0.mZ = lNeighborFloor;
-                    lP1.mZ = lFloorLevel;
-                    AddWallVertices(verts, lP0, lP1);
-                }
-
-                if (lCeilingLevel > lNeighborCeiling)
-                {
-                    lP0.mZ = lCeilingLevel;
-                    lP1.mZ = lNeighborCeiling;
-                    AddWallVertices(verts, lP0, lP1);
-                }
+                lP1.mZ = lNeighborCeiling;
+                AddWallVertices(verts, lP0, lP1, surfaceElement);
             }
         }
 
@@ -103,8 +92,10 @@ void GLLevelLoader::LoadRoom(const MR_Level* pLevel, int pRoomId, const MR_Polyg
     }
 }
 
-void GLLevelLoader::LoadRoomFloor(const MR_PolygonShape* roomShape, VerticesData& verts, MR_SurfaceElement* surfaceElement) const
+void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId, VerticesData& verts) const
 {
+    auto surfaceElement = level->GetRoomBottomElement(roomId);
+    auto roomShape = level->GetRoomShape(roomId);
     auto bitmap = surfaceElement->GetResBitmap();
     auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
 
@@ -116,7 +107,6 @@ void GLLevelLoader::LoadRoomFloor(const MR_PolygonShape* roomShape, VerticesData
     {
         float u = roomShape->X(i) / bitmap->GetWidth();
         float v = roomShape->Y(i) / bitmap->GetHeight();
-
         verts.vertices.push_back(
             SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height,
                               1.0f, 1.0f, 1.0f, 1.0f,
@@ -132,8 +122,9 @@ void GLLevelLoader::LoadRoomFloor(const MR_PolygonShape* roomShape, VerticesData
     }
 }
 
-void GLLevelLoader::LoadRoomCeiling(const MR_PolygonShape* roomShape, VerticesData& verts) const
+void GLLevelLoader::LoadRoomCeiling(const MR_Level* level, int roomId, VerticesData& verts) const
 {
+    auto roomShape = level->GetRoomShape(roomId);
     auto height = roomShape->ZMax();
     auto lNbVertex = roomShape->VertexCount();
     auto baseIndex = verts.vertices.size();
@@ -152,12 +143,22 @@ void GLLevelLoader::LoadRoomCeiling(const MR_PolygonShape* roomShape, VerticesDa
     }
 }
 
-void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR_3DCoordinate lP1) const
+void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_SurfaceElement* surfaceElement) const
 {
-    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP1.mZ, 1, 0, 0)));
+    auto bitmap = surfaceElement->GetResBitmap();
+    int textureAtlasId = 0;
+    if (bitmap != nullptr)
+    {
+        textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+    }
+
+    float u = 0.5f;
+    float v = 0.5f;
+
+    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u, v, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0,1, u, v, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0,1, u, v, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP1.mZ, 1, 0, 0,1, u, v, textureAtlasId)));
     uint16_t latestVertexIdx = verts.vertices.size() - 1;
 
     verts.indices.push_back(latestVertexIdx - 3);
