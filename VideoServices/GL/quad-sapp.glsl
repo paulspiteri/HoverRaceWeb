@@ -24,8 +24,8 @@ void main() {
 @end
 
 @fs fs
-layout(binding = 2) uniform texture2D atlas_tex;
-layout(binding = 3) uniform sampler smp;
+layout(binding = 0) uniform texture2D atlas_tex;
+layout(binding = 0) uniform sampler wrap_sampler;
 in vec2 world_uv;
 flat in vec4 atlas_coord;
 out vec4 frag_color;
@@ -34,7 +34,7 @@ void main() {
     vec2 uv = fract(world_uv);
     vec2 rotated_uv = vec2(1.0 - uv.y, uv.x);   // could be rotated wrong way, needs testing
     vec2 atlas_uv = mix(atlas_coord.xy, atlas_coord.zw, rotated_uv);
-    frag_color = texture(sampler2D(atlas_tex, smp), atlas_uv);
+    frag_color = texture(sampler2D(atlas_tex, wrap_sampler), atlas_uv);
 }
 @end
 

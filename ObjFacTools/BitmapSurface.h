@@ -80,6 +80,7 @@ class MR_DllDeclare MR_VStretchBitmapSurface:public MR_BitmapSurface
       MR_VStretchBitmapSurface( const MR_ObjectFromFactoryId& pId, /*const*/ MR_ResBitmap* pBitmap, int pMaxHeight );
       MR_VStretchBitmapSurface( const MR_ObjectFromFactoryId& pId, MR_ResBitmap* pBitmap1, MR_ResBitmap* pBitmap2, int pRotationSpeed, int pRotationLen, int pMaxHeight );
       void RenderWallSurface( MR_3DViewPort* pDest, const MR_3DCoordinate& pUpperLeft, const MR_3DCoordinate& pLowerRight, MR_Int32 pLen, MR_SimulationTime pTime );
+      int GetMaxHeight()const { return mMaxHeight; }
 };
 
 #undef MR_DllDeclare

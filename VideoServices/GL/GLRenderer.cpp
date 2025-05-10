@@ -35,13 +35,12 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
         .clear_value = {0.0f, 0.0f, 0.0f, 1.0f}
     };
 
-    sg_sampler_desc smp_desc = {};
-    smp_desc.min_filter = SG_FILTER_LINEAR;
-    smp_desc.mag_filter = SG_FILTER_LINEAR;
-    smp_desc.wrap_u = SG_WRAP_REPEAT;
-    smp_desc.wrap_v = SG_WRAP_REPEAT;
-    sg_sampler smp = sg_make_sampler(&smp_desc);
-    state.bind.samplers[3] = smp;
+    sg_sampler_desc wrap_sampler_desc = {};
+    wrap_sampler_desc.min_filter = SG_FILTER_LINEAR;
+    wrap_sampler_desc.mag_filter = SG_FILTER_LINEAR;
+    wrap_sampler_desc.wrap_u = SG_WRAP_REPEAT;
+    wrap_sampler_desc.wrap_v = SG_WRAP_REPEAT;
+    state.bind.samplers[0] = sg_make_sampler(&wrap_sampler_desc);
 
     state.swapchain = {
         .width = 640,
@@ -56,8 +55,8 @@ GLRenderer::~GLRenderer()
 {
     sg_destroy_buffer(state.bind.vertex_buffers[0]);
     sg_destroy_buffer(state.bind.index_buffer);
-    //  sg_destroy_image(state.bind.images[1]);
-    sg_destroy_sampler(state.bind.samplers[3]);
+    sg_destroy_image(state.bind.images[0]);
+    sg_destroy_sampler(state.bind.samplers[0]);
     sg_destroy_pipeline(state.pip);
 
     sg_shutdown();
@@ -160,7 +159,7 @@ void GLRenderer::BindTextures()
     auto atlas_texture = sg_make_image(&img_desc);
     delete[] atlas_pixels;
 
-    state.bind.images[2] = atlas_texture;
+    state.bind.images[0] = atlas_texture;
 
     int i = 0;
     for (const auto& texture : textures)

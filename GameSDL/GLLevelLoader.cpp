@@ -1,8 +1,7 @@
 #include "GLLevelLoader.h"
 
-#include <optional>
-
 #include "../ObjFacTools/ResBitmap.h"
+#include "../ObjFacTools/BitmapSurface.h"
 
 GLLevelLoader::GLLevelLoader(GLRenderer* renderer): glRenderer(renderer)
 {
@@ -164,12 +163,24 @@ void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR
     {
         return;
     }
-    int textureAtlasId = textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
-    float u0 = lP0.mX / bitmap->GetWidth();
-    float v0 = lP0.mZ / bitmap->GetHeight();
-    float u1 = lP1.mX / bitmap->GetWidth();
-    float v1 = lP1.mZ / bitmap->GetHeight();
 
+    int textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+    float u0 = lP0.mX / bitmap->GetWidth();
+    float v0 = 0.0;
+    float u1 = lP1.mX / bitmap->GetWidth();
+    float v1 = 1.0f;
+    auto vstretchBitmap = dynamic_cast<MR_VStretchBitmapSurface*>(surfaceElement);
+    if (vstretchBitmap != nullptr) {
+        int lHeight = lP0.mZ-lP1.mZ;
+        if(lHeight > 0)
+        {
+            int lDivisor = 1+(lHeight-1)/vstretchBitmap->GetMaxHeight();
+            if( lDivisor > 1)
+            {
+                v1 = v1*lDivisor;
+            }
+        }
+    }
 
     verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u0, v0, textureAtlasId)));
     verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0, 1, u0, v1, textureAtlasId)));
