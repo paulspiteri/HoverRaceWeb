@@ -273,3 +273,9 @@ void MR_SDLGameApp::SetControlState(int pState1)
       mCurrentSession->SetControlState( pState1, 0 );
    }
 }
+
+void MR_SDLGameApp::SetResolution(int width, int height)
+{
+   mGLRenderer->state.swapchain.width = width;
+   mGLRenderer->state.swapchain.height = height;
+}

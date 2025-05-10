@@ -29,7 +29,7 @@ int lControlState = 0;
 
 extern "C"
 {
-    void ChangeToTrack(const char* trackFile) 
+    void ChangeToTrack(const char* trackFile)
     {
         printf("ChangeToTrack: %s\n", trackFile);
         if (game != nullptr)
@@ -40,21 +40,21 @@ extern "C"
     }
 }
 
-std::optional<std::string> GetTrack() 
+std::optional<std::string> GetTrack()
 {
     std::string defaultTrackFile = "Steeplechase.trk";
     if (std::filesystem::exists(defaultTrackFile))
     {
        std::cout << "Selected default track: " << defaultTrackFile << std::endl;
        return defaultTrackFile.c_str();
-    } 
-    else 
+    }
+    else
     {
         std::cout << "Attempting to select a track... " << std::endl;
         std::promise<std::optional<std::string>> dialogPromise;
         std::future<std::optional<std::string>> dialogFuture = dialogPromise.get_future();
-    
-        SDL_ShowOpenFileDialog([](void* userdata, const char* const* filelist, int filter) 
+
+        SDL_ShowOpenFileDialog([](void* userdata, const char* const* filelist, int filter)
         {
             auto dialogPromise = static_cast<std::promise<std::optional<std::string>>*>(userdata);
             if (filelist && *filelist && filelist[0][0] != '\0')
@@ -67,7 +67,7 @@ std::optional<std::string> GetTrack()
                 dialogPromise->set_value(std::nullopt);
             }
         }, &dialogPromise, NULL, NULL, 0, NULL, FALSE);
- 
+
         return dialogFuture.get();
     }
 }
@@ -100,16 +100,15 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
     glWindow = SDL_CreateWindow("GLHoverRace",
     640, 400,
-    SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY
-);
+    SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!glWindow) {
         SDL_Log("Couldn't create gl window =: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    //SDL_SetWindowMinimumSize(glWindow, 640, 400);
+    SDL_SetWindowMinimumSize(glWindow, 640, 400);
     glContext = SDL_GL_CreateContext(glWindow);
     SDL_GL_SetSwapInterval(1); // VSync
     SDL_GL_MakeCurrent(glWindow, glContext);
@@ -123,7 +122,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     sg_desc desc = {};
     desc.environment.defaults.color_format = SG_PIXELFORMAT_RGBA8;
     desc.environment.defaults.depth_format = SG_PIXELFORMAT_DEPTH;
-    desc.environment.defaults.sample_count = 4;
+    desc.environment.defaults.sample_count = 16;
     desc.logger = logger;
     sg_setup(&desc);
 
@@ -144,7 +143,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     #endif
 
     auto track = GetTrack();
-    if(track.has_value()) 
+    if(track.has_value())
     {
         game->LoadSelectedTrack(track.value().c_str());
         return SDL_APP_CONTINUE;
@@ -161,7 +160,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
     if (event->type == SDL_EVENT_KEY_DOWN || event->type == SDL_EVENT_KEY_UP)
     {
-        if (event->key.repeat) 
+        if (event->key.repeat)
         {
             return SDL_APP_CONTINUE;
         }
@@ -222,7 +221,10 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
                     break;
             }
         }
-        game->SetControlState(lControlState);
+    }
+    if (event->type == SDL_EVENT_WINDOW_RESIZED)
+    {
+        game->SetResolution(event->window.data1, event->window.data2);
     }
 
     return SDL_APP_CONTINUE;

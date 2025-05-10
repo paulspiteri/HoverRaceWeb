@@ -57,4 +57,5 @@ class MR_SDLGameApp
       void RefreshView();
       void Simulate();
       void SetControlState(int pState1);
+      void SetResolution(int width, int height);
 };

@@ -32,7 +32,8 @@ out vec4 frag_color;
 
 void main() {
     vec2 uv = fract(world_uv);
-    vec2 atlas_uv = mix(atlas_coord.xy, atlas_coord.zw, uv);
+    vec2 rotated_uv = vec2(1.0 - uv.y, uv.x);   // could be rotated wrong way, needs testing
+    vec2 atlas_uv = mix(atlas_coord.xy, atlas_coord.zw, rotated_uv);
     frag_color = texture(sampler2D(atlas_tex, smp), atlas_uv);
 }
 @end
