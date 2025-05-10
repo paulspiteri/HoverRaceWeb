@@ -1,4 +1,7 @@
 #include "GLLevelLoader.h"
+
+#include <optional>
+
 #include "../ObjFacTools/ResBitmap.h"
 
 GLLevelLoader::GLLevelLoader(GLRenderer* renderer): glRenderer(renderer)
@@ -12,15 +15,9 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
     int totalRooms = level->GetRoomCount();
     for (int roomId = 0; roomId < totalRooms; roomId++)
     {
-        auto roomShape = level->GetRoomShape(roomId);
         LoadRoomWalls(level, roomId, verts);
         LoadRoomFloor(level, roomId, verts);
-
-        auto ceilingTexture = level->GetRoomTopElement(roomId);
-        if (ceilingTexture != nullptr)
-        {
-            //  LoadRoomCeiling(roomShape, verts);
-        }
+        LoadRoomCeiling(level, roomId, verts);
 
         int totalRoomFeatures = level->GetFeatureCount(roomId);
         for (int roomFeatureIdx = 0; roomFeatureIdx < totalRoomFeatures; roomFeatureIdx++)
@@ -30,7 +27,6 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
             //DrawGLSection(roomFeatureShape, vertices, vertexIdxs);
             delete roomFeatureShape;
         }
-        delete roomShape;
     }
 
     glRenderer->BindVertices(verts);
@@ -90,12 +86,13 @@ void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId, VerticesDat
         lP0.mX = lP1.mX;
         lP0.mY = lP1.mY;
     }
+    delete roomShape;
 }
 
 void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId, VerticesData& verts) const
 {
-    auto surfaceElement = level->GetRoomBottomElement(roomId);
     auto roomShape = level->GetRoomShape(roomId);
+    auto surfaceElement = level->GetRoomBottomElement(roomId);
     auto bitmap = surfaceElement->GetResBitmap();
     auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
 
@@ -120,19 +117,31 @@ void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId, VerticesDat
         verts.indices.push_back(baseIndex + j);
         verts.indices.push_back(baseIndex + j + 1);
     }
+    delete roomShape;
 }
 
 void GLLevelLoader::LoadRoomCeiling(const MR_Level* level, int roomId, VerticesData& verts) const
 {
     auto roomShape = level->GetRoomShape(roomId);
+    auto surfaceElement = level->GetRoomTopElement(roomId);
+    auto bitmap = surfaceElement->GetResBitmap();
+    if (bitmap == nullptr)
+    {
+        return;
+    }
     auto height = roomShape->ZMax();
     auto lNbVertex = roomShape->VertexCount();
     auto baseIndex = verts.vertices.size();
+    auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
 
     for (auto i = 0; i < lNbVertex; i++)
     {
+        float u = roomShape->X(i) / bitmap->GetWidth();
+        float v = roomShape->Y(i) / bitmap->GetHeight();
         verts.vertices.push_back(
-            SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height, 0.25f, 0.4f, 0.25f, 0)));
+            SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height,
+                              1.0f, 1.0f, 1.0f, 0.0f,
+                              u, v, textureAtlasId)));
     }
     // Triangulate using fan
     for (auto j = 1; j < lNbVertex - 1; ++j)
@@ -141,9 +150,11 @@ void GLLevelLoader::LoadRoomCeiling(const MR_Level* level, int roomId, VerticesD
         verts.indices.push_back(baseIndex + j + 1);
         verts.indices.push_back(baseIndex + j);
     }
+    delete roomShape;
 }
 
-void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_SurfaceElement* surfaceElement) const
+void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR_3DCoordinate lP1,
+                                    MR_SurfaceElement* surfaceElement) const
 {
     auto bitmap = surfaceElement->GetResBitmap();
     int textureAtlasId = 0;
@@ -156,9 +167,9 @@ void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR
     float v = 0.5f;
 
     verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u, v, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0,1, u, v, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0,1, u, v, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP1.mZ, 1, 0, 0,1, u, v, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0, 1, u, v, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0, 1, u, v, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP1.mZ, 1, 0, 0, 1, u, v, textureAtlasId)));
     uint16_t latestVertexIdx = verts.vertices.size() - 1;
 
     verts.indices.push_back(latestVertexIdx - 3);
