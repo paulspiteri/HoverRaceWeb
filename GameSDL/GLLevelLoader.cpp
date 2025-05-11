@@ -163,15 +163,18 @@ void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR
     {
         return;
     }
-
     int textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
-    float u0 = lP0.mX / bitmap->GetWidth();
-    float v0 = 0.0;
-    float u1 = lP1.mX / bitmap->GetWidth();
-    float v1 = 1.0f;
+
+    float dx = lP1.mX - lP0.mX;
+    float dy = lP1.mY - lP0.mY;
+    float u0 = 0.0f;
+    float u1 = sqrt(dx*dx + dy*dy) / bitmap->GetWidth();
+    float v0 = abs(lP0.mZ-lP1.mZ) / bitmap->GetHeight();
+    float v1 = 0.0f;
+
     auto vstretchBitmap = dynamic_cast<MR_VStretchBitmapSurface*>(surfaceElement);
     if (vstretchBitmap != nullptr) {
-        int lHeight = lP0.mZ-lP1.mZ;
+        int lHeight = abs(lP0.mZ-lP1.mZ);
         if(lHeight > 0)
         {
             int lDivisor = 1+(lHeight-1)/vstretchBitmap->GetMaxHeight();
