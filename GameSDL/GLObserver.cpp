@@ -15,10 +15,11 @@ void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_Sim
     }
 
     MR_3DCoordinate lCameraPos;
-    MR_3DCoordinate lCharacterPos = pViewingCharacter->mPosition;
-    lCameraPos.mX = lCharacterPos.mX - cos(lDist);
-    lCameraPos.mY = lCharacterPos.mY - sin(lDist);
-    lCameraPos.mZ = lCharacterPos.mZ + 1700;
+    auto orientationDegrees = MR_ANGLE_TO_DEGREES(lOrientation);
+    auto orientationRadians = orientationDegrees * (std::numbers::pi_v<float> / 180.0f);
+    lCameraPos.mX  = pViewingCharacter->mPosition.mX - lDist * cos(orientationRadians);
+    lCameraPos.mY  = pViewingCharacter->mPosition.mY - lDist * sin(orientationRadians);
+    lCameraPos.mZ  = pViewingCharacter->mPosition.mZ + 1700;
     if (mLastGlCameraPos.has_value())
     {
         constexpr float XY_SMOOTHING = 0.75f;
