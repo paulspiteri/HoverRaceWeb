@@ -191,8 +191,10 @@ void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR
     }
     else
     {
-        u1 = wallLength / bitmap->GetWidth();
-        v1 = wallHeight / bitmap->GetHeight();
+        u1 = wallLength / bitmap->GetWidth();   // tile horizontally
+
+        v0 = 1.0f;
+        v1 = 1.0f - ((float)wallHeight / bitmap->GetHeight());
     }
 
     verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u0, v0, textureAtlasId)));
