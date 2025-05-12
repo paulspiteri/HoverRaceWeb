@@ -164,25 +164,35 @@ void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR
         return;
     }
     int textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
-
     float dx = lP1.mX - lP0.mX;
     float dy = lP1.mY - lP0.mY;
+    auto wallLength = sqrt(dx * dx + dy * dy);
+    int wallHeight = lP0.mZ - lP1.mZ;
+
     float u0 = 0.0f;
-    float u1 = sqrt(dx*dx + dy*dy) / bitmap->GetWidth();
-    float v0 = abs(lP0.mZ-lP1.mZ) / bitmap->GetHeight();
-    float v1 = 0.0f;
+    float u1 = 1.0f;
+    float v0 = 0.0f;
+    float v1 = 1.0f;
 
     auto vstretchBitmap = dynamic_cast<MR_VStretchBitmapSurface*>(surfaceElement);
-    if (vstretchBitmap != nullptr) {
-        int lHeight = abs(lP0.mZ-lP1.mZ);
-        if(lHeight > 0)
+    if (vstretchBitmap != nullptr)
+    {
+        if (wallHeight > 0)
         {
-            int lDivisor = 1+(lHeight-1)/vstretchBitmap->GetMaxHeight();
-            if( lDivisor > 1)
+            u1 = wallLength / wallHeight; // repeat width every wall height
+
+            int lDivisor = 1 + (wallHeight - 1) / vstretchBitmap->GetMaxHeight();
+            if (lDivisor > 1)
             {
-                v1 = v1*lDivisor;
+                v1 = v1 * lDivisor;
+                u1 = u1 * lDivisor;
             }
         }
+    }
+    else
+    {
+        u1 = wallLength / bitmap->GetWidth();
+        v1 = wallHeight / bitmap->GetHeight();
     }
 
     verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u0, v0, textureAtlasId)));

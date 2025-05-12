@@ -227,6 +227,10 @@ uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
     auto palette = videoBuffer->GetPalette();
     int width = bitmap->GetMaxXRes();
     int height = bitmap->GetMaxYRes();
+    if (width != height)
+    {
+        throw new std::runtime_error("Only square textures are supported");
+    }
     MR_UInt8* lSrc = bitmap->GetBuffer(0);
     auto lDest = new uint32_t[width * height];
     for (int y = 0; y < height; y++)
@@ -237,7 +241,13 @@ uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
             MR_UInt8 pixelColorPaletteIdx = lSrc[pixelIdx];
             NoMFC::PALETTEENTRY& paletteEntry = palette[pixelColorPaletteIdx];
             uint32_t color = (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
-            lDest[pixelIdx] = color;
+
+            // textures appear to be rotated 90 degrees which this code corrects
+            int rotated_x = y;
+            int rotated_y = width - 1 - x;
+            int rotated_pixelIdx = rotated_y * width + rotated_x;
+
+            lDest[rotated_pixelIdx] = color;
         }
     }
 
