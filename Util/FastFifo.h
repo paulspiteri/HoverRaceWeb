@@ -40,7 +40,7 @@ template <class pType> class MR_FastFifoBase
     
    public:
 
-      MR_FastFifoBase<pType>( int pSize, pType* pData ) { mNbItem = 0; mHead = 0; mArraySize = pSize; mArray = pData; };
+      MR_FastFifoBase( int pSize, pType* pData ) { mNbItem = 0; mHead = 0; mArraySize = pSize; mArray = pData; };
      
       void   Add( pType pData )         { mArray[ (mHead+mNbItem)%mArraySize] = pData; if( mNbItem==mArraySize){mHead = (mHead+1)%mArraySize;}else{mNbItem++;} };
       void   Remove( int pCount=1 )     { if( pCount>mNbItem ){pCount=mNbItem;} mNbItem -= pCount; mHead = (mHead+pCount)%mArraySize; };
@@ -64,8 +64,8 @@ template <class pType> class MR_FastFifoBase
 template <class pType> class MR_FastFifo:public MR_FastFifoBase< pType >
 {
    public:
-      MR_FastFifo<pType>( int pSize ):MR_FastFifoBase<pType>( pSize, new pType[ pSize ] ){};
-      ~MR_FastFifo<pType>()                                                              { delete []this->mArray; };
+      MR_FastFifo( int pSize ):MR_FastFifoBase<pType>( pSize, new pType[ pSize ] ){};
+      ~MR_FastFifo()                                                              { delete []this->mArray; };
 };
 
 
@@ -75,7 +75,7 @@ template <class pType, int pSize> class MR_FixedFastFifo:public MR_FastFifoBase<
       pType mData[ pSize ];
 
    public:
-      MR_FixedFastFifo< pType, pSize>():MR_FastFifoBase<pType>( pSize, mData ){};
+      MR_FixedFastFifo():MR_FastFifoBase<pType>( pSize, mData ){};
 
 };
 
