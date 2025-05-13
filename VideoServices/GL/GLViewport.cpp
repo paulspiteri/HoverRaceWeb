@@ -1,7 +1,7 @@
 #include "GLViewport.h"
 #include <cstring>
 
-GLViewport::GLViewport(): sizeX(0), sizeY(0), camera(64.0f)
+GLViewport::GLViewport(): sizeX(0), sizeY(0), camera(74.0f)
 {
 }
 
