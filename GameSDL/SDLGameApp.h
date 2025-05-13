@@ -11,9 +11,9 @@ class MR_SDLGameApp
 {   
    private:
       static MR_SDLGameApp* This; // unique instance pointer
+
       SDL_Window*              mGLWindow;
       SDL_GLContext            mGLContext;
-      SDL_Texture*             mTexture;
       MR_VideoBuffer*          mVideoBuffer;
       GLRenderer*              mGLRenderer;
       GLLevelLoader*           mGLLevelLoader;
@@ -54,7 +54,8 @@ class MR_SDLGameApp
       BOOL InitApplication();
       BOOL InitGame();
       void LoadSelectedTrack(const char* trackFile);
-      void RefreshView();
+      void SetVideoMode(int width, int height);
+      void RefreshView(SDL_Texture* texture);
       void Simulate();
       void SetControlState(int pState1);
       void SetResolution(int width, int height);

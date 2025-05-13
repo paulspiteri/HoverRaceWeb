@@ -23,7 +23,6 @@ MR_SDLGameApp::MR_SDLGameApp(SDL_Texture* texture, SDL_Window* glWindow, SDL_GLC
    mCurrentSession  = NULL;
    mGLWindow = glWindow;
    mGLContext = glContext;
-   mTexture   = texture;
    mGLLevelLoader = nullptr;
    mClrScrTodo = 2;
 
@@ -96,7 +95,7 @@ BOOL MR_SDLGameApp::InitGame()
 
    if( lReturnValue )
    {
-       mVideoBuffer->SetVideoMode();
+       mVideoBuffer->SetVideoMode(640, 400);
    }
 
    mGLRenderer = new GLRenderer(mGLWindow, mGLContext, mVideoBuffer);
@@ -113,7 +112,7 @@ void MR_SDLGameApp::Simulate()
    }
 }
 
-void MR_SDLGameApp::RefreshView()
+void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
 {
    // Game processing
    if( mVideoBuffer != NULL )
@@ -156,7 +155,7 @@ void MR_SDLGameApp::RefreshView()
          {
             mVideoBuffer->Clear(0);
          }
-         mVideoBuffer->Unlock(mTexture);
+         mVideoBuffer->Unlock(texture);
       }
    }
 
@@ -239,6 +238,11 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
          std::cout << "New Local Session created" << std::endl;
       }
    }
+}
+
+void MR_SDLGameApp::SetVideoMode(int width, int height)
+{
+   mVideoBuffer->SetVideoMode(width, height);
 }
 
 void MR_SDLGameApp::DrawBackground()

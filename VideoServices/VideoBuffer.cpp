@@ -161,7 +161,7 @@ void MR_VideoBuffer::SetBackPalette( MR_UInt8* pPalette )
    CreatePalette( mGamma, mContrast, mBrightness );
 }
 
-BOOL MR_VideoBuffer::SetVideoMode()
+BOOL MR_VideoBuffer::SetVideoMode(int width, int height)
 {
    PRINT_LOG( "SetVideoMode(Window)" );
    BOOL            lReturnValue;
@@ -174,9 +174,9 @@ BOOL MR_VideoBuffer::SetVideoMode()
 
    DeleteInternalSurfaces();
 
-   mXRes = 640;
-   mYRes = 400;
-   mLineLen = 640;
+   mXRes = width;
+   mYRes = height;
+   mLineLen = width;
 
    // Create a local memory ZBuffer
    // We do not use DirectDrawZBuffer for now
