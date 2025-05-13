@@ -37,7 +37,7 @@ template <class pType> class MR_FastArrayBase
       pType* mArray;
     
    public:
-      MR_FastArrayBase<pType>( int pSize, pType* pData ) { mNbItem = 0; mArraySize = pSize; mArray = pData; };
+      MR_FastArrayBase( int pSize, pType* pData ) { mNbItem = 0; mArraySize = pSize; mArray = pData; };
 
       void   Add( pType pData )    { ASSERT( mNbItem<mArraySize ); mArray[ mNbItem++ ]=pData; };
       void   Use( int pCount = 1 ) { mNbItem+=pCount; ASSERT( mNbItem <= mArraySize ); };
@@ -57,8 +57,8 @@ template <class pType> class MR_FastArrayBase
 template <class pType> class FastArray:public MR_FastArrayBase< pType >
 {
    public:
-      FastArray<pType>( int pSize ):MR_FastArrayBase<pType>( pSize, new pType[ pSize ] ){};
-      ~FastArray<pType>() { delete []this->mArray; };
+      FastArray( int pSize ):MR_FastArrayBase<pType>( pSize, new pType[ pSize ] ){};
+      ~FastArray() { delete []this->mArray; };
 };
 
 
@@ -68,7 +68,7 @@ template <class pType, int pSize> class MR_FixedFastArray:public MR_FastArrayBas
       pType mData[ pSize ];
 
    public:
-      MR_FixedFastArray< pType, pSize>():MR_FastArrayBase<pType>( pSize, mData ){};
+      MR_FixedFastArray():MR_FastArrayBase<pType>( pSize, mData ){};
 
 };
 
