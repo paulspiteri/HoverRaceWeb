@@ -163,6 +163,14 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
         return SDL_APP_SUCCESS; /* end the program, reporting success to the OS. */
     }
 
+    if (event->window.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
+    {
+        if (event->window.windowID == SDL_GetWindowID(window))
+        {
+            SDL_DestroyWindow(window);
+        }
+    }
+
     if (event->type == SDL_EVENT_KEY_DOWN || event->type == SDL_EVENT_KEY_UP)
     {
         if (event->key.repeat)

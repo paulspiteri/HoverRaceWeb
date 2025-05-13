@@ -171,8 +171,8 @@ void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR
 
     float u0 = 0.0f;
     float u1 = 1.0f;
-    float v0 = 0.0f;
-    float v1 = 1.0f;
+    float v0 = 1.0f;
+    float v1 = 0.0f;
 
     auto vstretchBitmap = dynamic_cast<MR_VStretchBitmapSurface*>(surfaceElement);
     if (vstretchBitmap != nullptr)
@@ -184,7 +184,7 @@ void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR
             int lDivisor = 1 + (wallHeight - 1) / vstretchBitmap->GetMaxHeight();
             if (lDivisor > 1)
             {
-                v1 = v1 * lDivisor;
+                v0 = v0 * lDivisor;
                 u1 = u1 * lDivisor;
             }
         }

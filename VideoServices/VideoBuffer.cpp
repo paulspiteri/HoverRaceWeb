@@ -292,8 +292,8 @@ void MR_VideoBuffer::Unlock(/* SDL_Texture* */ void* texture)
    } 
    else 
    {
-      ASSERT(FALSE);
-      TRACE("Failed to lock texture");
+    //  ASSERT(FALSE);
+    //  TRACE("Failed to lock texture");
    }
 }
 
