@@ -11,7 +11,7 @@
 #ifdef __EMSCRIPTEN__
     #define SOKOL_GLES3
 #else
-    #define SOKOL_GLCORE
+#define SOKOL_GLCORE
 #endif
 #define SOKOL_LOG_IMPL
 #include "sokol_log.h"
@@ -27,17 +27,16 @@ SDL_GLContext glContext = nullptr;
 MR_SDLGameApp* game = nullptr;
 int lControlState = 0;
 
-extern "C"
+extern "C" {
+void ChangeToTrack(const char* trackFile)
 {
-    void ChangeToTrack(const char* trackFile)
+    printf("ChangeToTrack: %s\n", trackFile);
+    if (game != nullptr)
     {
-        printf("ChangeToTrack: %s\n", trackFile);
-        if (game != nullptr)
-        {
-            game->Clean();
-            game->LoadSelectedTrack(trackFile);
-        }
+        game->Clean();
+        game->LoadSelectedTrack(trackFile);
     }
+}
 }
 
 std::optional<std::string> GetTrack()
@@ -45,8 +44,8 @@ std::optional<std::string> GetTrack()
     std::string defaultTrackFile = "Steeplechase.trk";
     if (std::filesystem::exists(defaultTrackFile))
     {
-       std::cout << "Selected default track: " << defaultTrackFile << std::endl;
-       return defaultTrackFile.c_str();
+        std::cout << "Selected default track: " << defaultTrackFile << std::endl;
+        return defaultTrackFile.c_str();
     }
     else
     {
@@ -61,7 +60,8 @@ std::optional<std::string> GetTrack()
             {
                 std::cout << "Track selected " << filelist[0] << std::endl;
                 dialogPromise->set_value(filelist[0]);
-            } else
+            }
+            else
             {
                 std::cout << "Did not select a track file." << std::endl;
                 dialogPromise->set_value(std::nullopt);
@@ -72,28 +72,30 @@ std::optional<std::string> GetTrack()
     }
 }
 
-SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
+SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
 {
     MR_SoundServer::Init();
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
     window = SDL_CreateWindow("HoverRace SDL",
-        640, 400,
-        SDL_WINDOW_RESIZABLE);
-    if (!window) {
+                              640, 400,
+                              SDL_WINDOW_RESIZABLE);
+    if (!window)
+    {
         SDL_Log("Couldn't create window =: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
     SDL_SetWindowMinimumSize(window, 640, 400);
     renderer = SDL_CreateRenderer(window, NULL);
-    if (!renderer) {
+    if (!renderer)
+    {
         SDL_Log("Couldn't create renderer =: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
     texture = SDL_CreateTexture(renderer,
-    SDL_PIXELFORMAT_ARGB8888,
-    SDL_TEXTUREACCESS_STREAMING,
-    640, 400);
+                                SDL_PIXELFORMAT_ARGB8888,
+                                SDL_TEXTUREACCESS_STREAMING,
+                                640, 400);
 
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -102,9 +104,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
     glWindow = SDL_CreateWindow("GLHoverRace",
-    640, 400,
-    SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
-    if (!glWindow) {
+                                640, 400,
+                                SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    if (!glWindow)
+    {
         SDL_Log("Couldn't create gl window =: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
@@ -126,24 +129,25 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     desc.logger = logger;
     sg_setup(&desc);
 
-    if (!sg_isvalid()) {
+    if (!sg_isvalid())
+    {
         std::cout << "Failed to initialize sokol_gfx" << std::endl;
         return SDL_APP_FAILURE;
     }
     std::cout << "Initialized sokol_gfx" << std::endl;
 
 
-    game = new MR_SDLGameApp( texture, glWindow, glContext );
+    game = new MR_SDLGameApp(texture, glWindow, glContext);
     game->InitGame();
     std::cout << "Init Game completed" << std::endl;
 
-    #ifdef __EMSCRIPTEN__
+#ifdef __EMSCRIPTEN__
         // don't attempt to default a track on web
         return SDL_APP_CONTINUE;
-    #endif
+#endif
 
     auto track = GetTrack();
-    if(track.has_value())
+    if (track.has_value())
     {
         game->LoadSelectedTrack(track.value().c_str());
         return SDL_APP_CONTINUE;
@@ -151,11 +155,12 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     return SDL_APP_FAILURE;
 }
 
-SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
+SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 {
     if (
-        event->type == SDL_EVENT_QUIT) {
-        return SDL_APP_SUCCESS;  /* end the program, reporting success to the OS. */
+        event->type == SDL_EVENT_QUIT)
+    {
+        return SDL_APP_SUCCESS; /* end the program, reporting success to the OS. */
     }
 
     if (event->type == SDL_EVENT_KEY_DOWN || event->type == SDL_EVENT_KEY_UP)
@@ -167,88 +172,98 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
         if (event->type == SDL_EVENT_KEY_DOWN)
         {
-            switch (event->key.key) {
-                case SDLK_LSHIFT:
-                case SDLK_RSHIFT:
-                    lControlState |= MR_MainCharacter::eMotorOn;
-                    break;
-                case SDLK_RIGHT:
-                    lControlState |= MR_MainCharacter::eRight;
-                    break;
-                case SDLK_LEFT:
-                    lControlState |= MR_MainCharacter::eLeft;
-                    break;
-                case SDLK_DOWN:
-                    lControlState |= MR_MainCharacter::eBreakDirection;
-                    break;
-                case SDLK_UP:
-                    lControlState |= MR_MainCharacter::eJump;
-                    break;
-                case SDLK_LCTRL:
-                case SDLK_RCTRL:
-                    lControlState |= MR_MainCharacter::eFire;
-                    break;
-                case SDLK_TAB:
-                    lControlState |= MR_MainCharacter::eSelectWeapon;
-                    break;
+            switch (event->key.key)
+            {
+            case SDLK_LSHIFT:
+            case SDLK_RSHIFT:
+                lControlState |= MR_MainCharacter::eMotorOn;
+                break;
+            case SDLK_RIGHT:
+                lControlState |= MR_MainCharacter::eRight;
+                break;
+            case SDLK_LEFT:
+                lControlState |= MR_MainCharacter::eLeft;
+                break;
+            case SDLK_DOWN:
+                lControlState |= MR_MainCharacter::eBreakDirection;
+                break;
+            case SDLK_UP:
+                lControlState |= MR_MainCharacter::eJump;
+                break;
+            case SDLK_LCTRL:
+            case SDLK_RCTRL:
+                lControlState |= MR_MainCharacter::eFire;
+                break;
+            case SDLK_TAB:
+                lControlState |= MR_MainCharacter::eSelectWeapon;
+                break;
             }
         }
         else if (event->type == SDL_EVENT_KEY_UP)
         {
-            switch (event->key.key) {
-                case SDLK_LSHIFT:
-                case SDLK_RSHIFT:
-                    lControlState &= ~MR_MainCharacter::eMotorOn;
-                    break;
-                case SDLK_RIGHT:
-                    lControlState &= ~MR_MainCharacter::eRight;
-                    break;
-                case SDLK_LEFT:
-                    lControlState &= ~MR_MainCharacter::eLeft;
-                    break;
-                case SDLK_DOWN:
-                    lControlState &= ~MR_MainCharacter::eBreakDirection;
-                    break;
-                case SDLK_UP:
-                    lControlState &= ~MR_MainCharacter::eJump;
-                    break;
-                case SDLK_LCTRL:
-                case SDLK_RCTRL:
-                    lControlState &= ~MR_MainCharacter::eFire;
-                    break;
-                case SDLK_TAB:
-                    lControlState &= ~MR_MainCharacter::eSelectWeapon;
-                    break;
+            switch (event->key.key)
+            {
+            case SDLK_LSHIFT:
+            case SDLK_RSHIFT:
+                lControlState &= ~MR_MainCharacter::eMotorOn;
+                break;
+            case SDLK_RIGHT:
+                lControlState &= ~MR_MainCharacter::eRight;
+                break;
+            case SDLK_LEFT:
+                lControlState &= ~MR_MainCharacter::eLeft;
+                break;
+            case SDLK_DOWN:
+                lControlState &= ~MR_MainCharacter::eBreakDirection;
+                break;
+            case SDLK_UP:
+                lControlState &= ~MR_MainCharacter::eJump;
+                break;
+            case SDLK_LCTRL:
+            case SDLK_RCTRL:
+                lControlState &= ~MR_MainCharacter::eFire;
+                break;
+            case SDLK_TAB:
+                lControlState &= ~MR_MainCharacter::eSelectWeapon;
+                break;
             }
         }
     }
-    if (event->type == SDL_EVENT_WINDOW_RESIZED)
+    else if (event->type == SDL_EVENT_WINDOW_RESIZED)
     {
+        SDL_DestroyTexture(texture);
+        texture = SDL_CreateTexture(renderer,
+                                    SDL_PIXELFORMAT_ARGB8888,
+                                    SDL_TEXTUREACCESS_STREAMING,
+                                    event->window.data1, event->window.data2);
+
         game->SetResolution(event->window.data1, event->window.data2);
     }
 
     return SDL_APP_CONTINUE;
 }
 
-SDL_AppResult SDL_AppIterate(void *appstate)
+SDL_AppResult SDL_AppIterate(void* appstate)
 {
     // necessary to re-set the control state on each frame because the existing code polled in the game loop
     game->SetControlState(lControlState);
     game->Simulate();
-    game->RefreshView();
+    game->RefreshView(texture);
     SDL_RenderTexture(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
 
     return SDL_APP_CONTINUE;
 }
 
-void SDL_AppQuit(void *appstate, SDL_AppResult result)
+void SDL_AppQuit(void* appstate, SDL_AppResult result)
 {
     delete game;
     game = nullptr;
 
-    SDL_GL_DestroyContext(glContext);
-    SDL_DestroyWindow(glWindow);
+    SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+
+    SDL_GL_DestroyContext(glContext);
+    SDL_DestroyWindow(glWindow);
 }

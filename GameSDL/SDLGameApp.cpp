@@ -280,6 +280,8 @@ void MR_SDLGameApp::SetControlState(int pState1)
 
 void MR_SDLGameApp::SetResolution(int width, int height)
 {
+   mVideoBuffer->SetVideoMode(width, height);
+
    mGLRenderer->state.swapchain.width = width;
    mGLRenderer->state.swapchain.height = height;
 }
