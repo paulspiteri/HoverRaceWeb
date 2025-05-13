@@ -76,7 +76,7 @@ class MR_VideoBuffer
 
 
       // Video mode selection
-      MR_DllDeclare BOOL SetVideoMode( );     // In a window mode
+      MR_DllDeclare BOOL SetVideoMode(int width, int height);     // In a window mode
       MR_DllDeclare void EnterIconMode();
       MR_DllDeclare void ExitIconMode();
 

@@ -416,3 +416,4 @@ CMakeUserPresets.json
 build/
 buildweb/
 .vscode/
+.idea/

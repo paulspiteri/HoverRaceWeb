@@ -9,7 +9,6 @@ class MR_SDLGameApp
    private:
       static MR_SDLGameApp* This; // unique instance pointer
     
-      SDL_Texture*             mTexture;
       MR_VideoBuffer*          mVideoBuffer;
       MR_Observer*             mObserver1;
       MR_ClientSession*        mCurrentSession;
@@ -41,14 +40,15 @@ class MR_SDLGameApp
 
    public:
 
-      MR_SDLGameApp(SDL_Texture* texture);
+      MR_SDLGameApp();
       ~MR_SDLGameApp();
 
       void Clean();
       BOOL InitApplication();
       BOOL InitGame();
       void LoadSelectedTrack(const char* trackFile);
-      void RefreshView();
+      void SetVideoMode(int width, int height);
+      void RefreshView(SDL_Texture* texture);
       void Simulate();
       void SetControlState(int pState1);
 };

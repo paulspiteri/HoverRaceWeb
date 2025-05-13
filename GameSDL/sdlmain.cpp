@@ -14,9 +14,9 @@ static SDL_Texture *texture = NULL;
 static MR_SDLGameApp *game = NULL;
 static int lControlState = 0;
 
-extern "C" 
+extern "C"
 {
-    void ChangeToTrack(const char* trackFile) 
+    void ChangeToTrack(const char* trackFile)
     {
         printf("ChangeToTrack: %s\n", trackFile);
         if (game != nullptr)
@@ -27,21 +27,21 @@ extern "C"
     }
 }
 
-std::optional<std::string> GetTrack() 
+std::optional<std::string> GetTrack()
 {
     std::string defaultTrackFile = "Steeplechase.trk";
     if (std::filesystem::exists(defaultTrackFile))
     {
        std::cout << "Selected default track: " << defaultTrackFile << std::endl;
        return defaultTrackFile.c_str();
-    } 
-    else 
+    }
+    else
     {
         std::cout << "Attempting to select a track... " << std::endl;
         std::promise<std::optional<std::string>> dialogPromise;
         std::future<std::optional<std::string>> dialogFuture = dialogPromise.get_future();
-    
-        SDL_ShowOpenFileDialog([](void* userdata, const char* const* filelist, int filter) 
+
+        SDL_ShowOpenFileDialog([](void* userdata, const char* const* filelist, int filter)
         {
             auto dialogPromise = static_cast<std::promise<std::optional<std::string>>*>(userdata);
             if (filelist && *filelist && filelist[0][0] != '\0')
@@ -54,7 +54,7 @@ std::optional<std::string> GetTrack()
                 dialogPromise->set_value(std::nullopt);
             }
         }, &dialogPromise, NULL, NULL, 0, NULL, FALSE);
- 
+
         return dialogFuture.get();
     }
 }
@@ -67,6 +67,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_Log("Couldn't create window and renderer: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
+    SDL_SetWindowMinimumSize(window, 640, 400);
 
     texture = SDL_CreateTexture(renderer,
         SDL_PIXELFORMAT_ARGB8888,
@@ -74,7 +75,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         640, 400);
 
     std::cout << "Created Window and Renderer" << std::endl;
-    game = new MR_SDLGameApp( texture );
+    game = new MR_SDLGameApp();
     game->InitGame();
     std::cout << "Init Game completed" << std::endl;
 
@@ -84,7 +85,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     #endif
 
     auto track = GetTrack();
-    if(track.has_value()) 
+    if(track.has_value())
     {
         game->LoadSelectedTrack(track.value().c_str());
         return SDL_APP_CONTINUE;
@@ -101,7 +102,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 
     if (event->type == SDL_EVENT_KEY_DOWN || event->type == SDL_EVENT_KEY_UP)
     {
-        if (event->key.repeat) 
+        if (event->key.repeat)
         {
             return SDL_APP_CONTINUE;
         }
@@ -164,6 +165,17 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
         }
         game->SetControlState(lControlState);
     }
+    else if (event->window.type == SDL_EVENT_WINDOW_RESIZED)
+    {
+        SDL_DestroyTexture(texture);
+        texture = SDL_CreateTexture(renderer,
+        SDL_PIXELFORMAT_ARGB8888,
+        SDL_TEXTUREACCESS_STREAMING,
+        event->window.data1, event->window.data2);
+
+        game->SetVideoMode(event->window.data1, event->window.data2);
+    }
+
 
     return SDL_APP_CONTINUE;
 }
@@ -173,7 +185,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     // necessary to re-set the control state on each frame because the existing code polled in the game loop
     game->SetControlState(lControlState);
     game->Simulate();
-    game->RefreshView();
+    game->RefreshView(texture);
     SDL_RenderTexture(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
 
