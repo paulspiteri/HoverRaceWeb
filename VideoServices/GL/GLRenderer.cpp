@@ -8,6 +8,7 @@
 #include <algorithm>
 
 #include "stb_rect_pack.h"
+#include "../3DViewport.h"
 
 
 GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer)
@@ -40,7 +41,9 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     wrap_sampler_desc.mag_filter = SG_FILTER_LINEAR;
     wrap_sampler_desc.wrap_u = SG_WRAP_REPEAT;
     wrap_sampler_desc.wrap_v = SG_WRAP_REPEAT;
-    state.bind.samplers[0] = sg_make_sampler(&wrap_sampler_desc);
+    auto sampler = sg_make_sampler(&wrap_sampler_desc);
+    state.world_bindings.samplers[0] = sampler;
+    state.bkg_bindings.samplers[0] = sampler;
 
     state.swapchain = {
         .width = 640,
@@ -53,10 +56,10 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
 
 GLRenderer::~GLRenderer()
 {
-    sg_destroy_buffer(state.bind.vertex_buffers[0]);
-    sg_destroy_buffer(state.bind.index_buffer);
-    sg_destroy_image(state.bind.images[0]);
-    sg_destroy_sampler(state.bind.samplers[0]);
+    sg_destroy_buffer(state.world_bindings.vertex_buffers[0]);
+    sg_destroy_buffer(state.world_bindings.index_buffer);
+    sg_destroy_image(state.world_bindings.images[0]);
+    sg_destroy_sampler(state.world_bindings.samplers[0]);
     sg_destroy_pipeline(state.pip);
 
     sg_shutdown();
@@ -72,17 +75,22 @@ void GLRenderer::Render() const
     SDL_GL_MakeCurrent(glWindow, glContext);
     sg_begin_pass(&pass);
     sg_apply_pipeline(state.pip);
-    sg_apply_bindings(&state.bind);
     sg_apply_uniforms(0, SG_RANGE(state.uniforms));
     sg_apply_uniforms(1, SG_RANGE(state.atlas_coords));
-    sg_draw(0, state.wallVertexCount, 1);
+
+    sg_apply_bindings(&state.bkg_bindings);
+    sg_draw(0, state.bkg_count, 1);
+
+    sg_apply_bindings(&state.world_bindings);
+    sg_draw(0, state.world_count, 1);
+
     sg_end_pass();
     sg_commit();
     SDL_GL_SwapWindow(glWindow);
 }
 
 
-void GLRenderer::BindTextures()
+void GLRenderer::BindWorldTextures()
 {
     std::vector<stbrp_rect> rects;
     rects.reserve(textures.size());
@@ -159,51 +167,40 @@ void GLRenderer::BindTextures()
     auto atlas_texture = sg_make_image(&img_desc);
     delete[] atlas_pixels;
 
-    state.bind.images[0] = atlas_texture;
+    state.world_bindings.images[0] = atlas_texture;
 
     int i = 0;
     for (const auto& texture : textures)
     {
-        if (i >= 64) break;
+        if (i >= 32) break;
         state.atlas_coords[i] = glm::vec4(
             texture.atlas_coords.u1,
             texture.atlas_coords.v1,
             texture.atlas_coords.u2,
             texture.atlas_coords.v2
         );
-        std::cout << "Texture " << " (index " << i << "): "
-            << "(" << texture.atlas_coords.u1 << ", " << texture.atlas_coords.v1 << ") to "
-            << "(" << texture.atlas_coords.u2 << ", " << texture.atlas_coords.v2 << ")\n";
-
         i++;
     }
 }
 
-void GLRenderer::BindVertices(const VerticesData& vertices)
+void GLRenderer::BindWorldVertices(const VerticesData& vertices)
 {
     sg_buffer_desc buf_desc = {
         .type = SG_BUFFERTYPE_VERTEXBUFFER,
         .usage = SG_USAGE_IMMUTABLE,
         .data = make_sg_range(vertices.vertices),
-        .label = "wall-vertices"
+        .label = "wall-floor-vertices"
     };
-
-    state.bind.vertex_buffers[0] = sg_make_buffer(&buf_desc);
+    state.world_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
 
     sg_buffer_desc index_buf_desc = {
         .type = SG_BUFFERTYPE_INDEXBUFFER,
         .data = make_sg_range(vertices.indices),
-        .label = "wall-indices"
+        .label = "wall-floor-indices"
     };
-    state.bind.index_buffer = sg_make_buffer(&index_buf_desc);
+    state.world_bindings.index_buffer = sg_make_buffer(&index_buf_desc);
 
-    state.wallVertexCount = static_cast<uint32_t>(vertices.indices.size());
-
-    for (const auto& vertex : vertices.vertices)
-    {
-        std::cout << "UV: (" << vertex.texcoord.x << ", " << vertex.texcoord.y
-            << ") texIdx: " << vertex.textureIdx << std::endl;
-    }
+    state.world_count = static_cast<uint32_t>(vertices.indices.size());
 }
 
 unsigned long GLRenderer::LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap)
@@ -222,6 +219,42 @@ unsigned long GLRenderer::LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap)
     return std::distance(textures.begin(), it);
 }
 
+void GLRenderer::BindBackgroundVertices(const VerticesData& vertices)
+{
+    sg_buffer_desc buf_desc = {
+        .type = SG_BUFFERTYPE_VERTEXBUFFER,
+        .usage = SG_USAGE_IMMUTABLE,
+        .data = make_sg_range(vertices.vertices),
+        .label = "background-vertices"
+    };
+    state.bkg_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
+
+    sg_buffer_desc index_buf_desc = {
+        .type = SG_BUFFERTYPE_INDEXBUFFER,
+        .data = make_sg_range(vertices.indices),
+        .label = "background-indices"
+    };
+    state.bkg_bindings.index_buffer = sg_make_buffer(&index_buf_desc);
+
+    state.bkg_count = static_cast<uint32_t>(vertices.indices.size());
+}
+
+void GLRenderer::BindBackgroundTexture(const MR_UInt8* backImage)
+{
+    auto rgbaBackImg = ConvertBackgroundToRGBA8(backImage);
+
+    sg_image_desc img_desc = {};
+    img_desc.width = MR_BACK_X_RES;
+    img_desc.height = MR_BACK_Y_RES;
+    img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
+    img_desc.data.subimage[0][0].ptr = rgbaBackImg;
+    img_desc.data.subimage[0][0].size = MR_BACK_X_RES * MR_BACK_Y_RES * 4;
+    auto bkg_texture = sg_make_image(&img_desc);
+
+    state.bkg_bindings.images[0] = bkg_texture;
+    delete[] rgbaBackImg;   // todo
+}
+
 uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
 {
     auto palette = videoBuffer->GetPalette();
@@ -229,7 +262,7 @@ uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
     int height = bitmap->GetMaxYRes();
     if (width != height)
     {
-        throw new std::runtime_error("Only square textures are supported");
+        throw std::runtime_error("Only square textures are supported");
     }
     MR_UInt8* lSrc = bitmap->GetBuffer(0);
     auto lDest = new uint32_t[width * height];
@@ -242,7 +275,7 @@ uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
             NoMFC::PALETTEENTRY& paletteEntry = palette[pixelColorPaletteIdx];
             uint32_t color = (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
 
-            // textures appear to be rotated 90 degrees which this code corrects
+            // textures appear to be rotated 90 degrees, which this code corrects
             int rotated_x = y;
             int rotated_y = width - 1 - x;
             int rotated_pixelIdx = rotated_y * width + rotated_x;
@@ -250,6 +283,25 @@ uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
             lDest[rotated_pixelIdx] = color;
         }
     }
+    return lDest;
+}
 
+uint32_t* GLRenderer::ConvertBackgroundToRGBA8(const MR_UInt8* backImage)
+{
+    auto palette = videoBuffer->GetPalette();
+    int width = MR_BACK_X_RES;
+    int height = MR_BACK_Y_RES;
+    auto lDest = new uint32_t[width * height];
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            int pixelIdx = y * width + x;
+            MR_UInt8 pixelColorPaletteIdx = backImage[pixelIdx];
+            NoMFC::PALETTEENTRY& paletteEntry = palette[pixelColorPaletteIdx];
+            uint32_t color = (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
+            lDest[pixelIdx] = color;
+        }
+    }
     return lDest;
 }

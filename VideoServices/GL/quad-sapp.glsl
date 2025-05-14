@@ -5,7 +5,7 @@ layout(binding = 0) uniform Uniforms {
     mat4 proj;
 };
 layout(binding = 1) uniform AtlasCoords {
-    vec4 atlas_coords[64];
+    vec4 atlas_coords[32];
 };
 
 in ivec4 position;

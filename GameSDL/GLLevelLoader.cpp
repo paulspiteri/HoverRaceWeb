@@ -7,16 +7,14 @@ GLLevelLoader::GLLevelLoader(GLRenderer* renderer): glRenderer(renderer)
 {
 }
 
-void GLLevelLoader::LoadLevel(const MR_Level* level)
+void GLLevelLoader::LoadLevel(const MR_Level* level, const MR_UInt8* backImage)
 {
-    VerticesData verts;
-
     int totalRooms = level->GetRoomCount();
     for (int roomId = 0; roomId < totalRooms; roomId++)
     {
-        LoadRoomWalls(level, roomId, verts);
-        LoadRoomFloor(level, roomId, verts);
-        LoadRoomCeiling(level, roomId, verts);
+        LoadRoomWalls(level, roomId);
+        LoadRoomFloor(level, roomId);
+        LoadRoomCeiling(level, roomId);
 
         int totalRoomFeatures = level->GetFeatureCount(roomId);
         for (int roomFeatureIdx = 0; roomFeatureIdx < totalRoomFeatures; roomFeatureIdx++)
@@ -28,11 +26,44 @@ void GLLevelLoader::LoadLevel(const MR_Level* level)
         }
     }
 
-    glRenderer->BindVertices(verts);
-    glRenderer->BindTextures();
+    LoadBackground(level, backImage);
+    glRenderer->BindBackgroundVertices(bkgVerts);
+
+    glRenderer->BindWorldVertices(verts);
+    glRenderer->BindWorldTextures();
 }
 
-void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId, VerticesData& verts) const
+void GLLevelLoader::LoadBackground(const MR_Level* level, const MR_UInt8* backImage)
+{
+    glRenderer->BindBackgroundTexture(backImage);
+
+    int minX = std::numeric_limits<int>::max();
+    int maxX = std::numeric_limits<int>::min();
+    int minZ = std::numeric_limits<int>::max();
+    int maxZ = std::numeric_limits<int>::min();
+    for (const auto& vertex : verts.vertices)
+    {
+        minX = std::min(minX, vertex.position.x);
+        maxX = std::max(maxX, vertex.position.x);
+        minZ = std::min(minZ, vertex.position.z);
+        maxZ = std::max(maxZ, vertex.position.z);
+    }
+    bkgVerts.vertices.push_back(makeVertex(maxX, 200000, minZ, 1, 0, 0, 1, 0, 0, 0));
+    bkgVerts.vertices.push_back(makeVertex(maxX, 0, minZ, 1, 0, 0, 1, 0, 0, 0));
+    bkgVerts.vertices.push_back(makeVertex(maxX, 200000, maxZ, 1, 0, 0, 1, 1, 0, 0));
+    bkgVerts.vertices.push_back(makeVertex(maxX, 0, maxZ, 1, 0, 0, 1, 1, 1, 0));
+    uint16_t latestVertexIdx = bkgVerts.vertices.size() - 1;
+
+    bkgVerts.indices.push_back(latestVertexIdx - 3);
+    bkgVerts.indices.push_back(latestVertexIdx - 1);
+    bkgVerts.indices.push_back(latestVertexIdx - 2);
+
+    bkgVerts.indices.push_back(latestVertexIdx - 2);
+    bkgVerts.indices.push_back(latestVertexIdx - 1);
+    bkgVerts.indices.push_back(latestVertexIdx);
+}
+
+void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId)
 {
     auto roomShape = level->GetRoomShape(roomId);
     MR_3DCoordinate lP0;
@@ -60,7 +91,7 @@ void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId, VerticesDat
         {
             lP0.mZ = lCeilingLevel;
             lP1.mZ = lFloorLevel;
-            AddWallVertices(verts, lP0, lP1, surfaceElement);
+            AddWallVertices(lP0, lP1, surfaceElement);
         }
         else
         {
@@ -71,14 +102,14 @@ void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId, VerticesDat
             {
                 lP0.mZ = lNeighborFloor;
                 lP1.mZ = lFloorLevel;
-                AddWallVertices(verts, lP0, lP1, surfaceElement);
+                AddWallVertices(lP0, lP1, surfaceElement);
             }
 
             if (lCeilingLevel > lNeighborCeiling)
             {
                 lP0.mZ = lCeilingLevel;
                 lP1.mZ = lNeighborCeiling;
-                AddWallVertices(verts, lP0, lP1, surfaceElement);
+                AddWallVertices(lP0, lP1, surfaceElement);
             }
         }
 
@@ -88,7 +119,7 @@ void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId, VerticesDat
     delete roomShape;
 }
 
-void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId, VerticesData& verts) const
+void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId)
 {
     auto roomShape = level->GetRoomShape(roomId);
     auto surfaceElement = level->GetRoomBottomElement(roomId);
@@ -122,7 +153,7 @@ void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId, VerticesDat
     delete roomShape;
 }
 
-void GLLevelLoader::LoadRoomCeiling(const MR_Level* level, int roomId, VerticesData& verts) const
+void GLLevelLoader::LoadRoomCeiling(const MR_Level* level, int roomId)
 {
     auto roomShape = level->GetRoomShape(roomId);
     auto surfaceElement = level->GetRoomTopElement(roomId);
@@ -155,8 +186,7 @@ void GLLevelLoader::LoadRoomCeiling(const MR_Level* level, int roomId, VerticesD
     delete roomShape;
 }
 
-void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR_3DCoordinate lP1,
-                                    MR_SurfaceElement* surfaceElement) const
+void GLLevelLoader::AddWallVertices(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_SurfaceElement* surfaceElement)
 {
     auto bitmap = surfaceElement->GetResBitmap();
     if (bitmap == nullptr)
@@ -191,7 +221,7 @@ void GLLevelLoader::AddWallVertices(VerticesData& verts, MR_3DCoordinate lP0, MR
     }
     else
     {
-        u1 = wallLength / bitmap->GetWidth();   // tile horizontally
+        u1 = wallLength / bitmap->GetWidth(); // tile horizontally
 
         v0 = 1.0f;
         v1 = 1.0f - ((float)wallHeight / bitmap->GetHeight());

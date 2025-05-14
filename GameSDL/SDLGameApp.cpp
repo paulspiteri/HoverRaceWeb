@@ -213,7 +213,7 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
       if( lSuccess )
       {
          auto level = lCurrentSession->GetCurrentLevel();
-         mGLLevelLoader->LoadLevel(level);
+         mGLLevelLoader->LoadLevel(level, lCurrentSession->GetBackImage());
 
          lCurrentSession->SetSimulationTime( -6000 );
       }

@@ -68,18 +68,20 @@ class GLRenderer
     std::vector<TextureData> textures;
     MR_VideoBuffer* videoBuffer;
 
-private:
     uint32_t* ConvertTextureToRGBA8(const MR_ResBitmap* bitmap);
+    uint32_t* ConvertBackgroundToRGBA8(const MR_UInt8* backImage);
 
 public:
     GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer);
     ~GLRenderer();
-    Sokol_State state;
+    Sokol_State state{};
     SDL_Window* glWindow;
     SDL_GLContext glContext;
 
-    void BindTextures();
-    void BindVertices(const VerticesData& vertices);
+    void BindWorldTextures();
+    void BindWorldVertices(const VerticesData& vertices);
     unsigned long LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap);
+    void BindBackgroundVertices(const VerticesData& vertices);
+    void BindBackgroundTexture(const MR_UInt8* backImage);
     void Render() const;
 };

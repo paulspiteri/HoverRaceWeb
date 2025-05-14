@@ -58,7 +58,7 @@ class MR_SoundBuffer
             if (lWaveFormat->wBitsPerSample != 8)
             {
                 ASSERT(false);
-                throw new std::runtime_error("Unsupported audio format: only 8-bit PCM is supported.");
+                throw std::runtime_error("Unsupported audio format: only 8-bit PCM is supported.");
             }
             SDL_AudioSpec sdlAudioSpec;
             sdlAudioSpec.format = SDL_AUDIO_U8;
