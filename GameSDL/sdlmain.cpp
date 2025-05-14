@@ -19,7 +19,7 @@
 #include "sokol_gfx.h"
 #include "../VideoServices/GL/SokolState.h"
 
-SDL_Window* window = nullptr;
+SDL_Window* sdlWindow = nullptr;
 SDL_Renderer* renderer = nullptr;
 SDL_Texture* texture = nullptr;
 SDL_Window* glWindow = nullptr;
@@ -77,16 +77,16 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     MR_SoundServer::Init();
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
-    window = SDL_CreateWindow("HoverRace SDL",
+    sdlWindow = SDL_CreateWindow("HoverRace SDL",
                               640, 400,
                               SDL_WINDOW_RESIZABLE);
-    if (!window)
+    if (!sdlWindow)
     {
         SDL_Log("Couldn't create window =: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    SDL_SetWindowMinimumSize(window, 640, 400);
-    renderer = SDL_CreateRenderer(window, NULL);
+    SDL_SetWindowMinimumSize(sdlWindow, 640, 400);
+    renderer = SDL_CreateRenderer(sdlWindow, NULL);
     if (!renderer)
     {
         SDL_Log("Couldn't create renderer =: %s", SDL_GetError());
@@ -165,9 +165,9 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
 
     if (event->window.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED)
     {
-        if (event->window.windowID == SDL_GetWindowID(window))
+        if (event->window.windowID == SDL_GetWindowID(sdlWindow))
         {
-            SDL_DestroyWindow(window);
+            SDL_DestroyWindow(sdlWindow);
         }
     }
 
@@ -239,13 +239,20 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event)
     }
     else if (event->type == SDL_EVENT_WINDOW_RESIZED)
     {
-        SDL_DestroyTexture(texture);
-        texture = SDL_CreateTexture(renderer,
-                                    SDL_PIXELFORMAT_ARGB8888,
-                                    SDL_TEXTUREACCESS_STREAMING,
-                                    event->window.data1, event->window.data2);
+        if (event->window.windowID == SDL_GetWindowID(sdlWindow))
+        {
+            SDL_DestroyTexture(texture);
+            texture = SDL_CreateTexture(renderer,
+                                        SDL_PIXELFORMAT_ARGB8888,
+                                        SDL_TEXTUREACCESS_STREAMING,
+                                        event->window.data1, event->window.data2);
 
-        game->SetResolution(event->window.data1, event->window.data2);
+            game->SetResolution(event->window.data1, event->window.data2);
+        }
+       else if (event->window.windowID == SDL_GetWindowID(glWindow))
+       {
+           game->SetOpenGLResolution(event->window.data1, event->window.data2);
+       }
     }
 
     return SDL_APP_CONTINUE;
@@ -270,7 +277,7 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result)
 
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+    SDL_DestroyWindow(sdlWindow);
 
     SDL_GL_DestroyContext(glContext);
     SDL_DestroyWindow(glWindow);

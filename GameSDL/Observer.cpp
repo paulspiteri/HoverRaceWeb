@@ -1181,7 +1181,7 @@ void MR_Observer::RenderDebugDisplay( MR_VideoBuffer* pDest, GLRenderer* glRende
    mWireFrameView.Setup( pDest, 0,       lYOffset        , lXRes/2, lYRes/2, mApperture );
    m3DView.Setup(        pDest, 0,       lYOffset+lYRes/2, lXRes/2, lYRes/2, mApperture );
    m2DDebugView.Setup(   pDest, lXRes/2, lYOffset,         lXRes/2, lYRes );
-   mGLView.Setup(glRenderer, lXRes, lYRes);
+   mGLView.Setup(glRenderer, glRenderer->state.swapchain.width, glRenderer->state.swapchain.height);
 
    if( pViewingCharacter->mRoom != -1 )
    {
@@ -1233,7 +1233,7 @@ void MR_Observer::RenderNormalDisplay( MR_VideoBuffer* pDest, GLRenderer* glRend
 
 
    m3DView.Setup( pDest, lXMargin, lYOffset+lYMargin, lXRes-2*lXMargin, lYRes-2*lYMargin, mApperture );
-   mGLView.Setup(glRenderer, lXRes, lYRes);
+   mGLView.Setup(glRenderer, glRenderer->state.swapchain.width, glRenderer->state.swapchain.height);
 
    // Clear screen if needed
    if( lXMargin > 0 )

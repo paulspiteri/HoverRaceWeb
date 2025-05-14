@@ -51,7 +51,6 @@ class MR_SDLGameApp
       ~MR_SDLGameApp();
 
       void Clean();
-      BOOL InitApplication();
       BOOL InitGame();
       void LoadSelectedTrack(const char* trackFile);
       void SetVideoMode(int width, int height);
@@ -59,4 +58,5 @@ class MR_SDLGameApp
       void Simulate();
       void SetControlState(int pState1);
       void SetResolution(int width, int height);
+      void SetOpenGLResolution(int width, int height);
 };
