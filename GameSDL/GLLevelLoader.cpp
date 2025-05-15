@@ -41,17 +41,17 @@ void GLLevelLoader::LoadBackground(const MR_Level* level, const MR_UInt8* backIm
     int maxX = std::numeric_limits<int>::min();
     int minZ = std::numeric_limits<int>::max();
     int maxZ = std::numeric_limits<int>::min();
-    for (const auto& vertex : verts.vertices)
+    for (const auto& vert : verts.vertices)
     {
-        minX = std::min(minX, vertex.position.x);
-        maxX = std::max(maxX, vertex.position.x);
-        minZ = std::min(minZ, vertex.position.z);
-        maxZ = std::max(maxZ, vertex.position.z);
+        minX = std::min(minX, vert.vertex.position.x);
+        maxX = std::max(maxX, vert.vertex.position.x);
+        minZ = std::min(minZ, vert.vertex.position.z);
+        maxZ = std::max(maxZ, vert.vertex.position.z);
     }
-    bkgVerts.vertices.push_back(makeVertex(maxX, 200000, minZ, 1, 0, 0, 1, 0, 0, 0));
-    bkgVerts.vertices.push_back(makeVertex(maxX, 0, minZ, 1, 0, 0, 1, 0, 0, 0));
-    bkgVerts.vertices.push_back(makeVertex(maxX, 200000, maxZ, 1, 0, 0, 1, 1, 0, 0));
-    bkgVerts.vertices.push_back(makeVertex(maxX, 0, maxZ, 1, 0, 0, 1, 1, 1, 0));
+    bkgVerts.vertices.push_back(makeVertex(maxX, 200000, minZ, 1, 0, 0, 1, 0, 0));
+    bkgVerts.vertices.push_back(makeVertex(maxX, 0, minZ, 1, 0, 0, 1, 0, 1));
+    bkgVerts.vertices.push_back(makeVertex(maxX, 200000, maxZ, 1, 0, 0, 1, 1, 0));
+    bkgVerts.vertices.push_back(makeVertex(maxX, 0, maxZ, 1, 0, 0, 1, 1, 1));
     uint16_t latestVertexIdx = bkgVerts.vertices.size() - 1;
 
     bkgVerts.indices.push_back(latestVertexIdx - 3);
@@ -138,7 +138,7 @@ void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId)
         float u = roomShape->X(i) / bitmap->GetWidth();
         float v = roomShape->Y(i) / bitmap->GetHeight();
         verts.vertices.push_back(
-            SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height,
+            SwapYZ(makeVertexWithTextureId(roomShape->X(i), roomShape->Y(i), height,
                               1.0f, 1.0f, 1.0f, 1.0f,
                               u, v, textureAtlasId)));
     }
@@ -172,7 +172,7 @@ void GLLevelLoader::LoadRoomCeiling(const MR_Level* level, int roomId)
         float u = roomShape->X(i) / bitmap->GetWidth();
         float v = roomShape->Y(i) / bitmap->GetHeight();
         verts.vertices.push_back(
-            SwapYZ(makeVertex(roomShape->X(i), roomShape->Y(i), height,
+            SwapYZ(makeVertexWithTextureId(roomShape->X(i), roomShape->Y(i), height,
                               1.0f, 1.0f, 1.0f, 0.0f,
                               u, v, textureAtlasId)));
     }
@@ -227,10 +227,10 @@ void GLLevelLoader::AddWallVertices(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR
         v1 = 1.0f - ((float)wallHeight / bitmap->GetHeight());
     }
 
-    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u0, v0, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0, 1, u0, v1, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0, 1, u1, v0, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertex(lP1.mX, lP1.mY, lP1.mZ, 1, 0, 0, 1, u1, v1, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u0, v0, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0, 1, u0, v1, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0, 1, u1, v0, textureAtlasId)));
+    verts.vertices.push_back(SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP1.mZ, 1, 0, 0, 1, u1, v1, textureAtlasId)));
     uint16_t latestVertexIdx = verts.vertices.size() - 1;
 
     verts.indices.push_back(latestVertexIdx - 3);

@@ -12,24 +12,36 @@
 
 
 GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer)
-    : glWindow(glWindow), glContext(glContext), state{}, videoBuffer(videoBuffer)
+    : glWindow(glWindow), glContext(glContext), videoBuffer(videoBuffer)
 {
-    const sg_shader_desc* shader_desc = quad_shader_desc(sg_query_backend());
-    sg_shader shd = sg_make_shader(shader_desc);
+    const sg_shader_desc* bkg_shader_desc = background_shader_desc(sg_query_backend());
+    sg_shader bkg_shader = sg_make_shader(bkg_shader_desc);
+    sg_pipeline_desc bkg_pipeline_desc = {};
+    bkg_pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
+    bkg_pipeline_desc.shader = bkg_shader;
+    bkg_pipeline_desc.sample_count = 16;
+    bkg_pipeline_desc.label = "background-pipeline";
+    bkg_pipeline_desc.layout.attrs[ATTR_background_position].format = SG_VERTEXFORMAT_INT3;
+    bkg_pipeline_desc.layout.attrs[ATTR_background_color0].format = SG_VERTEXFORMAT_FLOAT4;
+    bkg_pipeline_desc.layout.attrs[ATTR_background_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
+    bkg_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
+    state.bkg_pipeline = sg_make_pipeline(&bkg_pipeline_desc);
 
-    sg_pipeline_desc pipeline_desc = {};
-    pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
-    pipeline_desc.shader = shd;
-    pipeline_desc.sample_count = 16;
-    pipeline_desc.label = "quad-pipeline";
-    pipeline_desc.layout.attrs[ATTR_quad_position].format = SG_VERTEXFORMAT_INT3;
-    pipeline_desc.layout.attrs[ATTR_quad_color0].format = SG_VERTEXFORMAT_FLOAT4;
-    pipeline_desc.layout.attrs[ATTR_quad_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
-    pipeline_desc.layout.attrs[ATTR_quad_textureIdx].format = SG_VERTEXFORMAT_UINT;
-    pipeline_desc.cull_mode = SG_CULLMODE_BACK;
-    pipeline_desc.depth.write_enabled = true;
-    pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
-    state.pip = sg_make_pipeline(&pipeline_desc);
+    const sg_shader_desc* world_shdr_desc = world_shader_desc(sg_query_backend());
+    sg_shader world_shader = sg_make_shader(world_shdr_desc);
+    sg_pipeline_desc world_pipeline_desc = {};
+    world_pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
+    world_pipeline_desc.shader = world_shader;
+    world_pipeline_desc.sample_count = 16;
+    world_pipeline_desc.label = "world-pipeline";
+    world_pipeline_desc.layout.attrs[ATTR_world_position].format = SG_VERTEXFORMAT_INT3;
+    world_pipeline_desc.layout.attrs[ATTR_world_color0].format = SG_VERTEXFORMAT_FLOAT4;
+    world_pipeline_desc.layout.attrs[ATTR_world_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
+    world_pipeline_desc.layout.attrs[ATTR_world_textureIdx].format = SG_VERTEXFORMAT_UINT;
+    world_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
+    world_pipeline_desc.depth.write_enabled = true;
+    world_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
+    state.world_pipeline = sg_make_pipeline(&world_pipeline_desc);
 
     state.pass_action.colors[0] = {
         .load_action = SG_LOADACTION_CLEAR,
@@ -60,7 +72,7 @@ GLRenderer::~GLRenderer()
     sg_destroy_buffer(state.world_bindings.index_buffer);
     sg_destroy_image(state.world_bindings.images[0]);
     sg_destroy_sampler(state.world_bindings.samplers[0]);
-    sg_destroy_pipeline(state.pip);
+    sg_destroy_pipeline(state.world_pipeline);
 
     sg_shutdown();
 }
@@ -74,13 +86,15 @@ void GLRenderer::Render() const
 
     SDL_GL_MakeCurrent(glWindow, glContext);
     sg_begin_pass(&pass);
-    sg_apply_pipeline(state.pip);
-    sg_apply_uniforms(0, SG_RANGE(state.uniforms));
-    sg_apply_uniforms(1, SG_RANGE(state.atlas_coords));
 
+    sg_apply_pipeline(state.bkg_pipeline);
+    sg_apply_uniforms(0, SG_RANGE(state.uniforms));
     sg_apply_bindings(&state.bkg_bindings);
     sg_draw(0, state.bkg_count, 1);
 
+    sg_apply_pipeline(state.world_pipeline);
+    sg_apply_uniforms(0, SG_RANGE(state.uniforms));
+    sg_apply_uniforms(1, SG_RANGE(state.atlas_coords));
     sg_apply_bindings(&state.world_bindings);
     sg_draw(0, state.world_count, 1);
 
@@ -183,7 +197,7 @@ void GLRenderer::BindWorldTextures()
     }
 }
 
-void GLRenderer::BindWorldVertices(const VerticesData& vertices)
+void GLRenderer::BindWorldVertices(const VerticesData<VertexWithTextureId>& vertices)
 {
     sg_buffer_desc buf_desc = {
         .type = SG_BUFFERTYPE_VERTEXBUFFER,
@@ -219,7 +233,7 @@ unsigned long GLRenderer::LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap)
     return std::distance(textures.begin(), it);
 }
 
-void GLRenderer::BindBackgroundVertices(const VerticesData& vertices)
+void GLRenderer::BindBackgroundVertices(const VerticesData<Vertex>& vertices)
 {
     sg_buffer_desc buf_desc = {
         .type = SG_BUFFERTYPE_VERTEXBUFFER,

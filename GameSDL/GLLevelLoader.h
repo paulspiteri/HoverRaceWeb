@@ -16,7 +16,7 @@ private:
     void LoadRoomCeiling(const MR_Level* level, int roomId);
     void AddWallVertices(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_SurfaceElement* surfaceElement);
 
-    VerticesData verts;
-    VerticesData bkgVerts;
+    VerticesData<VertexWithTextureId> verts;
+    VerticesData<Vertex> bkgVerts;
     GLRenderer* glRenderer;
 };

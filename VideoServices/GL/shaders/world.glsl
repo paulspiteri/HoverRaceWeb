@@ -1,10 +1,10 @@
-@vs vs
+@vs world_vs
 
-layout(binding = 0) uniform Uniforms {
+layout(binding = 0) uniform WorldUniforms {
     mat4 view;
     mat4 proj;
 };
-layout(binding = 1) uniform AtlasCoords {
+layout(binding = 1) uniform WorldAtlasCoords {
     vec4 atlas_coords[32];
 };
 
@@ -23,7 +23,7 @@ void main() {
 }
 @end
 
-@fs fs
+@fs world_fs
 layout(binding = 0) uniform texture2D atlas_tex;
 layout(binding = 0) uniform sampler wrap_sampler;
 in vec2 world_uv;
@@ -37,4 +37,4 @@ void main() {
 }
 @end
 
-@program quad vs fs
+@program world world_vs world_fs

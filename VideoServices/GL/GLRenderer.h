@@ -5,7 +5,6 @@
 #include "SokolState.h"
 #include "SDL3/SDL.h"
 #include "../../ObjFacTools/ResBitmap.h"
-#include "../ColorPaletteEntry.h"
 #include "../VideoBuffer.h"
 
 struct Vertex
@@ -13,24 +12,39 @@ struct Vertex
     glm::i32vec3 position;
     float color[4];
     glm::vec2 texcoord;
+};
+
+struct VertexWithTextureId
+{
+    Vertex vertex;
     uint32_t textureIdx;
 };
 
+template <typename T>
 struct VerticesData {
-    std::vector<Vertex> vertices;
+    std::vector<T> vertices;
     std::vector<uint16_t> indices;
 };
 
 inline Vertex makeVertex(
     int32_t x, int32_t y, int32_t z,
     float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f,
-    float u = 0.0f, float v = 0.0f, uint32_t tex_idx = 0)
+    float u = 0.0f, float v = 0.0f)
 {
     return Vertex{
         .position = glm::i32vec3(x, y, z),
         .color = {r, g, b, a},
         .texcoord = glm::vec2(u, v),
-        .textureIdx = tex_idx
+    };
+}
+
+inline VertexWithTextureId makeVertexWithTextureId(int32_t x, int32_t y, int32_t z,
+    float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f,
+    float u = 0.0f, float v = 0.0f, uint32_t textureIdx = 0)
+{
+    return VertexWithTextureId{
+        .vertex = makeVertex(x, y, z, r, g, b, a, u, v),
+        .textureIdx = textureIdx
     };
 }
 
@@ -43,6 +57,12 @@ inline glm::i32vec3 SwapYZ(glm::i32vec3 vec)
 inline Vertex SwapYZ(Vertex vertex)
 {
     vertex.position = SwapYZ(vertex.position);
+    return vertex;
+}
+
+inline VertexWithTextureId SwapYZ(VertexWithTextureId vertex)
+{
+    vertex.vertex = SwapYZ(vertex.vertex);
     return vertex;
 }
 
@@ -79,9 +99,9 @@ public:
     SDL_GLContext glContext;
 
     void BindWorldTextures();
-    void BindWorldVertices(const VerticesData& vertices);
+    void BindWorldVertices(const VerticesData<VertexWithTextureId>& vertices);
     unsigned long LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap);
-    void BindBackgroundVertices(const VerticesData& vertices);
+    void BindBackgroundVertices(const VerticesData<Vertex>& vertices);
     void BindBackgroundTexture(const MR_UInt8* backImage);
     void Render() const;
 };
