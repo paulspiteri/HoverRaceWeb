@@ -41,7 +41,7 @@ void ChangeToTrack(const char* trackFile)
 
 std::optional<std::string> GetTrack()
 {
-    std::string defaultTrackFile = "Steeplechase.trk";
+    std::string defaultTrackFile = "ClassicH.trk";
     if (std::filesystem::exists(defaultTrackFile))
     {
         std::cout << "Selected default track: " << defaultTrackFile << std::endl;

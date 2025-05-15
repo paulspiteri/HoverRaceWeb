@@ -10,7 +10,6 @@
 #include "stb_rect_pack.h"
 #include "../3DViewport.h"
 
-
 GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer)
     : glWindow(glWindow), glContext(glContext), videoBuffer(videoBuffer)
 {
@@ -53,9 +52,16 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     wrap_sampler_desc.mag_filter = SG_FILTER_LINEAR;
     wrap_sampler_desc.wrap_u = SG_WRAP_REPEAT;
     wrap_sampler_desc.wrap_v = SG_WRAP_REPEAT;
-    auto sampler = sg_make_sampler(&wrap_sampler_desc);
-    state.world_bindings.samplers[0] = sampler;
-    state.bkg_bindings.samplers[0] = sampler;
+    auto wrap_sampler = sg_make_sampler(&wrap_sampler_desc);
+    state.world_bindings.samplers[0] = wrap_sampler;
+
+    sg_sampler_desc edge_sampler_desc = {};
+    wrap_sampler_desc.min_filter = SG_FILTER_LINEAR;
+    wrap_sampler_desc.mag_filter = SG_FILTER_LINEAR;
+    wrap_sampler_desc.wrap_u = SG_WRAP_CLAMP_TO_EDGE;
+    wrap_sampler_desc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
+    auto edge_sampler = sg_make_sampler(&edge_sampler_desc);
+    state.bkg_bindings.samplers[0] = edge_sampler;
 
     state.swapchain = {
         .width = 640,
@@ -303,19 +309,29 @@ uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
 uint32_t* GLRenderer::ConvertBackgroundToRGBA8(const MR_UInt8* backImage)
 {
     auto palette = videoBuffer->GetPalette();
-    int width = MR_BACK_X_RES;
-    int height = MR_BACK_Y_RES;
-    auto lDest = new uint32_t[width * height];
-    for (int y = 0; y < height; y++)
+    int srcWidth = MR_BACK_Y_RES;   // image is rotated 90 degrees
+    int srcHeight = MR_BACK_X_RES;
+    int destWidth = srcHeight;
+    int destHeight = srcWidth;
+
+    auto lDest = new uint32_t[destWidth * destHeight];
+    for (int y = 0; y < srcHeight; y++)
     {
-        for (int x = 0; x < width; x++)
+        for (int x = 0; x < srcWidth; x++)
         {
-            int pixelIdx = y * width + x;
-            MR_UInt8 pixelColorPaletteIdx = backImage[pixelIdx];
+            int srcIdx = y * srcWidth + x;
+            MR_UInt8 pixelColorPaletteIdx = backImage[srcIdx];
             NoMFC::PALETTEENTRY& paletteEntry = palette[pixelColorPaletteIdx];
             uint32_t color = (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
-            lDest[pixelIdx] = color;
+
+            // Apply 90-degree clockwise rotation
+            int destX = y;
+            int destY = (srcWidth - 1) - x;
+            int destIdx = destY * destWidth + destX;
+
+            lDest[destIdx] = color;
         }
     }
+
     return lDest;
 }
