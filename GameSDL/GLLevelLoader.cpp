@@ -207,8 +207,8 @@ void GLLevelLoader::LoadFloor(MR_PolygonShape* shape, MR_SurfaceElement* surface
 
     for (auto i = 0; i < lNbVertex; i++)
     {
-        float u = shape->X(i) / bitmap->GetWidth();
-        float v = shape->Y(i) / bitmap->GetHeight();
+        float u = shape->X(i) / static_cast<float>(bitmap->GetWidth());
+        float v = shape->Y(i) / static_cast<float>(bitmap->GetHeight());
         verts.vertices.push_back(
             SwapYZ(makeVertexWithTextureId(shape->X(i), shape->Y(i), height, u, v, textureAtlasId)));
     }
@@ -236,8 +236,8 @@ void GLLevelLoader::LoadCeiling(MR_PolygonShape* shape, MR_SurfaceElement* surfa
 
     for (auto i = 0; i < lNbVertex; i++)
     {
-        float u = shape->X(i) / bitmap->GetWidth();
-        float v = shape->Y(i) / bitmap->GetHeight();
+        float u = shape->X(i) / static_cast<float>(bitmap->GetWidth());
+        float v = shape->Y(i) / static_cast<float>(bitmap->GetHeight());
         verts.vertices.push_back(
             SwapYZ(makeVertexWithTextureId(shape->X(i), shape->Y(i), height, u, v, textureAtlasId)));
     }
