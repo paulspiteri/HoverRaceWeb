@@ -21,20 +21,20 @@ void GLLevelLoader::LoadLevel(const MR_Level* level, const MR_UInt8* backImage)
         for (int roomFeatureIdx = 0; roomFeatureIdx < totalRoomFeatures; roomFeatureIdx++)
         {
             auto roomFeatureId = level->GetFeature(roomId, roomFeatureIdx);
-            auto roomFeatureShape = level->GetFeatureShape(roomFeatureId);
-            //DrawGLSection(roomFeatureShape, vertices, vertexIdxs);
-            delete roomFeatureShape;
+            LoadFeatureWalls(level, roomFeatureId);
+            LoadFeatureFloor(level, roomFeatureId);
+            LoadFeatureCeiling(level, roomFeatureId);
         }
     }
 
-    LoadBackground(level, backImage);
+    LoadBackground(backImage);
     glRenderer->BindBackgroundVertices(bkgVerts);
 
     glRenderer->BindWorldVertices(verts);
     glRenderer->BindWorldTextures();
 }
 
-void GLLevelLoader::LoadBackground(const MR_Level* level, const MR_UInt8* backImage)
+void GLLevelLoader::LoadBackground(const MR_UInt8* backImage)
 {
     glRenderer->BindBackgroundTexture(backImage);
 
@@ -99,7 +99,7 @@ void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId)
         {
             lP0.mZ = lCeilingLevel;
             lP1.mZ = lFloorLevel;
-            AddWallVertices(lP0, lP1, surfaceElement);
+            AddWall(lP0, lP1, surfaceElement);
         }
         else
         {
@@ -110,14 +110,14 @@ void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId)
             {
                 lP0.mZ = lNeighborFloor;
                 lP1.mZ = lFloorLevel;
-                AddWallVertices(lP0, lP1, surfaceElement);
+                AddWall(lP0, lP1, surfaceElement);
             }
 
             if (lCeilingLevel > lNeighborCeiling)
             {
                 lP0.mZ = lCeilingLevel;
                 lP1.mZ = lNeighborCeiling;
-                AddWallVertices(lP0, lP1, surfaceElement);
+                AddWall(lP0, lP1, surfaceElement);
             }
         }
 
@@ -131,31 +131,7 @@ void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId)
 {
     auto roomShape = level->GetRoomShape(roomId);
     auto surfaceElement = level->GetRoomBottomElement(roomId);
-    auto bitmap = surfaceElement->GetResBitmap();
-    if (bitmap == nullptr)
-    {
-        return;
-    }
-    auto height = roomShape->ZMin();
-    auto lNbVertex = roomShape->VertexCount();
-    auto baseIndex = verts.vertices.size();
-    auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
-
-    for (auto i = 0; i < lNbVertex; i++)
-    {
-        float u = roomShape->X(i) / bitmap->GetWidth();
-        float v = roomShape->Y(i) / bitmap->GetHeight();
-        verts.vertices.push_back(
-            SwapYZ(makeVertexWithTextureId(roomShape->X(i), roomShape->Y(i), height, u, v, textureAtlasId)));
-    }
-
-    // Triangulate using fan
-    for (auto j = 1; j < lNbVertex - 1; ++j)
-    {
-        verts.indices.push_back(baseIndex);
-        verts.indices.push_back(baseIndex + j);
-        verts.indices.push_back(baseIndex + j + 1);
-    }
+    LoadFloor(roomShape, surfaceElement);
     delete roomShape;
 }
 
@@ -163,34 +139,118 @@ void GLLevelLoader::LoadRoomCeiling(const MR_Level* level, int roomId)
 {
     auto roomShape = level->GetRoomShape(roomId);
     auto surfaceElement = level->GetRoomTopElement(roomId);
+    LoadCeiling(roomShape, surfaceElement, false);
+    delete roomShape;
+}
+
+void GLLevelLoader::LoadFeatureFloor(const MR_Level* level, int featureId)
+{
+    auto featureShape = level->GetFeatureShape(featureId);
+    auto surfaceElement = level->GetFeatureBottomElement(featureId);
+    LoadFloor(featureShape, surfaceElement, true);
+    delete featureShape;
+}
+
+void GLLevelLoader::LoadFeatureCeiling(const MR_Level* level, int featureId)
+{
+    auto featureShape = level->GetFeatureShape(featureId);
+    auto surfaceElement = level->GetFeatureTopElement(featureId);
+    LoadCeiling(featureShape, surfaceElement, true);
+    delete featureShape;
+}
+
+void GLLevelLoader::LoadFeatureWalls(const MR_Level* level, int featureId)
+{
+    auto featureShape = level->GetFeatureShape(featureId);
+    int lVertexCount = featureShape->VertexCount();
+
+    MR_3DCoordinate lP0;
+    MR_3DCoordinate lP1;
+    lP0.mZ = featureShape->ZMax();
+    lP1.mX = featureShape->X( 0 );
+    lP1.mY = featureShape->Y( 0 );
+    lP1.mZ = featureShape->ZMin();
+
+    for(int lVertex = 0; lVertex < lVertexCount; lVertex++)
+    {
+        int lNext = lVertex + 1;
+        if( lNext == lVertexCount )
+        {
+            lNext = 0;
+        }
+        lP0.mX = featureShape->X( lNext );
+        lP0.mY = featureShape->Y( lNext );
+
+        MR_SurfaceElement* surfaceElement = level->GetFeatureWallElement(featureId, lVertex);
+        if(surfaceElement != nullptr)
+        {
+            AddWall(lP0, lP1, surfaceElement);
+        }
+
+        lP1.mX = lP0.mX;
+        lP1.mY = lP0.mY;
+    }
+    delete featureShape;
+}
+
+void GLLevelLoader::LoadFloor(MR_PolygonShape* shape, MR_SurfaceElement* surfaceElement, bool upsideDown)
+{
     auto bitmap = surfaceElement->GetResBitmap();
     if (bitmap == nullptr)
     {
         return;
     }
-    auto height = roomShape->ZMax();
-    auto lNbVertex = roomShape->VertexCount();
+    auto height = shape->ZMin();
+    auto lNbVertex = shape->VertexCount();
     auto baseIndex = verts.vertices.size();
     auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
 
     for (auto i = 0; i < lNbVertex; i++)
     {
-        float u = roomShape->X(i) / bitmap->GetWidth();
-        float v = roomShape->Y(i) / bitmap->GetHeight();
+        float u = shape->X(i) / bitmap->GetWidth();
+        float v = shape->Y(i) / bitmap->GetHeight();
         verts.vertices.push_back(
-            SwapYZ(makeVertexWithTextureId(roomShape->X(i), roomShape->Y(i), height, u, v, textureAtlasId)));
+            SwapYZ(makeVertexWithTextureId(shape->X(i), shape->Y(i), height, u, v, textureAtlasId)));
+    }
+
+    // Triangulate using fan
+    for (auto j = 1; j < lNbVertex - 1; ++j)
+    {
+        verts.indices.push_back(baseIndex);
+        verts.indices.push_back(baseIndex + j + (upsideDown ? 1 : 0));
+        verts.indices.push_back(baseIndex + j + (upsideDown ? 0 : 1));
+    }
+}
+
+void GLLevelLoader::LoadCeiling(MR_PolygonShape* shape, MR_SurfaceElement* surfaceElement, bool upsideDown)
+{
+    auto bitmap = surfaceElement->GetResBitmap();
+    if (bitmap == nullptr)
+    {
+        return;
+    }
+    auto height = shape->ZMax();
+    auto lNbVertex = shape->VertexCount();
+    auto baseIndex = verts.vertices.size();
+    auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+
+    for (auto i = 0; i < lNbVertex; i++)
+    {
+        float u = shape->X(i) / bitmap->GetWidth();
+        float v = shape->Y(i) / bitmap->GetHeight();
+        verts.vertices.push_back(
+            SwapYZ(makeVertexWithTextureId(shape->X(i), shape->Y(i), height, u, v, textureAtlasId)));
     }
     // Triangulate using fan
     for (auto j = 1; j < lNbVertex - 1; ++j)
     {
         verts.indices.push_back(baseIndex); // Center
-        verts.indices.push_back(baseIndex + j + 1);
-        verts.indices.push_back(baseIndex + j);
+        verts.indices.push_back(baseIndex + j + (upsideDown ? 0 : 1));
+        verts.indices.push_back(baseIndex + j + (upsideDown ? 1 : 0));
     }
-    delete roomShape;
 }
 
-void GLLevelLoader::AddWallVertices(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_SurfaceElement* surfaceElement)
+void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_SurfaceElement* surfaceElement)
 {
     auto bitmap = surfaceElement->GetResBitmap();
     if (bitmap == nullptr)
