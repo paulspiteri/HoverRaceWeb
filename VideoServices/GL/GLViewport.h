@@ -9,6 +9,7 @@ class GLViewport
 {
     int sizeX, sizeY;
     Camera camera;
+    Camera bkg_camera;
     GLRenderer* glRenderer{};
 
 public:

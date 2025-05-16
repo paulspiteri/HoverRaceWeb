@@ -94,12 +94,12 @@ void GLRenderer::Render() const
     sg_begin_pass(&pass);
 
     sg_apply_pipeline(state.bkg_pipeline);
-    sg_apply_uniforms(0, SG_RANGE(state.uniforms));
+    sg_apply_uniforms(0, SG_RANGE(state.bkg_uniforms));
     sg_apply_bindings(&state.bkg_bindings);
     sg_draw(0, state.bkg_count, 1);
 
     sg_apply_pipeline(state.world_pipeline);
-    sg_apply_uniforms(0, SG_RANGE(state.uniforms));
+    sg_apply_uniforms(0, SG_RANGE(state.world_uniforms));
     sg_apply_uniforms(1, SG_RANGE(state.atlas_coords));
     sg_apply_bindings(&state.world_bindings);
     sg_draw(0, state.world_count, 1);

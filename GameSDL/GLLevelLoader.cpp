@@ -37,33 +37,30 @@ void GLLevelLoader::LoadBackground(const MR_Level* level, const MR_UInt8* backIm
 {
     glRenderer->BindBackgroundTexture(backImage);
 
-    auto start = level->GetStartingPos(0);
-    const int segments = 36;  // Number of segments around the cylinder
-    const float radius = 250000.0f;  // Radius of the cylinder
-    const float height = 150000.0f;  // Height of the cylinder
-    const float centerX = start.mX;  // X position of cylinder center
-    const float centerY = 0.0f;  // Y position of cylinder center
-    const float centerZ = start.mY;  // Z position of cylinder center
-    uint16_t baseIndex = bkgVerts.vertices.size();
+    const int segments = 20; // Number of segments around the cylinder
+    const float radius = 200000.0f;
+    const float height = 200000.0f;
+    const float centerX = 0;
+    const float centerY = 0.0f;
+    const float centerZ = 0;
 
-    // Create cylinder vertices
-    for (int i = 0; i < segments; i++) {
+    for (int i = 0; i < segments; i++)
+    {
         float angle = 2.0f * M_PI * i / segments;
         float x = centerX + radius * cos(angle);
         float z = centerZ + radius * sin(angle);
 
-        // Bottom vertices
         bkgVerts.vertices.push_back(makeVertex(x, centerY, z, 0, 1, 0, 1,
-                                             float(i) / segments, 1));
+                                               float(i+5) / segments, 1));
 
-        // Top vertices
         bkgVerts.vertices.push_back(makeVertex(x, centerY + height, z, 0, 1, 0, 1,
-                                             float(i) / segments, 0));
+                                               float(i+5) / segments, 0));
     }
 
-    for (int i = 0; i < segments; i++) {
-        int current = baseIndex + i * 2;
-        int next = baseIndex + ((i + 1) % segments) * 2;
+    for (int i = 0; i < segments; i++)
+    {
+        int current = i * 2;
+        int next = ((i + 1) % segments) * 2;
 
         bkgVerts.indices.push_back(current);
         bkgVerts.indices.push_back(current + 1);
@@ -73,21 +70,6 @@ void GLLevelLoader::LoadBackground(const MR_Level* level, const MR_UInt8* backIm
         bkgVerts.indices.push_back(current + 1);
         bkgVerts.indices.push_back(next + 1);
     }
-
-
-
-    int minX = std::numeric_limits<int>::max();
-    int maxX = std::numeric_limits<int>::min();
-    int minZ = std::numeric_limits<int>::max();
-    int maxZ = std::numeric_limits<int>::min();
-    for (const auto& vert : verts.vertices)
-    {
-        minX = std::min(minX, vert.vertex.position.x);
-        maxX = std::max(maxX, vert.vertex.position.x);
-        minZ = std::min(minZ, vert.vertex.position.z);
-        maxZ = std::max(maxZ, vert.vertex.position.z);
-    }
-
 }
 
 void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId)
@@ -166,8 +148,8 @@ void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId)
         float v = roomShape->Y(i) / bitmap->GetHeight();
         verts.vertices.push_back(
             SwapYZ(makeVertexWithTextureId(roomShape->X(i), roomShape->Y(i), height,
-                              1.0f, 1.0f, 1.0f, 1.0f,
-                              u, v, textureAtlasId)));
+                                           1.0f, 1.0f, 1.0f, 1.0f,
+                                           u, v, textureAtlasId)));
     }
 
     // Triangulate using fan
@@ -200,8 +182,8 @@ void GLLevelLoader::LoadRoomCeiling(const MR_Level* level, int roomId)
         float v = roomShape->Y(i) / bitmap->GetHeight();
         verts.vertices.push_back(
             SwapYZ(makeVertexWithTextureId(roomShape->X(i), roomShape->Y(i), height,
-                              1.0f, 1.0f, 1.0f, 0.0f,
-                              u, v, textureAtlasId)));
+                                           1.0f, 1.0f, 1.0f, 0.0f,
+                                           u, v, textureAtlasId)));
     }
     // Triangulate using fan
     for (auto j = 1; j < lNbVertex - 1; ++j)
@@ -254,10 +236,14 @@ void GLLevelLoader::AddWallVertices(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR
         v1 = 1.0f - ((float)wallHeight / bitmap->GetHeight());
     }
 
-    verts.vertices.push_back(SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u0, v0, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0, 1, u0, v1, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0, 1, u1, v0, textureAtlasId)));
-    verts.vertices.push_back(SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP1.mZ, 1, 0, 0, 1, u1, v1, textureAtlasId)));
+    verts.vertices.push_back(
+        SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u0, v0, textureAtlasId)));
+    verts.vertices.push_back(
+        SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0, 1, u0, v1, textureAtlasId)));
+    verts.vertices.push_back(
+        SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0, 1, u1, v0, textureAtlasId)));
+    verts.vertices.push_back(
+        SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP1.mZ, 1, 0, 0, 1, u1, v1, textureAtlasId)));
     uint16_t latestVertexIdx = verts.vertices.size() - 1;
 
     verts.indices.push_back(latestVertexIdx - 3);

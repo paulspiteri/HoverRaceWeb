@@ -9,15 +9,15 @@ struct Sokol_State {
     sg_pass_action pass_action;
     sg_swapchain swapchain;
 
-    WorldUniforms_t uniforms;
-    glm::vec4 atlas_coords[32]{};
-
     sg_pipeline bkg_pipeline;
+    BackgroundUniforms_t bkg_uniforms;
     sg_bindings bkg_bindings;
     int bkg_count;
 
     sg_pipeline world_pipeline;
+    WorldUniforms_t world_uniforms;
     sg_bindings world_bindings;
+    glm::vec4 atlas_coords[32]{};
     int world_count;
 };
 
