@@ -37,6 +37,45 @@ void GLLevelLoader::LoadBackground(const MR_Level* level, const MR_UInt8* backIm
 {
     glRenderer->BindBackgroundTexture(backImage);
 
+    auto start = level->GetStartingPos(0);
+    const int segments = 36;  // Number of segments around the cylinder
+    const float radius = 250000.0f;  // Radius of the cylinder
+    const float height = 150000.0f;  // Height of the cylinder
+    const float centerX = start.mX;  // X position of cylinder center
+    const float centerY = 0.0f;  // Y position of cylinder center
+    const float centerZ = start.mY;  // Z position of cylinder center
+    uint16_t baseIndex = bkgVerts.vertices.size();
+
+    // Create cylinder vertices
+    for (int i = 0; i < segments; i++) {
+        float angle = 2.0f * M_PI * i / segments;
+        float x = centerX + radius * cos(angle);
+        float z = centerZ + radius * sin(angle);
+
+        // Bottom vertices
+        bkgVerts.vertices.push_back(makeVertex(x, centerY, z, 0, 1, 0, 1,
+                                             float(i) / segments, 1));
+
+        // Top vertices
+        bkgVerts.vertices.push_back(makeVertex(x, centerY + height, z, 0, 1, 0, 1,
+                                             float(i) / segments, 0));
+    }
+
+    for (int i = 0; i < segments; i++) {
+        int current = baseIndex + i * 2;
+        int next = baseIndex + ((i + 1) % segments) * 2;
+
+        bkgVerts.indices.push_back(current);
+        bkgVerts.indices.push_back(current + 1);
+        bkgVerts.indices.push_back(next);
+
+        bkgVerts.indices.push_back(next);
+        bkgVerts.indices.push_back(current + 1);
+        bkgVerts.indices.push_back(next + 1);
+    }
+
+
+
     int minX = std::numeric_limits<int>::max();
     int maxX = std::numeric_limits<int>::min();
     int minZ = std::numeric_limits<int>::max();
@@ -48,19 +87,7 @@ void GLLevelLoader::LoadBackground(const MR_Level* level, const MR_UInt8* backIm
         minZ = std::min(minZ, vert.vertex.position.z);
         maxZ = std::max(maxZ, vert.vertex.position.z);
     }
-    bkgVerts.vertices.push_back(makeVertex(maxX, 200000, minZ, 1, 0, 0, 1, 0, 0));
-    bkgVerts.vertices.push_back(makeVertex(maxX, 0, minZ, 1, 0, 0, 1, 0, 1));
-    bkgVerts.vertices.push_back(makeVertex(maxX, 200000, maxZ, 1, 0, 0, 1, 1, 0));
-    bkgVerts.vertices.push_back(makeVertex(maxX, 0, maxZ, 1, 0, 0, 1, 1, 1));
-    uint16_t latestVertexIdx = bkgVerts.vertices.size() - 1;
 
-    bkgVerts.indices.push_back(latestVertexIdx - 3);
-    bkgVerts.indices.push_back(latestVertexIdx - 1);
-    bkgVerts.indices.push_back(latestVertexIdx - 2);
-
-    bkgVerts.indices.push_back(latestVertexIdx - 2);
-    bkgVerts.indices.push_back(latestVertexIdx - 1);
-    bkgVerts.indices.push_back(latestVertexIdx);
 }
 
 void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId)
