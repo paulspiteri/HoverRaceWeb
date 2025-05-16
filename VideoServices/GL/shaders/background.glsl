@@ -6,7 +6,6 @@ layout(binding = 0) uniform BackgroundUniforms {
 };
 
 in ivec4 position;
-in vec4 color0;
 in vec2 texcoord0;
 
 out vec2 uv;

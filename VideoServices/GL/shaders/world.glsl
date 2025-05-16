@@ -9,7 +9,6 @@ layout(binding = 1) uniform WorldAtlasCoords {
 };
 
 in ivec4 position;
-in vec4 color0;
 in vec2 texcoord0;
 in uint textureIdx;
 

@@ -40,7 +40,7 @@ void GLLevelLoader::LoadBackground(const MR_Level* level, const MR_UInt8* backIm
 
     const int segments = 24; // Number of segments around the cylinder
     const float radius = 200000.0f;
-    const float height = 150000.0f;
+    const float height = 160000.0f;
     const float centerX = 0.0f;
     const float centerY = 0.0f;
     const float centerZ = 0.0f;
@@ -53,8 +53,8 @@ void GLLevelLoader::LoadBackground(const MR_Level* level, const MR_UInt8* backIm
         float z = centerZ + radius * sin(angle);
         float u = float(i) / segments;
 
-        bkgVerts.vertices.push_back(makeVertex(x, centerY, z, 0, 1, 0, 1, u, 1));
-        bkgVerts.vertices.push_back(makeVertex(x, centerY + height, z, 0, 1, 0, 1, u, 0));
+        bkgVerts.vertices.push_back(makeVertex(x, centerY, z, u, 1));
+        bkgVerts.vertices.push_back(makeVertex(x, centerY + height, z, u, 0));
     }
 
     for (int i = 0; i < segments; i++)
@@ -146,9 +146,7 @@ void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId)
         float u = roomShape->X(i) / bitmap->GetWidth();
         float v = roomShape->Y(i) / bitmap->GetHeight();
         verts.vertices.push_back(
-            SwapYZ(makeVertexWithTextureId(roomShape->X(i), roomShape->Y(i), height,
-                                           1.0f, 1.0f, 1.0f, 1.0f,
-                                           u, v, textureAtlasId)));
+            SwapYZ(makeVertexWithTextureId(roomShape->X(i), roomShape->Y(i), height, u, v, textureAtlasId)));
     }
 
     // Triangulate using fan
@@ -180,9 +178,7 @@ void GLLevelLoader::LoadRoomCeiling(const MR_Level* level, int roomId)
         float u = roomShape->X(i) / bitmap->GetWidth();
         float v = roomShape->Y(i) / bitmap->GetHeight();
         verts.vertices.push_back(
-            SwapYZ(makeVertexWithTextureId(roomShape->X(i), roomShape->Y(i), height,
-                                           1.0f, 1.0f, 1.0f, 0.0f,
-                                           u, v, textureAtlasId)));
+            SwapYZ(makeVertexWithTextureId(roomShape->X(i), roomShape->Y(i), height, u, v, textureAtlasId)));
     }
     // Triangulate using fan
     for (auto j = 1; j < lNbVertex - 1; ++j)
@@ -236,13 +232,13 @@ void GLLevelLoader::AddWallVertices(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR
     }
 
     verts.vertices.push_back(
-        SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP0.mZ, 1, 0, 0, 1, u0, v0, textureAtlasId)));
+        SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP0.mZ, u0, v0, textureAtlasId)));
     verts.vertices.push_back(
-        SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP1.mZ, 1, 0, 0, 1, u0, v1, textureAtlasId)));
+        SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP1.mZ, u0, v1, textureAtlasId)));
     verts.vertices.push_back(
-        SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP0.mZ, 1, 0, 0, 1, u1, v0, textureAtlasId)));
+        SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP0.mZ, u1, v0, textureAtlasId)));
     verts.vertices.push_back(
-        SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP1.mZ, 1, 0, 0, 1, u1, v1, textureAtlasId)));
+        SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP1.mZ, u1, v1, textureAtlasId)));
     uint16_t latestVertexIdx = verts.vertices.size() - 1;
 
     verts.indices.push_back(latestVertexIdx - 3);

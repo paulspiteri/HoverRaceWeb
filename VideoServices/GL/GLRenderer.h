@@ -10,7 +10,6 @@
 struct Vertex
 {
     glm::i32vec3 position;
-    float color[4];
     glm::vec2 texcoord;
 };
 
@@ -21,29 +20,25 @@ struct VertexWithTextureId
 };
 
 template <typename T>
-struct VerticesData {
+struct VerticesData
+{
     std::vector<T> vertices;
     std::vector<uint16_t> indices;
 };
 
-inline Vertex makeVertex(
-    int32_t x, int32_t y, int32_t z,
-    float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f,
-    float u = 0.0f, float v = 0.0f)
+inline Vertex makeVertex(int32_t x, int32_t y, int32_t z, float u, float v)
 {
     return Vertex{
         .position = glm::i32vec3(x, y, z),
-        .color = {r, g, b, a},
         .texcoord = glm::vec2(u, v),
     };
 }
 
-inline VertexWithTextureId makeVertexWithTextureId(int32_t x, int32_t y, int32_t z,
-    float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f,
-    float u = 0.0f, float v = 0.0f, uint32_t textureIdx = 0)
+inline VertexWithTextureId makeVertexWithTextureId(int32_t x, int32_t y, int32_t z, float u, float v,
+                                                   uint32_t textureIdx)
 {
     return VertexWithTextureId{
-        .vertex = makeVertex(x, y, z, r, g, b, a, u, v),
+        .vertex = makeVertex(x, y, z, u, v),
         .textureIdx = textureIdx
     };
 }
@@ -66,16 +61,18 @@ inline VertexWithTextureId SwapYZ(VertexWithTextureId vertex)
     return vertex;
 }
 
-struct AtlasCoords {
-    float u1, v1;  // Top-left
-    float u2, v2;  // Bottom-right
+struct AtlasCoords
+{
+    float u1, v1; // Top-left
+    float u2, v2; // Bottom-right
 };
 
-struct TextureData {
+struct TextureData
+{
     MR_UInt16 id;
 
     sg_image img;
- //   sg_sampler sampler;
+    //   sg_sampler sampler;
     int width;
     int height;
     AtlasCoords atlas_coords;

@@ -21,7 +21,6 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     bkg_pipeline_desc.sample_count = 16;
     bkg_pipeline_desc.label = "background-pipeline";
     bkg_pipeline_desc.layout.attrs[ATTR_background_position].format = SG_VERTEXFORMAT_INT3;
-    bkg_pipeline_desc.layout.attrs[ATTR_background_color0].format = SG_VERTEXFORMAT_FLOAT4;
     bkg_pipeline_desc.layout.attrs[ATTR_background_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
     bkg_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
     state.bkg_pipeline = sg_make_pipeline(&bkg_pipeline_desc);
@@ -34,7 +33,6 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     world_pipeline_desc.sample_count = 16;
     world_pipeline_desc.label = "world-pipeline";
     world_pipeline_desc.layout.attrs[ATTR_world_position].format = SG_VERTEXFORMAT_INT3;
-    world_pipeline_desc.layout.attrs[ATTR_world_color0].format = SG_VERTEXFORMAT_FLOAT4;
     world_pipeline_desc.layout.attrs[ATTR_world_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
     world_pipeline_desc.layout.attrs[ATTR_world_textureIdx].format = SG_VERTEXFORMAT_UINT;
     world_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
