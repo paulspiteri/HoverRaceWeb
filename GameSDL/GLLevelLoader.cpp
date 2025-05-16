@@ -2,6 +2,7 @@
 
 #include "../ObjFacTools/ResBitmap.h"
 #include "../ObjFacTools/BitmapSurface.h"
+#include <numbers>
 
 GLLevelLoader::GLLevelLoader(GLRenderer* renderer): glRenderer(renderer)
 {
@@ -37,31 +38,29 @@ void GLLevelLoader::LoadBackground(const MR_Level* level, const MR_UInt8* backIm
 {
     glRenderer->BindBackgroundTexture(backImage);
 
-    const int segments = 20; // Number of segments around the cylinder
+    const int segments = 24; // Number of segments around the cylinder
     const float radius = 200000.0f;
-    const float height = 200000.0f;
-    const float centerX = 0;
+    const float height = 150000.0f;
+    const float centerX = 0.0f;
     const float centerY = 0.0f;
-    const float centerZ = 0;
+    const float centerZ = 0.0f;
 
-    for (int i = 0; i < segments; i++)
+    const float startAngleOffset = -(std::numbers::pi / 2.0f); // -90 degrees
+    for (int i = 0; i <= segments; i++)
     {
-        float angle = 2.0f * M_PI * i / segments;
+        float angle = 2.0f * std::numbers::pi * i / segments + startAngleOffset;
         float x = centerX + radius * cos(angle);
         float z = centerZ + radius * sin(angle);
+        float u = float(i) / segments;
 
-        bkgVerts.vertices.push_back(makeVertex(x, centerY, z, 0, 1, 0, 1,
-                                               float(i+5) / segments, 1));
-
-        bkgVerts.vertices.push_back(makeVertex(x, centerY + height, z, 0, 1, 0, 1,
-                                               float(i+5) / segments, 0));
+        bkgVerts.vertices.push_back(makeVertex(x, centerY, z, 0, 1, 0, 1, u, 1));
+        bkgVerts.vertices.push_back(makeVertex(x, centerY + height, z, 0, 1, 0, 1, u, 0));
     }
 
     for (int i = 0; i < segments; i++)
     {
         int current = i * 2;
-        int next = ((i + 1) % segments) * 2;
-
+        int next = (i + 1) * 2;
         bkgVerts.indices.push_back(current);
         bkgVerts.indices.push_back(current + 1);
         bkgVerts.indices.push_back(next);
