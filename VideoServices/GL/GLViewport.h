@@ -16,4 +16,5 @@ public:
     GLViewport();
     void Setup(GLRenderer* pGlRenderer, int pSizeX, int pSizeY);
     void SetCameraPosition(const MR_3DCoordinate& pPosition, MR_Angle pOrientation);
+    void SetSimulationTime(const MR_SimulationTime pTime);
 };

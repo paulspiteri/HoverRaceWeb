@@ -19,6 +19,12 @@ struct VertexWithTextureId
     uint32_t textureIdx;
 };
 
+struct WallVertex
+{
+    VertexWithTextureId vertex;
+    int rotationSpeed;
+};
+
 template <typename T>
 struct VerticesData
 {
@@ -43,6 +49,15 @@ inline VertexWithTextureId makeVertexWithTextureId(int32_t x, int32_t y, int32_t
     };
 }
 
+inline WallVertex makeWallVertex(int32_t x, int32_t y, int32_t z, float u, float v,
+                                                   uint32_t textureIdx, int rotationSpeed)
+{
+    return WallVertex {
+        .vertex = makeVertexWithTextureId(x, y, z, u, v, textureIdx),
+        .rotationSpeed = rotationSpeed
+    };
+}
+
 inline glm::i32vec3 SwapYZ(glm::i32vec3 vec)
 {
     // -z means ahead, which was +y in the old coordinate system
@@ -61,6 +76,12 @@ inline VertexWithTextureId SwapYZ(VertexWithTextureId vertex)
     return vertex;
 }
 
+inline WallVertex SwapYZ(WallVertex vertex)
+{
+    vertex.vertex = SwapYZ(vertex.vertex);
+    return vertex;
+}
+
 struct AtlasCoords
 {
     float u1, v1; // Top-left
@@ -69,7 +90,7 @@ struct AtlasCoords
 
 struct TextureData
 {
-    MR_UInt16 id;
+    MR_UInt32 id;   // high bit for 'b' animation frame
 
     sg_image img;
     //   sg_sampler sampler;
@@ -97,7 +118,8 @@ public:
 
     void BindWorldTextures();
     void BindWorldVertices(const VerticesData<VertexWithTextureId>& vertices);
-    unsigned long LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap);
+    void BindWallVertices(const VerticesData<WallVertex>& vertices);
+    unsigned long LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
     void BindBackgroundVertices(const VerticesData<Vertex>& vertices);
     void BindBackgroundTexture(const MR_UInt8* backImage);
     void Render() const;

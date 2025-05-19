@@ -4,6 +4,7 @@
 #include "sokol_gfx.h"
 #include "shaders/background.h"
 #include "shaders/world.h"
+#include "shaders/wall.h"
 
 struct Sokol_State {
     sg_pass_action pass_action;
@@ -17,8 +18,14 @@ struct Sokol_State {
     sg_pipeline world_pipeline;
     WorldUniforms_t world_uniforms;
     sg_bindings world_bindings;
-    glm::vec4 atlas_coords[32]{};
     int world_count;
+
+    sg_pipeline wall_pipeline;
+    WallUniforms_t wall_uniforms;
+    sg_bindings wall_bindings;
+    int wall_count;
+
+    glm::vec4 atlas_coords[32]{};
 };
 
 template<typename T>

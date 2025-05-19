@@ -30,4 +30,5 @@ void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_Sim
     }
     mLastGlCameraPos = lCameraPos;
     mGLView.SetCameraPosition(lCameraPos, lOrientation);
+    mGLView.SetSimulationTime(pTime);
 }

@@ -29,8 +29,8 @@ void GLLevelLoader::LoadLevel(const MR_Level* level, const MR_UInt8* backImage)
 
     LoadBackground(backImage);
     glRenderer->BindBackgroundVertices(bkgVerts);
-
-    glRenderer->BindWorldVertices(verts);
+    glRenderer->BindWorldVertices(worldVerts);
+    glRenderer->BindWallVertices(wallVerts);
     glRenderer->BindWorldTextures();
 }
 
@@ -202,23 +202,23 @@ void GLLevelLoader::LoadFloor(MR_PolygonShape* shape, MR_SurfaceElement* surface
     }
     auto height = shape->ZMin();
     auto lNbVertex = shape->VertexCount();
-    auto baseIndex = verts.vertices.size();
+    auto baseIndex = worldVerts.vertices.size();
     auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
 
     for (auto i = 0; i < lNbVertex; i++)
     {
         float u = shape->X(i) / static_cast<float>(bitmap->GetWidth());
         float v = shape->Y(i) / static_cast<float>(bitmap->GetHeight());
-        verts.vertices.push_back(
+        worldVerts.vertices.push_back(
             SwapYZ(makeVertexWithTextureId(shape->X(i), shape->Y(i), height, u, v, textureAtlasId)));
     }
 
     // Triangulate using fan
     for (auto j = 1; j < lNbVertex - 1; ++j)
     {
-        verts.indices.push_back(baseIndex);
-        verts.indices.push_back(baseIndex + j + (upsideDown ? 1 : 0));
-        verts.indices.push_back(baseIndex + j + (upsideDown ? 0 : 1));
+        worldVerts.indices.push_back(baseIndex);
+        worldVerts.indices.push_back(baseIndex + j + (upsideDown ? 1 : 0));
+        worldVerts.indices.push_back(baseIndex + j + (upsideDown ? 0 : 1));
     }
 }
 
@@ -231,22 +231,22 @@ void GLLevelLoader::LoadCeiling(MR_PolygonShape* shape, MR_SurfaceElement* surfa
     }
     auto height = shape->ZMax();
     auto lNbVertex = shape->VertexCount();
-    auto baseIndex = verts.vertices.size();
+    auto baseIndex = worldVerts.vertices.size();
     auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
 
     for (auto i = 0; i < lNbVertex; i++)
     {
         float u = shape->X(i) / static_cast<float>(bitmap->GetWidth());
         float v = shape->Y(i) / static_cast<float>(bitmap->GetHeight());
-        verts.vertices.push_back(
+        worldVerts.vertices.push_back(
             SwapYZ(makeVertexWithTextureId(shape->X(i), shape->Y(i), height, u, v, textureAtlasId)));
     }
     // Triangulate using fan
     for (auto j = 1; j < lNbVertex - 1; ++j)
     {
-        verts.indices.push_back(baseIndex); // Center
-        verts.indices.push_back(baseIndex + j + (upsideDown ? 0 : 1));
-        verts.indices.push_back(baseIndex + j + (upsideDown ? 1 : 0));
+        worldVerts.indices.push_back(baseIndex); // Center
+        worldVerts.indices.push_back(baseIndex + j + (upsideDown ? 0 : 1));
+        worldVerts.indices.push_back(baseIndex + j + (upsideDown ? 1 : 0));
     }
 }
 
@@ -258,6 +258,12 @@ void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_Surface
         return;
     }
     int textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+    auto bitmap2 = surfaceElement->GetResBitmap2();
+    if (bitmap2 != nullptr)
+    {
+        MR_UInt32 id2 = surfaceElement->mId.mClassId | 0x80000000;  // turn on high bit for bitmap2
+        glRenderer->LoadTexture(id2, bitmap2);
+    }
     float dx = lP1.mX - lP0.mX;
     float dy = lP1.mY - lP0.mY;
     auto wallLength = sqrt(dx * dx + dy * dy);
@@ -291,21 +297,27 @@ void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_Surface
         v1 = 1.0f - ((float)wallHeight / bitmap->GetHeight());
     }
 
-    verts.vertices.push_back(
-        SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP0.mZ, u0, v0, textureAtlasId)));
-    verts.vertices.push_back(
-        SwapYZ(makeVertexWithTextureId(lP0.mX, lP0.mY, lP1.mZ, u0, v1, textureAtlasId)));
-    verts.vertices.push_back(
-        SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP0.mZ, u1, v0, textureAtlasId)));
-    verts.vertices.push_back(
-        SwapYZ(makeVertexWithTextureId(lP1.mX, lP1.mY, lP1.mZ, u1, v1, textureAtlasId)));
-    uint16_t latestVertexIdx = verts.vertices.size() - 1;
+    int rotationSpeed = 0;
+    auto bitmapSurface = dynamic_cast<MR_BitmapSurface*>(surfaceElement);
+    if (bitmapSurface != nullptr)
+    {
+        rotationSpeed = bitmapSurface->GetRotationSpeed();
+    }
+    wallVerts.vertices.push_back(
+        SwapYZ(makeWallVertex(lP0.mX, lP0.mY, lP0.mZ, u0, v0, textureAtlasId, rotationSpeed)));
+    wallVerts.vertices.push_back(
+        SwapYZ(makeWallVertex(lP0.mX, lP0.mY, lP1.mZ, u0, v1, textureAtlasId, rotationSpeed)));
+    wallVerts.vertices.push_back(
+        SwapYZ(makeWallVertex(lP1.mX, lP1.mY, lP0.mZ, u1, v0, textureAtlasId, rotationSpeed)));
+    wallVerts.vertices.push_back(
+        SwapYZ(makeWallVertex(lP1.mX, lP1.mY, lP1.mZ, u1, v1, textureAtlasId, rotationSpeed)));
+    uint16_t latestVertexIdx = wallVerts.vertices.size() - 1;
 
-    verts.indices.push_back(latestVertexIdx - 3);
-    verts.indices.push_back(latestVertexIdx - 1);
-    verts.indices.push_back(latestVertexIdx - 2);
+    wallVerts.indices.push_back(latestVertexIdx - 3);
+    wallVerts.indices.push_back(latestVertexIdx - 1);
+    wallVerts.indices.push_back(latestVertexIdx - 2);
 
-    verts.indices.push_back(latestVertexIdx - 2);
-    verts.indices.push_back(latestVertexIdx - 1);
-    verts.indices.push_back(latestVertexIdx);
+    wallVerts.indices.push_back(latestVertexIdx - 2);
+    wallVerts.indices.push_back(latestVertexIdx - 1);
+    wallVerts.indices.push_back(latestVertexIdx);
 }

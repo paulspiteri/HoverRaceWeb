@@ -21,7 +21,9 @@ private:
     void LoadCeiling(MR_PolygonShape* shape, MR_SurfaceElement* surfaceElement, bool upsideDown = false);
     void AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_SurfaceElement* surfaceElement);
 
-    VerticesData<VertexWithTextureId> verts;
     VerticesData<Vertex> bkgVerts;
+    VerticesData<VertexWithTextureId> worldVerts;
+    VerticesData<WallVertex> wallVerts;
+
     GLRenderer* glRenderer;
 };

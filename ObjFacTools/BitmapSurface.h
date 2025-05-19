@@ -68,6 +68,12 @@ class MR_DllDeclare MR_BitmapSurface:public MR_SurfaceElement
       {
          return mBitmap;
       }
+      MR_ResBitmap* GetResBitmap2()const override
+      {
+         return mBitmap2;
+      }
+      int GetRotationSpeed()const { return mRotationSpeed; }
+      int GetRotationLen()const { return mRotationLen; }
 };
 
 class MR_DllDeclare MR_VStretchBitmapSurface:public MR_BitmapSurface

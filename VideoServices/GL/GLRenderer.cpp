@@ -40,6 +40,22 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     world_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
     state.world_pipeline = sg_make_pipeline(&world_pipeline_desc);
 
+    const sg_shader_desc* wall_shdr_desc = wall_shader_desc(sg_query_backend());
+    sg_shader wall_shader = sg_make_shader(wall_shdr_desc);
+    sg_pipeline_desc wall_pipeline_desc = {};
+    wall_pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
+    wall_pipeline_desc.shader = wall_shader;
+    wall_pipeline_desc.sample_count = 16;
+    wall_pipeline_desc.label = "wall-pipeline";
+    wall_pipeline_desc.layout.attrs[ATTR_wall_position].format = SG_VERTEXFORMAT_INT3;
+    wall_pipeline_desc.layout.attrs[ATTR_wall_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
+    wall_pipeline_desc.layout.attrs[ATTR_wall_textureIdx].format = SG_VERTEXFORMAT_UINT;
+    wall_pipeline_desc.layout.attrs[ATTR_wall_rotationSpeed].format = SG_VERTEXFORMAT_INT;
+    wall_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
+    wall_pipeline_desc.depth.write_enabled = true;
+    wall_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
+    state.wall_pipeline = sg_make_pipeline(&wall_pipeline_desc);
+
     state.pass_action.colors[0] = {
         .load_action = SG_LOADACTION_CLEAR,
         .clear_value = {0.0f, 0.0f, 0.0f, 1.0f}
@@ -52,6 +68,7 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     wrap_sampler_desc.wrap_v = SG_WRAP_REPEAT;
     auto wrap_sampler = sg_make_sampler(&wrap_sampler_desc);
     state.world_bindings.samplers[0] = wrap_sampler;
+    state.wall_bindings.samplers[0] = wrap_sampler;
 
     sg_sampler_desc edge_sampler_desc = {};
     wrap_sampler_desc.min_filter = SG_FILTER_LINEAR;
@@ -72,11 +89,20 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
 
 GLRenderer::~GLRenderer()
 {
+    sg_destroy_buffer(state.bkg_bindings.vertex_buffers[0]);
+    sg_destroy_buffer(state.bkg_bindings.index_buffer);
+    sg_destroy_image(state.bkg_bindings.images[0]);
+    sg_destroy_sampler(state.bkg_bindings.samplers[0]);
+    sg_destroy_pipeline(state.bkg_pipeline);
+
+    sg_destroy_buffer(state.wall_bindings.vertex_buffers[0]);
+    sg_destroy_buffer(state.wall_bindings.index_buffer);
     sg_destroy_buffer(state.world_bindings.vertex_buffers[0]);
     sg_destroy_buffer(state.world_bindings.index_buffer);
     sg_destroy_image(state.world_bindings.images[0]);
     sg_destroy_sampler(state.world_bindings.samplers[0]);
     sg_destroy_pipeline(state.world_pipeline);
+    sg_destroy_pipeline(state.wall_pipeline);
 
     sg_shutdown();
 }
@@ -101,6 +127,12 @@ void GLRenderer::Render() const
     sg_apply_uniforms(1, SG_RANGE(state.atlas_coords));
     sg_apply_bindings(&state.world_bindings);
     sg_draw(0, state.world_count, 1);
+
+    sg_apply_pipeline(state.wall_pipeline);
+    sg_apply_uniforms(0, SG_RANGE(state.wall_uniforms));
+    sg_apply_uniforms(1, SG_RANGE(state.atlas_coords));
+    sg_apply_bindings(&state.wall_bindings);
+    sg_draw(0, state.wall_count, 1);
 
     sg_end_pass();
     sg_commit();
@@ -186,6 +218,7 @@ void GLRenderer::BindWorldTextures()
     delete[] atlas_pixels;
 
     state.world_bindings.images[0] = atlas_texture;
+    state.wall_bindings.images[0] = atlas_texture;
 
     int i = 0;
     for (const auto& texture : textures)
@@ -207,21 +240,41 @@ void GLRenderer::BindWorldVertices(const VerticesData<VertexWithTextureId>& vert
         .type = SG_BUFFERTYPE_VERTEXBUFFER,
         .usage = SG_USAGE_IMMUTABLE,
         .data = make_sg_range(vertices.vertices),
-        .label = "wall-floor-vertices"
+        .label = "floor-vertices"
     };
     state.world_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
 
     sg_buffer_desc index_buf_desc = {
         .type = SG_BUFFERTYPE_INDEXBUFFER,
         .data = make_sg_range(vertices.indices),
-        .label = "wall-floor-indices"
+        .label = "floor-indices"
     };
     state.world_bindings.index_buffer = sg_make_buffer(&index_buf_desc);
 
     state.world_count = static_cast<uint32_t>(vertices.indices.size());
 }
 
-unsigned long GLRenderer::LoadTexture(MR_UInt16 id, const MR_ResBitmap* bitmap)
+void GLRenderer::BindWallVertices(const VerticesData<WallVertex>& vertices)
+{
+    sg_buffer_desc buf_desc = {
+        .type = SG_BUFFERTYPE_VERTEXBUFFER,
+        .usage = SG_USAGE_IMMUTABLE,
+        .data = make_sg_range(vertices.vertices),
+        .label = "wall-vertices"
+    };
+    state.wall_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
+
+    sg_buffer_desc index_buf_desc = {
+        .type = SG_BUFFERTYPE_INDEXBUFFER,
+        .data = make_sg_range(vertices.indices),
+        .label = "wall-indices"
+    };
+    state.wall_bindings.index_buffer = sg_make_buffer(&index_buf_desc);
+
+    state.wall_count = static_cast<uint32_t>(vertices.indices.size());
+}
+
+unsigned long GLRenderer::LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap)
 {
     auto it = std::ranges::find_if(textures, [=](const auto& t) { return t.id == id; });
     if (it == textures.end())
