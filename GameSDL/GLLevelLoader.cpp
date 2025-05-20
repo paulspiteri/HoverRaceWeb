@@ -257,13 +257,39 @@ void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_Surface
     {
         return;
     }
+
     int textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+
+    std::optional<int> maxHeight;
+    auto vstretchBitmap = dynamic_cast<MR_VStretchBitmapSurface*>(surfaceElement);
+    if (vstretchBitmap != nullptr)
+    {
+        maxHeight = vstretchBitmap->GetMaxHeight();
+    }
+
     auto bitmap2 = surfaceElement->GetResBitmap2();
-    if (bitmap2 != nullptr)
+    if (bitmap2 != nullptr && bitmap2 != bitmap)
     {
         MR_UInt32 id2 = surfaceElement->mId.mClassId | 0x80000000;  // turn on high bit for bitmap2
         glRenderer->LoadTexture(id2, bitmap2);
+
+        int rotationSpeed = 0, rotationLength = 0;
+        auto bitmapSurface = dynamic_cast<MR_BitmapSurface*>(surfaceElement);
+        if (bitmapSurface != nullptr)
+        {
+            rotationSpeed = bitmapSurface->GetRotationSpeed();
+            rotationLength = bitmapSurface->GetRotationLen();
+        }
+        AddAnimatedWall(lP0, lP1, textureAtlasId, bitmap->GetWidth(), bitmap->GetHeight(), maxHeight, rotationSpeed, rotationLength);
     }
+    else
+    {
+        AddRegularWall(lP0, lP1, textureAtlasId, bitmap->GetWidth(), bitmap->GetHeight(), maxHeight);
+    }
+}
+
+void GLLevelLoader::AddRegularWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, int textureAtlasId, float bitmapWidth, float bitmapHeight, std::optional<int> maxHeight)
+{
     float dx = lP1.mX - lP0.mX;
     float dy = lP1.mY - lP0.mY;
     auto wallLength = sqrt(dx * dx + dy * dy);
@@ -274,14 +300,13 @@ void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_Surface
     float v0 = 1.0f;
     float v1 = 0.0f;
 
-    auto vstretchBitmap = dynamic_cast<MR_VStretchBitmapSurface*>(surfaceElement);
-    if (vstretchBitmap != nullptr)
+    if (maxHeight.has_value())
     {
         if (wallHeight > 0)
         {
             u1 = wallLength / wallHeight; // repeat width every wall height
 
-            int lDivisor = 1 + (wallHeight - 1) / vstretchBitmap->GetMaxHeight();
+            int lDivisor = 1 + (wallHeight - 1) / maxHeight.value();
             if (lDivisor > 1)
             {
                 v0 = v0 * lDivisor;
@@ -291,26 +316,20 @@ void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_Surface
     }
     else
     {
-        u1 = wallLength / bitmap->GetWidth(); // tile horizontally
+        u1 = wallLength / bitmapWidth; // tile horizontally
 
         v0 = 1.0f;
-        v1 = 1.0f - ((float)wallHeight / bitmap->GetHeight());
+        v1 = 1.0f - (float)wallHeight / bitmapHeight;
     }
 
-    int rotationSpeed = 0;
-    auto bitmapSurface = dynamic_cast<MR_BitmapSurface*>(surfaceElement);
-    if (bitmapSurface != nullptr)
-    {
-        rotationSpeed = bitmapSurface->GetRotationSpeed();
-    }
     wallVerts.vertices.push_back(
-        SwapYZ(makeWallVertex(lP0.mX, lP0.mY, lP0.mZ, u0, v0, textureAtlasId, rotationSpeed)));
+        SwapYZ(makeWallVertex(lP0.mX, lP0.mY, lP0.mZ, u0, v0, textureAtlasId)));
     wallVerts.vertices.push_back(
-        SwapYZ(makeWallVertex(lP0.mX, lP0.mY, lP1.mZ, u0, v1, textureAtlasId, rotationSpeed)));
+        SwapYZ(makeWallVertex(lP0.mX, lP0.mY, lP1.mZ, u0, v1, textureAtlasId)));
     wallVerts.vertices.push_back(
-        SwapYZ(makeWallVertex(lP1.mX, lP1.mY, lP0.mZ, u1, v0, textureAtlasId, rotationSpeed)));
+        SwapYZ(makeWallVertex(lP1.mX, lP1.mY, lP0.mZ, u1, v0, textureAtlasId)));
     wallVerts.vertices.push_back(
-        SwapYZ(makeWallVertex(lP1.mX, lP1.mY, lP1.mZ, u1, v1, textureAtlasId, rotationSpeed)));
+        SwapYZ(makeWallVertex(lP1.mX, lP1.mY, lP1.mZ, u1, v1, textureAtlasId)));
     uint16_t latestVertexIdx = wallVerts.vertices.size() - 1;
 
     wallVerts.indices.push_back(latestVertexIdx - 3);
@@ -320,4 +339,85 @@ void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_Surface
     wallVerts.indices.push_back(latestVertexIdx - 2);
     wallVerts.indices.push_back(latestVertexIdx - 1);
     wallVerts.indices.push_back(latestVertexIdx);
+}
+
+void GLLevelLoader::AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, int textureAtlasId, float bitmapWidth, float bitmapHeight, std::optional<int> maxHeight, int rotationSpeed, int rotationLength)
+{
+    float dx = lP1.mX - lP0.mX;
+    float dy = lP1.mY - lP0.mY;
+    auto wallLength = sqrt(dx * dx + dy * dy);
+    int wallHeight = lP0.mZ - lP1.mZ;
+
+    if (maxHeight.has_value() && wallHeight > 0)
+    {
+        bitmapHeight = wallHeight;
+        bitmapWidth = wallHeight;
+    }
+
+    // Calculate direction vector for the wall
+    float dirX = dx / wallLength;
+    float dirY = dy / wallLength;
+
+    // Calculate how many full segments fit in the wall length
+    int numFullSegments = floor(wallLength / bitmapWidth);
+    float remainingLength = wallLength - (numFullSegments * bitmapWidth);
+
+    // Total number of segments (full + possible partial)
+    int numSegments = remainingLength > 0 ? (numFullSegments + 1) : numFullSegments;
+
+    for (int i = 0; i < numSegments; i++) {
+        float startPos = i * bitmapWidth;
+        float segmentWidth;
+
+        // For the last segment, use the remaining length
+        if (i == numFullSegments && remainingLength > 0) {
+            segmentWidth = remainingLength;
+        } else {
+            segmentWidth = bitmapWidth;
+        }
+
+        float endPos = startPos + segmentWidth;
+
+        MR_3DCoordinate segP0, segP1;
+        segP0.mX = lP0.mX + dirX * startPos;
+        segP0.mY = lP0.mY + dirY * startPos;
+        segP0.mZ = lP0.mZ;
+
+        segP1.mX = lP0.mX + dirX * endPos;
+        segP1.mY = lP0.mY + dirY * endPos;
+        segP1.mZ = lP0.mZ;
+
+        float u0 = 0.0f;
+        float u1;
+
+        // If this is the last segment, and it's partial, adjust u1 to match the proportion
+        if (i == numFullSegments && remainingLength > 0) {
+            u1 = remainingLength / bitmapWidth; // Partial texture width
+        } else {
+            u1 = 1.0f; // Full texture width
+        }
+        // - the code implemented in non-animated wall to adjust height to maxHeight may be needed here
+        float v0 = 1.0f;
+        float v1 = 0.0f;
+
+        wallVerts.vertices.push_back(
+            SwapYZ(makeWallVertex(segP0.mX, segP0.mY, lP0.mZ, u0, v0, textureAtlasId, rotationSpeed,  rotationLength, i)));
+        wallVerts.vertices.push_back(
+            SwapYZ(makeWallVertex(segP0.mX, segP0.mY, lP1.mZ, u0, v1, textureAtlasId, rotationSpeed,  rotationLength, i)));
+        wallVerts.vertices.push_back(
+            SwapYZ(makeWallVertex(segP1.mX, segP1.mY, lP0.mZ, u1, v0, textureAtlasId, rotationSpeed,  rotationLength, i)));
+        wallVerts.vertices.push_back(
+            SwapYZ(makeWallVertex(segP1.mX, segP1.mY, lP1.mZ, u1, v1, textureAtlasId, rotationSpeed, rotationLength,  i)));
+
+        uint16_t latestVertexIdx = wallVerts.vertices.size() - 1;
+
+        // Add indices for the two triangles of this quad
+        wallVerts.indices.push_back(latestVertexIdx - 3);
+        wallVerts.indices.push_back(latestVertexIdx - 1);
+        wallVerts.indices.push_back(latestVertexIdx - 2);
+
+        wallVerts.indices.push_back(latestVertexIdx - 2);
+        wallVerts.indices.push_back(latestVertexIdx - 1);
+        wallVerts.indices.push_back(latestVertexIdx);
+    }
 }

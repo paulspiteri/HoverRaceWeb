@@ -51,6 +51,8 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     wall_pipeline_desc.layout.attrs[ATTR_wall_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
     wall_pipeline_desc.layout.attrs[ATTR_wall_textureIdx].format = SG_VERTEXFORMAT_UINT;
     wall_pipeline_desc.layout.attrs[ATTR_wall_rotationSpeed].format = SG_VERTEXFORMAT_INT;
+    wall_pipeline_desc.layout.attrs[ATTR_wall_rotationLength].format = SG_VERTEXFORMAT_INT;
+    wall_pipeline_desc.layout.attrs[ATTR_wall_segment].format = SG_VERTEXFORMAT_UINT;
     wall_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
     wall_pipeline_desc.depth.write_enabled = true;
     wall_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;

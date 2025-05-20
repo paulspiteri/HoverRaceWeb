@@ -23,6 +23,8 @@ struct WallVertex
 {
     VertexWithTextureId vertex;
     int rotationSpeed;
+    uint rotationLength;
+    uint segment;
 };
 
 template <typename T>
@@ -50,11 +52,13 @@ inline VertexWithTextureId makeVertexWithTextureId(int32_t x, int32_t y, int32_t
 }
 
 inline WallVertex makeWallVertex(int32_t x, int32_t y, int32_t z, float u, float v,
-                                                   uint32_t textureIdx, int rotationSpeed)
+                                                   uint32_t textureIdx, int rotationSpeed = 0, uint rotationLength = 0, uint segment = 0)
 {
     return WallVertex {
         .vertex = makeVertexWithTextureId(x, y, z, u, v, textureIdx),
-        .rotationSpeed = rotationSpeed
+        .rotationSpeed = rotationSpeed,
+        .rotationLength = rotationLength,
+        .segment = segment
     };
 }
 

@@ -13,6 +13,8 @@ in ivec4 position;
 in vec2 texcoord0;
 in uint textureIdx;
 in int rotationSpeed;  // animation speed
+in int rotationLength;  // animation segment length
+in uint segment;       // wall segment
 
 out vec2 wall_uv;
 flat out vec4 atlas_coord;
@@ -24,8 +26,9 @@ void main() {
     if (rotationSpeed == 0) {
         atlas_coord = atlas_coords[textureIdx];
     } else {
-        int lStartPos = ((time+40000) / rotationSpeed) % 4;
-        uint idx = lStartPos >= 2 ? textureIdx + 1 : textureIdx;
+        int lStartPos = ((time+40000) / rotationSpeed) % rotationLength;
+        uint segmentRepeat = segment % rotationLength;
+        uint idx = lStartPos == segmentRepeat ? textureIdx + 1 : textureIdx;
         atlas_coord = atlas_coords[idx];
     }
 }
