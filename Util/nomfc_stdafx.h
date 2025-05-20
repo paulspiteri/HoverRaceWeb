@@ -16,9 +16,6 @@ typedef int BOOL;
 #define TRUE 1
 #define FALSE 0
 
-#define DECLARE_HANDLE(name) struct name##__{int unused;}; typedef struct name##__ *name
-DECLARE_HANDLE (HWND);
-
 #define ASSERT(condition) assert(condition)
 
 #define Int32x32To64(a, b)  (((int64_t)((long)(a))) * ((int64_t)((long)(b))))
