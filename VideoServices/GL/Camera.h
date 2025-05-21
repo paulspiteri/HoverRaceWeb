@@ -27,7 +27,7 @@ public:
 
     glm::mat4 getProjectionMatrix(float aspectRatio) const
     {
-        const float nearPlane = 1000.0f;
+        const float nearPlane = 100.0f;
         const float farPlane = 1000000.0f;
 
         return glm::perspective(

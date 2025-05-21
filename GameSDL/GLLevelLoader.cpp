@@ -131,6 +131,21 @@ void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId)
 {
     auto roomShape = level->GetRoomShape(roomId);
     auto surfaceElement = level->GetRoomBottomElement(roomId);
+    if (surfaceElement->mId.mClassId == 63)
+    {
+        int waterLevel = roomShape->ZMax();
+        for (int i = 0; i < roomShape->VertexCount(); i++)
+        {
+            int neighborId = level->GetNeighbor(roomId, i);
+            if (neighborId != -1)
+            {
+                auto neighborRoomShape = level->GetRoomShape(neighborId);
+                waterLevel = std::min(neighborRoomShape->ZMin(), waterLevel);
+                delete neighborRoomShape;
+            }
+        }
+        //LoadWater(roomShape, surfaceElement, waterLevel);
+    }
     LoadFloor(roomShape, surfaceElement);
     delete roomShape;
 }
@@ -219,6 +234,30 @@ void GLLevelLoader::LoadFloor(MR_PolygonShape* shape, MR_SurfaceElement* surface
         worldVerts.indices.push_back(baseIndex);
         worldVerts.indices.push_back(baseIndex + j + (upsideDown ? 1 : 0));
         worldVerts.indices.push_back(baseIndex + j + (upsideDown ? 0 : 1));
+    }
+}
+
+void GLLevelLoader::LoadWater(MR_PolygonShape* shape, MR_SurfaceElement* surfaceElement, MR_Int32 level)
+{
+    auto bitmap = surfaceElement->GetResBitmap();
+    auto lNbVertex = shape->VertexCount();
+    auto baseIndex = worldVerts.vertices.size();
+    auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+
+    for (auto i = 0; i < lNbVertex; i++)
+    {
+        float u = shape->X(i) / static_cast<float>(bitmap->GetWidth());
+        float v = shape->Y(i) / static_cast<float>(bitmap->GetHeight());
+        worldVerts.vertices.push_back(
+            SwapYZ(makeVertexWithTextureId(shape->X(i), shape->Y(i), level, u, v, textureAtlasId)));
+    }
+
+    // Triangulate using fan
+    for (auto j = 1; j < lNbVertex - 1; ++j)
+    {
+        worldVerts.indices.push_back(baseIndex);
+        worldVerts.indices.push_back(baseIndex + j + 0);
+        worldVerts.indices.push_back(baseIndex + j + 1);
     }
 }
 
