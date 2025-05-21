@@ -16,15 +16,15 @@ struct Vertex
 struct VertexWithTextureId
 {
     Vertex vertex;
-    uint32_t textureIdx;
+    int textureIdx;
 };
 
 struct WallVertex
 {
     VertexWithTextureId vertex;
     int rotationSpeed;
-    unsigned int rotationLength;
-    unsigned int segment;
+    int rotationLength;
+    int segment;
 };
 
 template <typename T>
@@ -43,7 +43,7 @@ inline Vertex makeVertex(int32_t x, int32_t y, int32_t z, float u, float v)
 }
 
 inline VertexWithTextureId makeVertexWithTextureId(int32_t x, int32_t y, int32_t z, float u, float v,
-                                                   uint32_t textureIdx)
+                                                   int textureIdx)
 {
     return VertexWithTextureId{
         .vertex = makeVertex(x, y, z, u, v),
@@ -52,7 +52,7 @@ inline VertexWithTextureId makeVertexWithTextureId(int32_t x, int32_t y, int32_t
 }
 
 inline WallVertex makeWallVertex(int32_t x, int32_t y, int32_t z, float u, float v,
-                                                   uint32_t textureIdx, int rotationSpeed = 0, unsigned int rotationLength = 0, unsigned int segment = 0)
+                                                   uint32_t textureIdx, int rotationSpeed = 0, int rotationLength = 0, int segment = 0)
 {
     return WallVertex {
         .vertex = makeVertexWithTextureId(x, y, z, u, v, textureIdx),

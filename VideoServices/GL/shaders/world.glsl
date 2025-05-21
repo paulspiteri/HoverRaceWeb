@@ -10,7 +10,7 @@ layout(binding = 1) uniform WorldAtlasCoords {
 
 in ivec4 position;
 in vec2 texcoord0;
-in uint textureIdx;
+in int textureIdx;
 
 out vec2 world_uv;
 flat out vec4 atlas_coord;
