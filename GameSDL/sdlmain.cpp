@@ -129,9 +129,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
         if (event->type == SDL_EVENT_KEY_DOWN) {
             switch (event->key.key) {
-                case SDLK_T:
-                    ChangeToTrack("ClassicH.trk");
-                    break;
                 case SDLK_LSHIFT:
                 case SDLK_RSHIFT:
                     lControlState |= MR_MainCharacter::eMotorOn;
@@ -185,6 +182,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
         }
     } else if (event->type == SDL_EVENT_WINDOW_RESIZED) {
         if (event->window.windowID == SDL_GetWindowID(sdlWindow)) {
+            std::cout << "SDL Window resized " << event->window.data1 << " x " << event->window.data2 << std::endl;
             SDL_DestroyTexture(texture);
             texture = SDL_CreateTexture(renderer,
                                         SDL_PIXELFORMAT_ARGB8888,
@@ -193,6 +191,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
             game->SetResolution(event->window.data1, event->window.data2);
         } else if (event->window.windowID == SDL_GetWindowID(glWindow)) {
+            std::cout << "GL Window resized " << event->window.data1 << " x " << event->window.data2 << std::endl;
             game->SetOpenGLResolution(event->window.data1, event->window.data2);
         }
     }
