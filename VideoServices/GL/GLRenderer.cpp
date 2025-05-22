@@ -10,9 +10,39 @@
 #include "stb_rect_pack.h"
 #include "../3DViewport.h"
 
+#define SOKOL_DEBUG
+#ifdef __EMSCRIPTEN__
+    #define SOKOL_GLES3
+#else
+#define SOKOL_GLCORE
+#endif
+
+#define SOKOL_LOG_IMPL
+#include "sokol_log.h"
+#define SOKOL_GFX_IMPL
+#include "sokol_gfx.h"
+
+
 GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer)
     : glWindow(glWindow), glContext(glContext), videoBuffer(videoBuffer)
 {
+    sg_logger logger = {
+        .func = slog_func
+    };
+
+    sg_desc desc = {};
+    desc.environment.defaults.color_format = SG_PIXELFORMAT_RGBA8;
+    desc.environment.defaults.depth_format = SG_PIXELFORMAT_DEPTH;
+    desc.environment.defaults.sample_count = 16;
+    desc.logger = logger;
+    sg_setup(&desc);
+
+    if (!sg_isvalid()) {
+        std::cout << "Failed to initialize sokol_gfx" << std::endl;
+        throw std::runtime_error("Failed to initialize sokol_gfx");
+    }
+    std::cout << "Initialized sokol_gfx" << std::endl;
+
     const sg_shader_desc* bkg_shader_desc = background_shader_desc(sg_query_backend());
     sg_shader bkg_shader = sg_make_shader(bkg_shader_desc);
     sg_pipeline_desc bkg_pipeline_desc = {};

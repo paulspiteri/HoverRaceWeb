@@ -23,6 +23,7 @@ MR_SDLGameApp::MR_SDLGameApp(SDL_Texture* texture, SDL_Window* glWindow, SDL_GLC
    mCurrentSession  = NULL;
    mGLWindow = glWindow;
    mGLContext = glContext;
+   mGLRenderer = nullptr;
    mGLLevelLoader = nullptr;
    mClrScrTodo = 2;
 
@@ -57,8 +58,8 @@ MR_SDLGameApp::~MR_SDLGameApp()
    MR_DllObjectFactory::Clean( FALSE );
    DeleteObjFac1();
    delete mVideoBuffer;
-   delete mGLRenderer;
-   delete mGLLevelLoader;
+   mVideoBuffer = nullptr;
+
 }
 
 void MR_SDLGameApp::Clean()
@@ -69,7 +70,10 @@ void MR_SDLGameApp::Clean()
    mObserver1->Delete();
    mObserver1 = NULL;
 
-   // unload GLLevelLoader here
+   delete mGLRenderer;
+   mGLRenderer = nullptr;
+   delete mGLLevelLoader;
+   mGLLevelLoader = nullptr;
 
    MR_DllObjectFactory::Clean( TRUE );
 
@@ -97,9 +101,6 @@ BOOL MR_SDLGameApp::InitGame()
    {
        mVideoBuffer->SetVideoMode(640, 400);
    }
-
-   mGLRenderer = new GLRenderer(mGLWindow, mGLContext, mVideoBuffer);
-   mGLLevelLoader = new GLLevelLoader(mGLRenderer);
 
    return lReturnValue;
 }
@@ -189,6 +190,8 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
 
    if( lSuccess )
    {
+      mGLRenderer = new GLRenderer(mGLWindow, mGLContext, mVideoBuffer);
+      mGLLevelLoader = new GLLevelLoader(mGLRenderer);
       mObserver1 = MR_Observer::New();
 
       // Create the new session
