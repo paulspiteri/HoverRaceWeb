@@ -77,6 +77,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
     MR_SoundServer::Init();
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
+#ifndef __EMSCRIPTEN__
     sdlWindow = SDL_CreateWindow("HoverRace SDL",
                               640, 400,
                               SDL_WINDOW_RESIZABLE);
@@ -96,13 +97,8 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
                                 SDL_PIXELFORMAT_ARGB8888,
                                 SDL_TEXTUREACCESS_STREAMING,
                                 640, 400);
+#endif
 
-
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
     glWindow = SDL_CreateWindow("GLHoverRace",
                                 640, 400,
                                 SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -112,11 +108,22 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[])
         return SDL_APP_FAILURE;
     }
     SDL_SetWindowMinimumSize(glWindow, 640, 400);
+    std::cout << "Created Windows and Renderer" << std::endl;
+
+#ifdef __EMSCRIPTEN__
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#else
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+#endif
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
     glContext = SDL_GL_CreateContext(glWindow);
     SDL_GL_SetSwapInterval(1); // VSync
     SDL_GL_MakeCurrent(glWindow, glContext);
-
-    std::cout << "Created Windows and Renderer" << std::endl;
 
     sg_logger logger = {
         .func = slog_func

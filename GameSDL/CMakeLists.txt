@@ -7,12 +7,12 @@ add_executable(GameSDL
     GLLevelLoader.cpp
 )
 
-target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3-static sokol
+target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3-static sokol glm::glm
 )
 
 if(EMSCRIPTEN)
-    set_target_properties(GameSDL PROPERTIES OUTPUT_NAME "index" SUFFIX ".html"   
-    LINK_FLAGS "-s EXPORTED_FUNCTIONS=['_main','_ChangeToTrack'] -s EXPORTED_RUNTIME_METHODS=['ccall']")
+    set_target_properties(GameSDL PROPERTIES OUTPUT_NAME "index" SUFFIX ".html"
+    LINK_FLAGS "-s MIN_WEBGL_VERSION=2 -s USE_WEBGL2=1 -s EXPORTED_FUNCTIONS=['_main','_ChangeToTrack'] -s EXPORTED_RUNTIME_METHODS=['ccall']")
     target_link_options(GameSDL PRIVATE
     "--shell-file=${CMAKE_SOURCE_DIR}/Emscripten/Hover.html"
     "--preload-file=${CMAKE_SOURCE_DIR}/ObjFac1.dat@ObjFac1.dat"
@@ -23,7 +23,7 @@ if(EMSCRIPTEN)
   )
 else()
     find_package(OpenGL REQUIRED)
-    target_link_libraries(GameSDL PRIVATE OpenGL::GL glm::glm)
+    target_link_libraries(GameSDL PRIVATE OpenGL::GL)
 
     if(WIN32)
         if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
