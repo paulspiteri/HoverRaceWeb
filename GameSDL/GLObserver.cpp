@@ -15,8 +15,7 @@ void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_Sim
     }
 
     MR_3DCoordinate lCameraPos;
-    auto orientationDegrees = MR_ANGLE_TO_DEGREES(lOrientation);
-    auto orientationRadians = orientationDegrees * (std::numbers::pi_v<float> / 180.0f);
+    auto orientationRadians = MR_ANGLE_TO_RADIANS(lOrientation);
     lCameraPos.mX  = pViewingCharacter->mPosition.mX - lDist * cos(orientationRadians);
     lCameraPos.mY  = pViewingCharacter->mPosition.mY - lDist * sin(orientationRadians);
     lCameraPos.mZ  = pViewingCharacter->mPosition.mZ + 1700;

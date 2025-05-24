@@ -16,7 +16,7 @@ void GLViewport::SetCameraPosition(const MR_3DCoordinate& pPosition, MR_Angle pO
 {
     camera.setPosition(SwapYZ(glm::vec3(pPosition.mX, pPosition.mY, pPosition.mZ)));
 
-    float orientationYaw = MR_ANGLE_TO_DEGREES(pOrientation);
+    float orientationYaw = MR_ANGLE_TO_RADIANS(pOrientation);
     orientationYaw = -orientationYaw; // requires negation due to coordinate system mapping, and depth being negative in GL
     camera.rotate(orientationYaw);
     bkg_camera.rotate(orientationYaw);

@@ -22,7 +22,28 @@ public:
 
     glm::mat4 getViewMatrix() const
     {
-        return glm::lookAt(position, position + front, up);
+        // Calculate right and up vectors
+        glm::vec3 r = glm::cross(front, up);
+        glm::vec3 u = glm::cross(r, front);
+
+        glm::mat4 view(1.0f);
+        view[0][0] = r.x;
+        view[1][0] = r.y;
+        view[2][0] = r.z;
+
+        view[0][1] = u.x;
+        view[1][1] = u.y;
+        view[2][1] = u.z;
+
+        view[0][2] = -front.x;
+        view[1][2] = -front.y;
+        view[2][2] = -front.z;
+
+        view[3][0] = -glm::dot(r, position);
+        view[3][1] = -glm::dot(u, position);
+        view[3][2] = glm::dot(front, position);
+
+        return view;
     }
 
     glm::mat4 getProjectionMatrix(float aspectRatio) const
@@ -46,14 +67,14 @@ public:
 
     void rotate(float yaw)
     {
-        front.x = cos(glm::radians(yaw));
+        front.x = glm::cos(yaw);
         front.y = 0;
-        front.z = sin(glm::radians(yaw));
+        front.z = glm::sin(yaw);
     }
 };
 
-inline float MR_ANGLE_TO_DEGREES(MR_Angle angle)
+inline float MR_ANGLE_TO_RADIANS(MR_Angle angle)
 {
-    float degrees = (static_cast<float>(angle) * 360.0f) / static_cast<float>(MR_2PI);
-    return degrees;
+    float radians = static_cast<float>(angle) * (glm::pi<float>() / static_cast<float>(MR_PI));
+    return radians;
 }
