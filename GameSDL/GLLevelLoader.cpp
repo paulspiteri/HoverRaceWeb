@@ -73,7 +73,7 @@ void GLLevelLoader::LoadBackground(const MR_UInt8* backImage)
 
 void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId)
 {
-    auto roomShape = level->GetRoomShape(roomId);
+    std::unique_ptr<MR_PolygonShape> roomShape(level->GetRoomShape(roomId));
     MR_3DCoordinate lP0;
     MR_3DCoordinate lP1;
     MR_Int32 lFloorLevel = roomShape->ZMin();
@@ -124,12 +124,11 @@ void GLLevelLoader::LoadRoomWalls(const MR_Level* level, int roomId)
         lP0.mX = lP1.mX;
         lP0.mY = lP1.mY;
     }
-    delete roomShape;
 }
 
 void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId)
 {
-    auto roomShape = level->GetRoomShape(roomId);
+    std::unique_ptr<MR_PolygonShape> roomShape(level->GetRoomShape(roomId));
     auto surfaceElement = level->GetRoomBottomElement(roomId);
     if (surfaceElement->mId.mClassId == 63)
     {
@@ -146,37 +145,33 @@ void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId)
         }
         //LoadWater(roomShape, surfaceElement, waterLevel);
     }
-    LoadFloor(roomShape, surfaceElement);
-    delete roomShape;
+    LoadFloor(roomShape.get(), surfaceElement);
 }
 
 void GLLevelLoader::LoadRoomCeiling(const MR_Level* level, int roomId)
 {
-    auto roomShape = level->GetRoomShape(roomId);
+    std::unique_ptr<MR_PolygonShape> roomShape(level->GetRoomShape(roomId));
     auto surfaceElement = level->GetRoomTopElement(roomId);
-    LoadCeiling(roomShape, surfaceElement, false);
-    delete roomShape;
+    LoadCeiling(roomShape.get(), surfaceElement, false);
 }
 
 void GLLevelLoader::LoadFeatureFloor(const MR_Level* level, int featureId)
 {
-    auto featureShape = level->GetFeatureShape(featureId);
+    std::unique_ptr<MR_PolygonShape> featureShape(level->GetFeatureShape(featureId));
     auto surfaceElement = level->GetFeatureBottomElement(featureId);
-    LoadFloor(featureShape, surfaceElement, true);
-    delete featureShape;
+    LoadFloor(featureShape.get(), surfaceElement, true);
 }
 
 void GLLevelLoader::LoadFeatureCeiling(const MR_Level* level, int featureId)
 {
-    auto featureShape = level->GetFeatureShape(featureId);
+    std::unique_ptr<MR_PolygonShape> featureShape(level->GetFeatureShape(featureId));
     auto surfaceElement = level->GetFeatureTopElement(featureId);
-    LoadCeiling(featureShape, surfaceElement, true);
-    delete featureShape;
+    LoadCeiling(featureShape.get(), surfaceElement, true);
 }
 
 void GLLevelLoader::LoadFeatureWalls(const MR_Level* level, int featureId)
 {
-    auto featureShape = level->GetFeatureShape(featureId);
+    std::unique_ptr<MR_PolygonShape> featureShape(level->GetFeatureShape(featureId));
     int lVertexCount = featureShape->VertexCount();
 
     MR_3DCoordinate lP0;
@@ -205,7 +200,6 @@ void GLLevelLoader::LoadFeatureWalls(const MR_Level* level, int featureId)
         lP1.mX = lP0.mX;
         lP1.mY = lP0.mY;
     }
-    delete featureShape;
 }
 
 void GLLevelLoader::LoadFloor(MR_PolygonShape* shape, MR_SurfaceElement* surfaceElement, bool upsideDown)
