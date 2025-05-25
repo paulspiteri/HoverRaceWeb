@@ -123,6 +123,7 @@ public:
     void BindWorldTextures();
     void BindWorldVertices(const VerticesData<VertexWithTextureId>& vertices);
     void BindWallVertices(const VerticesData<WallVertex>& vertices);
+    void BindFreeElementVertices(const VerticesData<VertexWithTextureId>& vertices);
     unsigned long LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
     void BindBackgroundVertices(const VerticesData<Vertex>& vertices);
     void BindBackgroundTexture(const MR_UInt8* backImage);

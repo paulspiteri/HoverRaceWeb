@@ -88,6 +88,26 @@ void MR_ResActor::Draw( MR_3DViewPort* pDest, const MR_PositionMatrix& pMatrix, 
    mSequenceList[ pSequence ].Draw( pDest, pMatrix, pFrame );
 }
 
+std::vector<MR_ResActor::Patch*> MR_ResActor::GetActorPatches() const
+{
+   auto patches = std::vector<Patch*>();
+
+   if (mNbSequence == 0 || mSequenceList[0].mNbFrame == 0)
+   {
+      return patches;
+   }
+
+   auto& frame = mSequenceList[0].mFrameList[0];
+   for (int i = 0; i < frame.mNbComponent; i++)
+   {
+      if (frame.mComponentList[i]->GetType() == ePatch)
+      {
+         patches.push_back(static_cast<Patch*>(frame.mComponentList[i]));
+      }
+   }
+   return patches;
+}
+
 
 // Sequence
 MR_ResActor::Sequence::Sequence()

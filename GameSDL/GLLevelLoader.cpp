@@ -2,6 +2,7 @@
 
 #include "../ObjFacTools/ResBitmap.h"
 #include "../ObjFacTools/BitmapSurface.h"
+#include "../ObjFacTools/FreeElementBase.h"
 #include <numbers>
 
 GLLevelLoader::GLLevelLoader(GLRenderer* renderer): glRenderer(renderer)
@@ -25,12 +26,15 @@ void GLLevelLoader::LoadLevel(const MR_Level* level, const MR_UInt8* backImage)
             LoadFeatureFloor(level, roomFeatureId);
             LoadFeatureCeiling(level, roomFeatureId);
         }
+
+        LoadRoomFreeElements(level, roomId);
     }
 
     LoadBackground(backImage);
     glRenderer->BindBackgroundVertices(bkgVerts);
     glRenderer->BindWorldVertices(worldVerts);
     glRenderer->BindWallVertices(wallVerts);
+    glRenderer->BindFreeElementVertices(freeElementVerts);
     glRenderer->BindWorldTextures();
 }
 
@@ -452,5 +456,36 @@ void GLLevelLoader::AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, in
         wallVerts.indices.push_back(latestVertexIdx - 2);
         wallVerts.indices.push_back(latestVertexIdx - 1);
         wallVerts.indices.push_back(latestVertexIdx);
+    }
+}
+
+void GLLevelLoader::LoadRoomFreeElements(const MR_Level* level, int roomId)
+{
+    MR_FreeElementHandle lHandle = level->GetFirstFreeElement(roomId);
+    while(lHandle != nullptr)
+    {
+        MR_FreeElement* lElement = MR_Level::GetFreeElement(lHandle);
+        auto freeElementBase = dynamic_cast<MR_FreeElementBase*>(lElement);
+        if (freeElementBase != nullptr)
+        {
+            auto actor = freeElementBase->GetActor();
+            auto patches = actor->GetActorPatches();
+            for (auto patch : patches)
+            {
+                int lCounter;
+                int lURes = patch->GetURes();
+                int lVRes = patch->GetVRes();
+                int lNbNodes = lURes*lVRes;
+                const MR_3DCoordinate* lNodeList = patch->GetNodeList();
+                for(lCounter = 0; lCounter < lNbNodes; lCounter++)
+                {
+                    auto node = lNodeList[lCounter];
+                    freeElementVerts.vertices.push_back(makeVertexWithTextureId(node.mX, node.mY, node.mZ, 0.0f, 0.0f, 0));
+                }
+                freeElementVerts.indices.push_back(0);
+                std::cout << "patch node count " << lNbNodes << std::endl;
+            }
+        }
+        lHandle = MR_Level::GetNextFreeElement( lHandle );
     }
 }

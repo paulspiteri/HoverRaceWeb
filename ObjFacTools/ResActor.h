@@ -5,6 +5,8 @@
 #ifndef MR_RES_ACTOR_H
 #define MR_RES_ACTOR_H
 
+#include <vector>
+
 #include "ResBitmap.h"
 #include "../VideoServices/3DViewport.h"
 
@@ -34,7 +36,6 @@ class MR_ResActor
          virtual eComponentType GetType()const = 0;
          virtual void           Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib ) = 0;
          virtual void           Draw( MR_3DViewPort* pDest, const MR_PositionMatrix& pMatrix )const = 0;
-
       };
 
       class MR_DllDeclare Patch: public ActorComponent, public MR_Patch
@@ -103,7 +104,7 @@ class MR_ResActor
 
       MR_DllDeclare void Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib=NULL );
       MR_DllDeclare void Draw( MR_3DViewPort* pDest, const MR_PositionMatrix& pMatrix, int pSequence, int pFrame )const;
-
+      std::vector<Patch*> GetActorPatches() const;
 };
 
 
