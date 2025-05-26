@@ -22,7 +22,6 @@
 #define SOKOL_GFX_IMPL
 #include "sokol_gfx.h"
 
-
 GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer)
     : glWindow(glWindow), glContext(glContext), videoBuffer(videoBuffer)
 {
@@ -109,14 +108,13 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     };
 
     sg_sampler_desc wrap_sampler_desc = {};
-    wrap_sampler_desc.min_filter = SG_FILTER_LINEAR;
+    wrap_sampler_desc.min_filter =SG_FILTER_LINEAR;
     wrap_sampler_desc.mag_filter = SG_FILTER_LINEAR;
     wrap_sampler_desc.wrap_u = SG_WRAP_REPEAT;
     wrap_sampler_desc.wrap_v = SG_WRAP_REPEAT;
     auto wrap_sampler = sg_make_sampler(&wrap_sampler_desc);
     state.world_bindings.samplers[0] = wrap_sampler;
     state.wall_bindings.samplers[0] = wrap_sampler;
-    state.free_element_bindings.samplers[0] = wrap_sampler;
 
     sg_sampler_desc edge_sampler_desc = {};
     wrap_sampler_desc.min_filter = SG_FILTER_LINEAR;
@@ -125,6 +123,7 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     wrap_sampler_desc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
     auto edge_sampler = sg_make_sampler(&edge_sampler_desc);
     state.bkg_bindings.samplers[0] = edge_sampler;
+    state.free_element_bindings.samplers[0] = edge_sampler;
 
     state.swapchain = {
         .width = 640,
