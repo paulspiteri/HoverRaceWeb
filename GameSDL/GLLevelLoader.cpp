@@ -34,8 +34,9 @@ void GLLevelLoader::LoadLevel(const MR_Level* level, const MR_UInt8* backImage)
     glRenderer->BindBackgroundVertices(bkgVerts);
     glRenderer->BindWorldVertices(worldVerts);
     glRenderer->BindWallVertices(wallVerts);
-    glRenderer->BindFreeElementVertices(freeElementVerts);
     glRenderer->BindWorldTextures();
+    glRenderer->BindFreeElementVertices(freeElementVerts);
+    glRenderer->BindFreeElementTextures();
 }
 
 void GLLevelLoader::LoadBackground(const MR_UInt8* backImage)
@@ -468,21 +469,45 @@ void GLLevelLoader::LoadRoomFreeElements(const MR_Level* level, int roomId)
         auto freeElementBase = dynamic_cast<MR_FreeElementBase*>(lElement);
         if (freeElementBase != nullptr)
         {
+            auto actorPosition = freeElementBase->mPosition;
             auto actor = freeElementBase->GetActor();
+
             auto patches = actor->GetActorPatches();
             for (auto patch : patches)
             {
-                int lCounter;
+                int lCounter = 0;
                 int lURes = patch->GetURes();
                 int lVRes = patch->GetVRes();
                 int lNbNodes = lURes*lVRes;
                 const MR_3DCoordinate* lNodeList = patch->GetNodeList();
-                for(lCounter = 0; lCounter < lNbNodes; lCounter++)
+                int textureId = glRenderer->LoadFreeElementTexture(glRenderer->GetNextFreeElementTextureId(), patch->mBitmap);
+
+                for(int lV = 0; lV < lVRes-1; lV++)
                 {
-                    auto node = lNodeList[lCounter];
-                    freeElementVerts.vertices.push_back(makeVertexWithTextureId(node.mX, node.mY, node.mZ, 0.0f, 0.0f, 0));
+                    for(int lU = 0; lU < lURes-1; lU++)
+                    {
+                        auto node0 = lNodeList[lCounter] + actorPosition;
+                        freeElementVerts.vertices.push_back(SwapYZ(makeVertexWithTextureId(node0.mX, node0.mY, node0.mZ, 0.0f, 0.0f, textureId)));
+                        auto node1 = lNodeList[lCounter+1] + actorPosition;
+                        freeElementVerts.vertices.push_back(SwapYZ(makeVertexWithTextureId(node1.mX, node1.mY, node1.mZ, 0.0f, 0.0f, textureId)));
+                        auto node2 = lNodeList[lCounter+lURes] + actorPosition;
+                        freeElementVerts.vertices.push_back(SwapYZ(makeVertexWithTextureId(node2.mX, node2.mY, node2.mZ, 0.0f, 0.0f, textureId)));
+                        auto node3 = lNodeList[lCounter+lURes+1] + actorPosition;
+                        freeElementVerts.vertices.push_back(SwapYZ(makeVertexWithTextureId(node3.mX, node3.mY, node3.mZ, 0.0f, 0.0f, textureId)));
+
+                        uint16_t latestVertexIdx = freeElementVerts.vertices.size() - 1;
+                        freeElementVerts.indices.push_back(latestVertexIdx - 3);
+                        freeElementVerts.indices.push_back(latestVertexIdx - 1);
+                        freeElementVerts.indices.push_back(latestVertexIdx - 2);
+
+                        freeElementVerts.indices.push_back(latestVertexIdx - 2);
+                        freeElementVerts.indices.push_back(latestVertexIdx - 1);
+                        freeElementVerts.indices.push_back(latestVertexIdx);
+
+                        lCounter++;
+                    }
                 }
-                freeElementVerts.indices.push_back(0);
+
                 std::cout << "patch node count " << lNbNodes << std::endl;
             }
         }

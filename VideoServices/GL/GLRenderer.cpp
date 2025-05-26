@@ -98,7 +98,7 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_position].format = SG_VERTEXFORMAT_INT3;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_textureIdx].format = SG_VERTEXFORMAT_INT;
-    free_element_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
+    free_element_pipeline_desc.cull_mode = SG_CULLMODE_NONE;
     free_element_pipeline_desc.depth.write_enabled = true;
     free_element_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
     state.free_element_pipeline = sg_make_pipeline(&free_element_pipeline_desc);
@@ -175,19 +175,19 @@ void GLRenderer::Render() const
 
     sg_apply_pipeline(state.world_pipeline);
     sg_apply_uniforms(0, SG_RANGE(state.world_uniforms));
-    sg_apply_uniforms(1, SG_RANGE(state.atlas_coords));
+    sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
     sg_apply_bindings(&state.world_bindings);
     sg_draw(0, state.world_count, 1);
 
     sg_apply_pipeline(state.wall_pipeline);
     sg_apply_uniforms(0, SG_RANGE(state.wall_uniforms));
-    sg_apply_uniforms(1, SG_RANGE(state.atlas_coords));
+    sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
     sg_apply_bindings(&state.wall_bindings);
     sg_draw(0, state.wall_count, 1);
 
     sg_apply_pipeline(state.free_element_pipeline);
     sg_apply_uniforms(0, SG_RANGE(state.free_element_uniforms));
-    sg_apply_uniforms(1, SG_RANGE(state.atlas_coords));
+    sg_apply_uniforms(1, SG_RANGE(state.free_element_atlas_coords));
     sg_apply_bindings(&state.free_element_bindings);
     sg_draw(0, state.free_element_count, 1);
 
@@ -196,14 +196,13 @@ void GLRenderer::Render() const
     SDL_GL_SwapWindow(glWindow);
 }
 
-
-void GLRenderer::BindWorldTextures()
+std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal(std::vector<TextureData>& collection)
 {
     std::vector<stbrp_rect> rects;
-    rects.reserve(textures.size());
+    rects.reserve(collection.size());
 
     int max_dim = 0;
-    for (const auto& texture : textures)
+    for (const auto& texture : collection)
     {
         stbrp_rect rect;
         rect.id = texture.id;
@@ -237,7 +236,7 @@ void GLRenderer::BindWorldTextures()
     auto atlas_pixels = new uint32_t[atlas_width * atlas_height]{};
 
     // Copy all textures to their positions in the atlas
-    for (auto [rectIt, texIt] = std::tuple{rects.begin(), textures.begin()};
+    for (auto [rectIt, texIt] = std::tuple{rects.begin(), collection.begin()};
          rectIt != rects.end();
          ++rectIt, ++texIt)
     {
@@ -274,15 +273,12 @@ void GLRenderer::BindWorldTextures()
     auto atlas_texture = sg_make_image(&img_desc);
     delete[] atlas_pixels;
 
-    state.world_bindings.images[0] = atlas_texture;
-    state.wall_bindings.images[0] = atlas_texture;
-    state.free_element_bindings.images[0] = atlas_texture;
-
+    std::array<glm::vec4, 32> atlas_coords = {};
     int i = 0;
-    for (const auto& texture : textures)
+    for (const auto& texture : collection)
     {
         if (i >= 32) break;
-        state.atlas_coords[i] = glm::vec4(
+        atlas_coords[i] = glm::vec4(
             texture.atlas_coords.u1,
             texture.atlas_coords.v1,
             texture.atlas_coords.u2,
@@ -290,6 +286,16 @@ void GLRenderer::BindWorldTextures()
         );
         i++;
     }
+
+    return std::make_tuple(atlas_texture, atlas_coords);
+}
+
+void GLRenderer::BindWorldTextures()
+{
+    auto [atlas_texture, atlas_coords] = BindTexturesInternal(textures);
+    state.world_bindings.images[0] = atlas_texture;
+    state.wall_bindings.images[0] = atlas_texture;
+    state.world_atlas_coords = atlas_coords;
 }
 
 void GLRenderer::BindWorldVertices(const VerticesData<VertexWithTextureId>& vertices)
@@ -352,20 +358,37 @@ void GLRenderer::BindFreeElementVertices(const VerticesData<VertexWithTextureId>
     state.free_element_count = static_cast<uint32_t>(vertices.indices.size());
 }
 
-unsigned long GLRenderer::LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap)
+unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap)
 {
-    auto it = std::ranges::find_if(textures, [=](const auto& t) { return t.id == id; });
-    if (it == textures.end())
+    auto it = std::ranges::find_if(collection, [=](const auto& t) { return t.id == id; });
+    if (it == collection.end())
     {
         TextureData textureData = {};
         textureData.id = id;
         textureData.width = bitmap->GetMaxXRes();
         textureData.height = bitmap->GetMaxYRes();
         textureData.pixels = ConvertTextureToRGBA8(bitmap);
-        textures.push_back(textureData);
-        return textures.size() - 1;
+        collection.push_back(textureData);
+        return collection.size() - 1;
     }
-    return std::distance(textures.begin(), it);
+    return std::distance(collection.begin(), it);
+}
+
+unsigned long GLRenderer::LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap)
+{
+    return LoadTextureInternal(textures, id, bitmap);
+}
+
+unsigned long GLRenderer::LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitmap* bitmap)
+{
+    return LoadTextureInternal(free_element_textures, id, bitmap);
+}
+
+void GLRenderer::BindFreeElementTextures()
+{
+    auto [atlas_texture, atlas_coords] = BindTexturesInternal(free_element_textures);
+    state.free_element_bindings.images[0] = atlas_texture;
+    state.free_element_atlas_coords = atlas_coords;
 }
 
 void GLRenderer::BindBackgroundVertices(const VerticesData<Vertex>& vertices)

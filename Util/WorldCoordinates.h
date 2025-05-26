@@ -73,6 +73,15 @@ class MR_DllDeclare MR_3DCoordinate : public MR_2DCoordinate
 
 };
 
+inline MR_3DCoordinate operator+(const MR_3DCoordinate& lhs, const MR_3DCoordinate& rhs)
+{
+   return MR_3DCoordinate(
+       lhs.mX + rhs.mX,
+       lhs.mY + rhs.mY,
+       lhs.mZ + rhs.mZ
+   );
+}
+
 // Angles
 typedef MR_Int16 MR_Angle;
 

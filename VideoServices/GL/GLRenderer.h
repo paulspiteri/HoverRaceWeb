@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <array>
 
 #include "Camera.h"
 #include "SokolState.h"
@@ -108,10 +109,14 @@ struct TextureData
 class GLRenderer
 {
     std::vector<TextureData> textures;
+    std::vector<TextureData> free_element_textures;
     MR_VideoBuffer* videoBuffer;
 
     uint32_t* ConvertTextureToRGBA8(const MR_ResBitmap* bitmap);
     uint32_t* ConvertBackgroundToRGBA8(const MR_UInt8* backImage);
+    unsigned long LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap);
+    std::tuple<sg_image, std::array<glm::vec4, 32>> BindTexturesInternal(std::vector<TextureData>& collection);
+
 
 public:
     GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer);
@@ -125,6 +130,9 @@ public:
     void BindWallVertices(const VerticesData<WallVertex>& vertices);
     void BindFreeElementVertices(const VerticesData<VertexWithTextureId>& vertices);
     unsigned long LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
+    unsigned long LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
+    unsigned long GetNextFreeElementTextureId() { return free_element_textures.size(); }
+    void BindFreeElementTextures();
     void BindBackgroundVertices(const VerticesData<Vertex>& vertices);
     void BindBackgroundTexture(const MR_UInt8* backImage);
     void Render() const;

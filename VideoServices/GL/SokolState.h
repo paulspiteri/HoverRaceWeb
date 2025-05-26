@@ -31,7 +31,8 @@ struct Sokol_State {
     sg_bindings free_element_bindings;
     int free_element_count;
 
-    glm::vec4 atlas_coords[32]{};
+    std::array<glm::vec4, 32> world_atlas_coords;
+    std::array<glm::vec4, 32> free_element_atlas_coords;
 };
 
 template<typename T>

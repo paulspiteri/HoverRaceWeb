@@ -28,6 +28,9 @@ void GLViewport::SetCameraPosition(const MR_3DCoordinate& pPosition, MR_Angle pO
     std::memcpy(glRenderer->state.world_uniforms.proj, &projection, sizeof(projection));
     std::memcpy(glRenderer->state.wall_uniforms.view, &view, sizeof(view));
     std::memcpy(glRenderer->state.wall_uniforms.proj, &projection, sizeof(projection));
+    std::memcpy(glRenderer->state.free_element_uniforms.view, &view, sizeof(view));
+    std::memcpy(glRenderer->state.free_element_uniforms.proj, &projection, sizeof(projection));
+
 
     glm::mat4 bkg_view = bkg_camera.getViewMatrix();
     glm::mat4 bkg_projection = camera.getProjectionMatrix(aspect);

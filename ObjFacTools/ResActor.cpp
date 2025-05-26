@@ -102,7 +102,8 @@ std::vector<MR_ResActor::Patch*> MR_ResActor::GetActorPatches() const
    {
       if (frame.mComponentList[i]->GetType() == ePatch)
       {
-         patches.push_back(static_cast<Patch*>(frame.mComponentList[i]));
+         auto patch = static_cast<Patch*>(frame.mComponentList[i]);
+         patches.push_back(patch);
       }
    }
    return patches;
