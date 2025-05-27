@@ -475,56 +475,49 @@ void GLLevelLoader::LoadRoomFreeElements(const MR_Level* level, int roomId)
             auto patches = actor->GetActorPatches();
             for (auto patch : patches)
             {
-                int lCounter = 0;
                 int lBitmapXRes = patch->mBitmap->GetXRes( 0);
                 int lBitmapYRes = patch->mBitmap->GetYRes( 0);
                 int lURes = patch->GetURes();
                 int lVRes = patch->GetVRes();
-                float lBitmapRowInc_4096 = (float)lBitmapXRes/(float)(lVRes-1);
-                float lBitmapColInc_4096 = (float)lBitmapYRes/(float)(lURes-1);
-                int lNbNodes = lURes*lVRes;
+                float lBitmapRowInc = static_cast<float>(lBitmapXRes)/static_cast<float>(lVRes - 1);
+                float lBitmapColInc = static_cast<float>(lBitmapYRes)/static_cast<float>(lURes - 1);
                 const MR_3DCoordinate* lNodeList = patch->GetNodeList();
                 int textureId = glRenderer->LoadFreeElementTexture(glRenderer->GetNextFreeElementTextureId(), patch->mBitmap);
 
-                float lBitmapRow_4096_0 = 0;
-                float lBitmapRow_4096_1 = lBitmapRowInc_4096;
+                uint16_t startVertexIdx = freeElementVerts.vertices.size();
+                for (int lV = 0; lV < lVRes; lV++) {
+                    float v = (lV * lBitmapRowInc) / lBitmapYRes;
 
-                for(int lV = 0; lV < lVRes-1; lV++)
-                {
-                    float lBitmapCol_4096_0 = 0;
-                    float lBitmapCol_4096_1 = lBitmapColInc_4096;
+                    for (int lU = 0; lU < lURes; lU++) {
+                        float u = (lU * lBitmapColInc) / lBitmapXRes;
+                        int index = lV * lURes + lU;
+                        auto node = lNodeList[index] + actorPosition;
 
-                    for(int lU = 0; lU < lURes-1; lU++)
-                    {
-                        auto node0 = lNodeList[lCounter] + actorPosition;
-                        freeElementVerts.vertices.push_back(SwapYZ(makeVertexWithTextureId(node0.mX, node0.mY, node0.mZ, lBitmapCol_4096_0/lBitmapXRes, 1 - (lBitmapRow_4096_0/lBitmapYRes), textureId)));
-                        auto node1 = lNodeList[lCounter+1] + actorPosition;
-                        freeElementVerts.vertices.push_back(SwapYZ(makeVertexWithTextureId(node1.mX, node1.mY, node1.mZ, lBitmapCol_4096_1/lBitmapXRes, 1 -(lBitmapRow_4096_0/lBitmapYRes), textureId)));
-                        auto node2 = lNodeList[lCounter+lURes] + actorPosition;
-                        freeElementVerts.vertices.push_back(SwapYZ(makeVertexWithTextureId(node2.mX, node2.mY, node2.mZ, lBitmapCol_4096_0/lBitmapXRes, 1 -(lBitmapRow_4096_1/lBitmapYRes), textureId)));
-                        auto node3 = lNodeList[lCounter+lURes+1] + actorPosition;
-                        freeElementVerts.vertices.push_back(SwapYZ(makeVertexWithTextureId(node3.mX, node3.mY, node3.mZ, lBitmapCol_4096_1/lBitmapXRes, 1 -(lBitmapRow_4096_1/lBitmapYRes), textureId)));
-
-                        uint16_t latestVertexIdx = freeElementVerts.vertices.size() - 1;
-                        freeElementVerts.indices.push_back(latestVertexIdx - 3);
-                        freeElementVerts.indices.push_back(latestVertexIdx - 1);
-                        freeElementVerts.indices.push_back(latestVertexIdx - 2);
-
-                        freeElementVerts.indices.push_back(latestVertexIdx - 2);
-                        freeElementVerts.indices.push_back(latestVertexIdx - 1);
-                        freeElementVerts.indices.push_back(latestVertexIdx);
-
-                        lBitmapCol_4096_0 =  lBitmapCol_4096_1;
-                        lBitmapCol_4096_1 += lBitmapColInc_4096;
-                        lCounter++;
+                        freeElementVerts.vertices.push_back(SwapYZ(
+                            makeVertexWithTextureId(node.mX, node.mY, node.mZ, u, 1 - v,textureId)));
                     }
-
-                    lBitmapRow_4096_0 =  lBitmapRow_4096_1;
-                    lBitmapRow_4096_1 += lBitmapRowInc_4096;
-                    lCounter++;
                 }
 
-                std::cout << "patch node count " << lNbNodes << std::endl;
+                for (int lV = 0; lV < lVRes-1; lV++) {
+                    for (int lU = 0; lU < lURes-1; lU++) {
+                        // Calculate indices for the four corners of the current grid cell
+                        // Offset by startVertexIdx to account for existing vertices
+                        uint16_t bottomLeft = startVertexIdx + lV * lURes + lU;
+                        uint16_t bottomRight = bottomLeft + 1;
+                        uint16_t topLeft = bottomLeft + lURes;
+                        uint16_t topRight = topLeft + 1;
+
+                        // First triangle (bottom-left, top-left, bottom-right)
+                        freeElementVerts.indices.push_back(bottomLeft);
+                        freeElementVerts.indices.push_back(topLeft);
+                        freeElementVerts.indices.push_back(bottomRight);
+
+                        // Second triangle (bottom-right, top-left, top-right)
+                        freeElementVerts.indices.push_back(bottomRight);
+                        freeElementVerts.indices.push_back(topLeft);
+                        freeElementVerts.indices.push_back(topRight);
+                    }
+                }
             }
         }
         lHandle = MR_Level::GetNextFreeElement( lHandle );
