@@ -108,12 +108,19 @@ struct TextureData
 struct FreeElementInstance
 {
     glm::i32vec3 position;
+
+    bool operator==(const FreeElementInstance& other) const {
+        return position.x == other.position.x &&
+               position.y == other.position.y &&
+               position.z == other.position.z;
+    }
 };
 
 class GLRenderer
 {
     std::vector<TextureData> textures;
     std::vector<TextureData> free_element_textures;
+    std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> freeElementInstances;
     MR_VideoBuffer* videoBuffer;
 
     uint32_t* ConvertTextureToRGBA8(const MR_ResBitmap* bitmap);

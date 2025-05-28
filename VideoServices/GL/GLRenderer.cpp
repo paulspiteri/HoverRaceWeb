@@ -375,34 +375,37 @@ void GLRenderer::BindFreeElementVertices(const std::unordered_map<MR_UInt16, Ver
         state.free_element_bindings[elementId].index_buffer = sg_make_buffer(&index_buf_desc);
         state.free_element_bindings[elementId].samplers[0] = state.edge_sampler;
         state.free_element_vertex_count[elementId] = static_cast<int>(vertices.indices.size());
+
+        sg_buffer_desc instance_buf_desc = {
+            .type = SG_BUFFERTYPE_VERTEXBUFFER,
+            .usage = SG_USAGE_DYNAMIC,
+            .size = freeElements.size() * sizeof(FreeElementInstance),  // assume at least 1 instance of each type
+            .label = "free_element-instances",
+        };
+        state.free_element_bindings[elementId].vertex_buffers[1] =  sg_make_buffer(&instance_buf_desc);
     }
 }
 
 void GLRenderer::BindFreeElementInstances(
     const std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> freeElementInstances)
 {
-    static bool first = true;
-    if (!first)
+    if (this->freeElementInstances == freeElementInstances)
     {
+        // no change, nothing to do
         return;
     }
-    first = false;
+
     for (const auto& [elementId, instances] : freeElementInstances)
     {
         if (!state.free_element_bindings.contains(elementId))
         {
             throw std::runtime_error("Free element instance not bound");
         }
-        sg_buffer_desc instance_buf_desc = {
-            .type = SG_BUFFERTYPE_VERTEXBUFFER,
-            .usage = SG_USAGE_IMMUTABLE,
-            .data = make_sg_range(instances),
-            .label = "free_element-instances",
-        };
-        auto instance_buffer = sg_make_buffer(&instance_buf_desc);
-        state.free_element_bindings[elementId].vertex_buffers[1] = instance_buffer;
+
+        sg_update_buffer(state.free_element_bindings[elementId].vertex_buffers[1], make_sg_range(instances));
         state.free_element_instance_count[elementId] = instances.size();
     }
+    this->freeElementInstances = freeElementInstances;
 }
 
 unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap)
