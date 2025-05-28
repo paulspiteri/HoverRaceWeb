@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <unordered_map>
 
 #include "../VideoServices/GL/GLRenderer.h"
 #include "../Model/Level.h"
@@ -10,6 +11,7 @@ class GLLevelLoader
 public:
     explicit GLLevelLoader(GLRenderer* glRenderer);
     void LoadLevel(const MR_Level* level, const MR_UInt8* backImage);
+    std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> GetFreeElementInstances(const MR_Level* level);
 
 private:
     void LoadBackground(const MR_UInt8* backImage);
@@ -30,7 +32,6 @@ private:
     VerticesData<Vertex> bkgVerts;
     VerticesData<VertexWithTextureId> worldVerts;
     VerticesData<WallVertex> wallVerts;
-    VerticesData<VertexWithTextureId> freeElementVerts;
-
+    std::unordered_map<MR_UInt16, VerticesData<VertexWithTextureId>> freeElementVerts;
     GLRenderer* glRenderer;
 };

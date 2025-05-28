@@ -8,15 +8,20 @@ layout(binding = 1) uniform FreeElementAtlasCoords {
     vec4 atlas_coords[32];
 };
 
+// Per-vertex attributes (buffer 0)
 in ivec4 position;
 in vec2 texcoord0;
 in int textureIdx;
+
+// Per-instance attributes (buffer 1)
+in ivec3 instancePosition;
 
 out vec2 free_element_uv;
 flat out vec4 atlas_coord;
 
 void main() {
-    gl_Position = proj * view * vec4(position);
+    ivec4 worldPos = ivec4(position.xyz + instancePosition, 1);
+    gl_Position = proj * view * vec4(worldPos);
     free_element_uv = texcoord0;
     atlas_coord = atlas_coords[textureIdx];
 }

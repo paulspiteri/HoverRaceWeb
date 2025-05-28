@@ -39,6 +39,31 @@ void GLLevelLoader::LoadLevel(const MR_Level* level, const MR_UInt8* backImage)
     glRenderer->BindFreeElementTextures();
 }
 
+std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> GLLevelLoader::GetFreeElementInstances(
+    const MR_Level* level)
+{
+    std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> freeElementInstances;
+    int totalRooms = level->GetRoomCount();
+    for (int roomId = 0; roomId < totalRooms; roomId++)
+    {
+        MR_FreeElementHandle lHandle = level->GetFirstFreeElement(roomId);
+        while (lHandle != nullptr)
+        {
+            MR_FreeElement* lElement = MR_Level::GetFreeElement(lHandle);
+            auto freeElementBase = dynamic_cast<MR_FreeElementBase*>(lElement);
+            if (freeElementBase != nullptr)
+            {
+                auto type = lElement->mId.mClassId;
+                auto actorPosition = freeElementBase->mPosition;
+                auto position = SwapYZ(glm::ivec3(actorPosition.mX, actorPosition.mY, actorPosition.mZ));
+                freeElementInstances[type].push_back({.position = position});
+            }
+            lHandle = MR_Level::GetNextFreeElement(lHandle);
+        }
+    }
+    return freeElementInstances;
+}
+
 void GLLevelLoader::LoadBackground(const MR_UInt8* backImage)
 {
     glRenderer->BindBackgroundTexture(backImage);
@@ -182,22 +207,22 @@ void GLLevelLoader::LoadFeatureWalls(const MR_Level* level, int featureId)
     MR_3DCoordinate lP0;
     MR_3DCoordinate lP1;
     lP0.mZ = featureShape->ZMax();
-    lP1.mX = featureShape->X( 0 );
-    lP1.mY = featureShape->Y( 0 );
+    lP1.mX = featureShape->X(0);
+    lP1.mY = featureShape->Y(0);
     lP1.mZ = featureShape->ZMin();
 
-    for(int lVertex = 0; lVertex < lVertexCount; lVertex++)
+    for (int lVertex = 0; lVertex < lVertexCount; lVertex++)
     {
         int lNext = lVertex + 1;
-        if( lNext == lVertexCount )
+        if (lNext == lVertexCount)
         {
             lNext = 0;
         }
-        lP0.mX = featureShape->X( lNext );
-        lP0.mY = featureShape->Y( lNext );
+        lP0.mX = featureShape->X(lNext);
+        lP0.mY = featureShape->Y(lNext);
 
         MR_SurfaceElement* surfaceElement = level->GetFeatureWallElement(featureId, lVertex);
-        if(surfaceElement != nullptr)
+        if (surfaceElement != nullptr)
         {
             AddWall(lP0, lP1, surfaceElement);
         }
@@ -308,7 +333,7 @@ void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_Surface
     auto bitmap2 = surfaceElement->GetResBitmap2();
     if (bitmap2 != nullptr && bitmap2 != bitmap)
     {
-        MR_UInt32 id2 = surfaceElement->mId.mClassId | 0x80000000;  // turn on high bit for bitmap2
+        MR_UInt32 id2 = surfaceElement->mId.mClassId | 0x80000000; // turn on high bit for bitmap2
         glRenderer->LoadTexture(id2, bitmap2);
 
         int rotationSpeed = 0, rotationLength = 0;
@@ -318,7 +343,8 @@ void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_Surface
             rotationSpeed = bitmapSurface->GetRotationSpeed();
             rotationLength = bitmapSurface->GetRotationLen();
         }
-        AddAnimatedWall(lP0, lP1, textureAtlasId, bitmap->GetWidth(), bitmap->GetHeight(), maxHeight, rotationSpeed, rotationLength);
+        AddAnimatedWall(lP0, lP1, textureAtlasId, bitmap->GetWidth(), bitmap->GetHeight(), maxHeight, rotationSpeed,
+                        rotationLength);
     }
     else
     {
@@ -326,7 +352,8 @@ void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_Surface
     }
 }
 
-void GLLevelLoader::AddRegularWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, int textureAtlasId, float bitmapWidth, float bitmapHeight, std::optional<int> maxHeight)
+void GLLevelLoader::AddRegularWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, int textureAtlasId, float bitmapWidth,
+                                   float bitmapHeight, std::optional<int> maxHeight)
 {
     float dx = lP1.mX - lP0.mX;
     float dy = lP1.mY - lP0.mY;
@@ -379,7 +406,9 @@ void GLLevelLoader::AddRegularWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, int
     wallVerts.indices.push_back(latestVertexIdx);
 }
 
-void GLLevelLoader::AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, int textureAtlasId, float bitmapWidth, float bitmapHeight, std::optional<int> maxHeight, int rotationSpeed, int rotationLength)
+void GLLevelLoader::AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, int textureAtlasId, float bitmapWidth,
+                                    float bitmapHeight, std::optional<int> maxHeight, int rotationSpeed,
+                                    int rotationLength)
 {
     float dx = lP1.mX - lP0.mX;
     float dy = lP1.mY - lP0.mY;
@@ -403,14 +432,18 @@ void GLLevelLoader::AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, in
     // Total number of segments (full + possible partial)
     int numSegments = remainingLength > 0 ? (numFullSegments + 1) : numFullSegments;
 
-    for (int i = 0; i < numSegments; i++) {
+    for (int i = 0; i < numSegments; i++)
+    {
         float startPos = i * bitmapWidth;
         float segmentWidth;
 
         // For the last segment, use the remaining length
-        if (i == numFullSegments && remainingLength > 0) {
+        if (i == numFullSegments && remainingLength > 0)
+        {
             segmentWidth = remainingLength;
-        } else {
+        }
+        else
+        {
             segmentWidth = bitmapWidth;
         }
 
@@ -429,9 +462,12 @@ void GLLevelLoader::AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, in
         float u1;
 
         // If this is the last segment, and it's partial, adjust u1 to match the proportion
-        if (i == numFullSegments && remainingLength > 0) {
+        if (i == numFullSegments && remainingLength > 0)
+        {
             u1 = remainingLength / bitmapWidth; // Partial texture width
-        } else {
+        }
+        else
+        {
             u1 = 1.0f; // Full texture width
         }
         // - the code implemented in non-animated wall to adjust height to maxHeight may be needed here
@@ -439,13 +475,17 @@ void GLLevelLoader::AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, in
         float v1 = 0.0f;
 
         wallVerts.vertices.push_back(
-            SwapYZ(makeWallVertex(segP0.mX, segP0.mY, lP0.mZ, u0, v0, textureAtlasId, rotationSpeed,  rotationLength, i)));
+            SwapYZ(makeWallVertex(segP0.mX, segP0.mY, lP0.mZ, u0, v0, textureAtlasId, rotationSpeed, rotationLength,
+                                  i)));
         wallVerts.vertices.push_back(
-            SwapYZ(makeWallVertex(segP0.mX, segP0.mY, lP1.mZ, u0, v1, textureAtlasId, rotationSpeed,  rotationLength, i)));
+            SwapYZ(makeWallVertex(segP0.mX, segP0.mY, lP1.mZ, u0, v1, textureAtlasId, rotationSpeed, rotationLength,
+                                  i)));
         wallVerts.vertices.push_back(
-            SwapYZ(makeWallVertex(segP1.mX, segP1.mY, lP0.mZ, u1, v0, textureAtlasId, rotationSpeed,  rotationLength, i)));
+            SwapYZ(makeWallVertex(segP1.mX, segP1.mY, lP0.mZ, u1, v0, textureAtlasId, rotationSpeed, rotationLength,
+                                  i)));
         wallVerts.vertices.push_back(
-            SwapYZ(makeWallVertex(segP1.mX, segP1.mY, lP1.mZ, u1, v1, textureAtlasId, rotationSpeed, rotationLength,  i)));
+            SwapYZ(makeWallVertex(segP1.mX, segP1.mY, lP1.mZ, u1, v1, textureAtlasId, rotationSpeed, rotationLength,
+                                  i)));
 
         uint16_t latestVertexIdx = wallVerts.vertices.size() - 1;
 
@@ -463,63 +503,70 @@ void GLLevelLoader::AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, in
 void GLLevelLoader::LoadRoomFreeElements(const MR_Level* level, int roomId)
 {
     MR_FreeElementHandle lHandle = level->GetFirstFreeElement(roomId);
-    while(lHandle != nullptr)
+    while (lHandle != nullptr)
     {
         MR_FreeElement* lElement = MR_Level::GetFreeElement(lHandle);
         auto freeElementBase = dynamic_cast<MR_FreeElementBase*>(lElement);
         if (freeElementBase != nullptr)
         {
             auto actorPosition = freeElementBase->mPosition;
-            auto actor = freeElementBase->GetActor();
-
-            auto patches = actor->GetActorPatches();
-            for (auto patch : patches)
+            if (!freeElementVerts.contains(lElement->mId.mClassId))
             {
-                int lBitmapXRes = patch->mBitmap->GetXRes( 0);
-                int lBitmapYRes = patch->mBitmap->GetYRes( 0);
-                int lURes = patch->GetURes();
-                int lVRes = patch->GetVRes();
-                float lBitmapRowInc = static_cast<float>(lBitmapXRes)/static_cast<float>(lVRes - 1);
-                float lBitmapColInc = static_cast<float>(lBitmapYRes)/static_cast<float>(lURes - 1);
-                const MR_3DCoordinate* lNodeList = patch->GetNodeList();
-                int textureId = glRenderer->LoadFreeElementTexture(glRenderer->GetNextFreeElementTextureId(), patch->mBitmap);
+                VerticesData<VertexWithTextureId> verts;
+                auto actor = freeElementBase->GetActor();
+                auto patches = actor->GetActorPatches();
+                for (auto patch : patches)
+                {
+                    int lBitmapXRes = patch->mBitmap->GetXRes(0);
+                    int lBitmapYRes = patch->mBitmap->GetYRes(0);
+                    int lURes = patch->GetURes();
+                    int lVRes = patch->GetVRes();
+                    float lBitmapRowInc = static_cast<float>(lBitmapXRes) / static_cast<float>(lVRes - 1);
+                    float lBitmapColInc = static_cast<float>(lBitmapYRes) / static_cast<float>(lURes - 1);
+                    const MR_3DCoordinate* lNodeList = patch->GetNodeList();
+                    int textureId = glRenderer->LoadFreeElementTexture(glRenderer->GetNextFreeElementTextureId(),
+                                                                       patch->mBitmap);
 
-                uint16_t startVertexIdx = freeElementVerts.vertices.size();
-                for (int lV = 0; lV < lVRes; lV++) {
-                    float v = (lV * lBitmapRowInc) / lBitmapYRes;
+                    uint16_t startVertexIdx = verts.vertices.size();
+                    for (int lV = 0; lV < lVRes; lV++)
+                    {
+                        float v = (lV * lBitmapRowInc) / lBitmapYRes;
 
-                    for (int lU = 0; lU < lURes; lU++) {
-                        float u = (lU * lBitmapColInc) / lBitmapXRes;
-                        int index = lV * lURes + lU;
-                        auto node = lNodeList[index] + actorPosition;
+                        for (int lU = 0; lU < lURes; lU++)
+                        {
+                            float u = (lU * lBitmapColInc) / lBitmapXRes;
+                            int index = lV * lURes + lU;
+                            auto node = lNodeList[index];
 
-                        freeElementVerts.vertices.push_back(SwapYZ(
-                            makeVertexWithTextureId(node.mX, node.mY, node.mZ, u, 1 - v,textureId)));
+                            verts.vertices.push_back(SwapYZ(
+                                makeVertexWithTextureId(node.mX, node.mY, node.mZ, u, 1 - v, textureId)));
+                        }
+                    }
+
+                    for (int lV = 0; lV < lVRes - 1; lV++)
+                    {
+                        for (int lU = 0; lU < lURes - 1; lU++)
+                        {
+                            // Calculate indices for the four corners of the current grid cell
+                            // Offset by startVertexIdx to account for existing vertices
+                            uint16_t bottomLeft = startVertexIdx + lV * lURes + lU;
+                            uint16_t bottomRight = bottomLeft + 1;
+                            uint16_t topLeft = bottomLeft + lURes;
+                            uint16_t topRight = topLeft + 1;
+
+                            verts.indices.push_back(bottomLeft);
+                            verts.indices.push_back(bottomRight);
+                            verts.indices.push_back(topLeft);
+
+                            verts.indices.push_back(bottomRight);
+                            verts.indices.push_back(topRight);
+                            verts.indices.push_back(topLeft);
+                        }
                     }
                 }
-
-                for (int lV = 0; lV < lVRes-1; lV++) {
-                    for (int lU = 0; lU < lURes-1; lU++) {
-                        // Calculate indices for the four corners of the current grid cell
-                        // Offset by startVertexIdx to account for existing vertices
-                        uint16_t bottomLeft = startVertexIdx + lV * lURes + lU;
-                        uint16_t bottomRight = bottomLeft + 1;
-                        uint16_t topLeft = bottomLeft + lURes;
-                        uint16_t topRight = topLeft + 1;
-
-                        // First triangle (bottom-left, top-left, bottom-right)
-                        freeElementVerts.indices.push_back(bottomLeft);
-                        freeElementVerts.indices.push_back(topLeft);
-                        freeElementVerts.indices.push_back(bottomRight);
-
-                        // Second triangle (bottom-right, top-left, top-right)
-                        freeElementVerts.indices.push_back(bottomRight);
-                        freeElementVerts.indices.push_back(topLeft);
-                        freeElementVerts.indices.push_back(topRight);
-                    }
-                }
+                freeElementVerts[lElement->mId.mClassId] = verts;
             }
         }
-        lHandle = MR_Level::GetNextFreeElement( lHandle );
+        lHandle = MR_Level::GetNextFreeElement(lHandle);
     }
 }

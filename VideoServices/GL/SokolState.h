@@ -1,4 +1,5 @@
 #pragma once
+#include <unordered_map>
 #include <vector>
 
 #include "sokol_gfx.h"
@@ -8,6 +9,9 @@
 #include "shaders/free_element.h"
 
 struct Sokol_State {
+    sg_sampler wrap_sampler;
+    sg_sampler edge_sampler;
+
     sg_pass_action pass_action;
     sg_swapchain swapchain;
 
@@ -28,8 +32,9 @@ struct Sokol_State {
 
     sg_pipeline free_element_pipeline;
     FreeElementUniforms_t free_element_uniforms;
-    sg_bindings free_element_bindings;
-    int free_element_count;
+    std::unordered_map<MR_UInt16, sg_bindings> free_element_bindings;
+    std::unordered_map<MR_UInt16, int> free_element_vertex_count;
+    std::unordered_map<MR_UInt16, int> free_element_instance_count;
 
     std::array<glm::vec4, 32> world_atlas_coords;
     std::array<glm::vec4, 32> free_element_atlas_coords;

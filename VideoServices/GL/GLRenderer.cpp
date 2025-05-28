@@ -95,9 +95,19 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     free_element_pipeline_desc.sample_count = 16;
     free_element_pipeline_desc.label = "free_element-pipeline";
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_position].format = SG_VERTEXFORMAT_INT3;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_position].buffer_index = 0;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_texcoord0].buffer_index = 0;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_textureIdx].format = SG_VERTEXFORMAT_INT;
-    free_element_pipeline_desc.cull_mode = SG_CULLMODE_NONE;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_textureIdx].buffer_index = 0;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_instancePosition].format = SG_VERTEXFORMAT_INT3;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_instancePosition].buffer_index = 1;
+    free_element_pipeline_desc.layout.buffers[0].step_func = SG_VERTEXSTEP_PER_VERTEX;
+    free_element_pipeline_desc.layout.buffers[0].step_rate = 1;
+    free_element_pipeline_desc.layout.buffers[1].step_func = SG_VERTEXSTEP_PER_INSTANCE;
+    free_element_pipeline_desc.layout.buffers[1].step_rate = 1;
+
+    free_element_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
     free_element_pipeline_desc.depth.write_enabled = true;
     free_element_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
     state.free_element_pipeline = sg_make_pipeline(&free_element_pipeline_desc);
@@ -112,18 +122,17 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     wrap_sampler_desc.mag_filter = SG_FILTER_LINEAR;
     wrap_sampler_desc.wrap_u = SG_WRAP_REPEAT;
     wrap_sampler_desc.wrap_v = SG_WRAP_REPEAT;
-    auto wrap_sampler = sg_make_sampler(&wrap_sampler_desc);
-    state.world_bindings.samplers[0] = wrap_sampler;
-    state.wall_bindings.samplers[0] = wrap_sampler;
+    state.wrap_sampler = sg_make_sampler(&wrap_sampler_desc);
+    state.world_bindings.samplers[0] = state.wrap_sampler;
+    state.wall_bindings.samplers[0] = state.wrap_sampler;
 
     sg_sampler_desc edge_sampler_desc = {};
     wrap_sampler_desc.min_filter = SG_FILTER_LINEAR;
     wrap_sampler_desc.mag_filter = SG_FILTER_LINEAR;
     wrap_sampler_desc.wrap_u = SG_WRAP_CLAMP_TO_EDGE;
     wrap_sampler_desc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
-    auto edge_sampler = sg_make_sampler(&edge_sampler_desc);
-    state.bkg_bindings.samplers[0] = edge_sampler;
-    state.free_element_bindings.samplers[0] = edge_sampler;
+    state.edge_sampler = sg_make_sampler(&edge_sampler_desc);
+    state.bkg_bindings.samplers[0] = state.edge_sampler;
 
     state.swapchain = {
         .width = 640,
@@ -142,8 +151,13 @@ GLRenderer::~GLRenderer()
     sg_destroy_sampler(state.bkg_bindings.samplers[0]);
     sg_destroy_pipeline(state.bkg_pipeline);
 
-    sg_destroy_buffer(state.free_element_bindings.vertex_buffers[0]);
-    sg_destroy_buffer(state.free_element_bindings.index_buffer);
+    for (auto& [_, binding] : state.free_element_bindings)
+    {
+        sg_destroy_buffer(binding.vertex_buffers[0]);
+        sg_destroy_buffer(binding.index_buffer);
+        sg_destroy_buffer(binding.vertex_buffers[1]);
+    }
+
     sg_destroy_buffer(state.wall_bindings.vertex_buffers[0]);
     sg_destroy_buffer(state.wall_bindings.index_buffer);
     sg_destroy_buffer(state.world_bindings.vertex_buffers[0]);
@@ -187,8 +201,13 @@ void GLRenderer::Render() const
     sg_apply_pipeline(state.free_element_pipeline);
     sg_apply_uniforms(0, SG_RANGE(state.free_element_uniforms));
     sg_apply_uniforms(1, SG_RANGE(state.free_element_atlas_coords));
-    sg_apply_bindings(&state.free_element_bindings);
-    sg_draw(0, state.free_element_count, 1);
+    for (auto& [freeElementType, binding] : state.free_element_bindings)
+    {
+        sg_apply_bindings(&binding);
+        int freeElementVertexCount = state.free_element_vertex_count.at(freeElementType);
+        int freeElementInstanceCount = state.free_element_instance_count.at(freeElementType);
+        sg_draw(0, freeElementVertexCount, freeElementInstanceCount);
+    }
 
     sg_end_pass();
     sg_commit();
@@ -337,24 +356,53 @@ void GLRenderer::BindWallVertices(const VerticesData<WallVertex>& vertices)
     state.wall_count = static_cast<uint32_t>(vertices.indices.size());
 }
 
-void GLRenderer::BindFreeElementVertices(const VerticesData<VertexWithTextureId>& vertices)
+void GLRenderer::BindFreeElementVertices(const std::unordered_map<MR_UInt16, VerticesData<VertexWithTextureId>>& freeElements)
 {
-    sg_buffer_desc buf_desc = {
-        .type = SG_BUFFERTYPE_VERTEXBUFFER,
-        .usage = SG_USAGE_IMMUTABLE,
-        .data = make_sg_range(vertices.vertices),
-        .label = "free_element-vertices"
-    };
-    state.free_element_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
+    for (const auto& [elementId, vertices] : freeElements)
+    {
+        sg_buffer_desc buf_desc = {
+            .type = SG_BUFFERTYPE_VERTEXBUFFER,
+            .usage = SG_USAGE_IMMUTABLE,
+            .data = make_sg_range(vertices.vertices),
+            .label = "free_element-vertices"
+        };
+        sg_buffer_desc index_buf_desc = {
+            .type = SG_BUFFERTYPE_INDEXBUFFER,
+            .data = make_sg_range(vertices.indices),
+            .label = "free_element-indices"
+        };
+        state.free_element_bindings[elementId].vertex_buffers[0] = sg_make_buffer(&buf_desc);
+        state.free_element_bindings[elementId].index_buffer = sg_make_buffer(&index_buf_desc);
+        state.free_element_bindings[elementId].samplers[0] = state.edge_sampler;
+        state.free_element_vertex_count[elementId] = static_cast<int>(vertices.indices.size());
+    }
+}
 
-    sg_buffer_desc index_buf_desc = {
-        .type = SG_BUFFERTYPE_INDEXBUFFER,
-        .data = make_sg_range(vertices.indices),
-        .label = "free_element-indices"
-    };
-    state.free_element_bindings.index_buffer = sg_make_buffer(&index_buf_desc);
-
-    state.free_element_count = static_cast<uint32_t>(vertices.indices.size());
+void GLRenderer::BindFreeElementInstances(
+    const std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> freeElementInstances)
+{
+    static bool first = true;
+    if (!first)
+    {
+        return;
+    }
+    first = false;
+    for (const auto& [elementId, instances] : freeElementInstances)
+    {
+        if (!state.free_element_bindings.contains(elementId))
+        {
+            throw std::runtime_error("Free element instance not bound");
+        }
+        sg_buffer_desc instance_buf_desc = {
+            .type = SG_BUFFERTYPE_VERTEXBUFFER,
+            .usage = SG_USAGE_IMMUTABLE,
+            .data = make_sg_range(instances),
+            .label = "free_element-instances",
+        };
+        auto instance_buffer = sg_make_buffer(&instance_buf_desc);
+        state.free_element_bindings[elementId].vertex_buffers[1] = instance_buffer;
+        state.free_element_instance_count[elementId] = instances.size();
+    }
 }
 
 unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap)
@@ -386,7 +434,10 @@ unsigned long GLRenderer::LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitma
 void GLRenderer::BindFreeElementTextures()
 {
     auto [atlas_texture, atlas_coords] = BindTexturesInternal(free_element_textures);
-    state.free_element_bindings.images[0] = atlas_texture;
+    for (auto& [_, binding] : state.free_element_bindings)
+    {
+        binding.images[0] = atlas_texture;
+    }
     state.free_element_atlas_coords = atlas_coords;
 }
 
