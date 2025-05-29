@@ -108,11 +108,10 @@ struct TextureData
 struct FreeElementInstance
 {
     glm::i32vec3 position;
+    int type;
 
     bool operator==(const FreeElementInstance& other) const {
-        return position.x == other.position.x &&
-               position.y == other.position.y &&
-               position.z == other.position.z;
+        return position == other.position && type == other.type;
     }
 };
 

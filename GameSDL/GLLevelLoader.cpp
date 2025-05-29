@@ -56,7 +56,7 @@ std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> GLLevelLoader::G
                 auto type = lElement->mId.mClassId;
                 auto actorPosition = freeElementBase->mPosition;
                 auto position = SwapYZ(glm::ivec3(actorPosition.mX, actorPosition.mY, actorPosition.mZ));
-                freeElementInstances[type].push_back({.position = position});
+                freeElementInstances[type].push_back({.position = position, .type = lElement->mId.mClassId});
             }
             lHandle = MR_Level::GetNextFreeElement(lHandle);
         }
@@ -509,7 +509,6 @@ void GLLevelLoader::LoadRoomFreeElements(const MR_Level* level, int roomId)
         auto freeElementBase = dynamic_cast<MR_FreeElementBase*>(lElement);
         if (freeElementBase != nullptr)
         {
-            auto actorPosition = freeElementBase->mPosition;
             if (!freeElementVerts.contains(lElement->mId.mClassId))
             {
                 VerticesData<VertexWithTextureId> verts;

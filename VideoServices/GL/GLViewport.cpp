@@ -41,4 +41,5 @@ void GLViewport::SetCameraPosition(const MR_3DCoordinate& pPosition, MR_Angle pO
 void GLViewport::SetSimulationTime(const MR_SimulationTime pTime)
 {
     glRenderer->state.wall_uniforms.time = pTime;
+    glRenderer->state.free_element_uniforms.time = pTime;
 }

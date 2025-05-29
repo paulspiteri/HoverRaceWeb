@@ -102,6 +102,8 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_textureIdx].buffer_index = 0;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instancePosition].format = SG_VERTEXFORMAT_INT3;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instancePosition].buffer_index = 1;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_type].format = SG_VERTEXFORMAT_INT;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_type].buffer_index = 1;
     free_element_pipeline_desc.layout.buffers[0].step_func = SG_VERTEXSTEP_PER_VERTEX;
     free_element_pipeline_desc.layout.buffers[0].step_rate = 1;
     free_element_pipeline_desc.layout.buffers[1].step_func = SG_VERTEXSTEP_PER_INSTANCE;
