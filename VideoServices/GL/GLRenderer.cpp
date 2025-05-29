@@ -36,7 +36,8 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     desc.logger = logger;
     sg_setup(&desc);
 
-    if (!sg_isvalid()) {
+    if (!sg_isvalid())
+    {
         std::cout << "Failed to initialize sokol_gfx" << std::endl;
         throw std::runtime_error("Failed to initialize sokol_gfx");
     }
@@ -120,7 +121,7 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     };
 
     sg_sampler_desc wrap_sampler_desc = {};
-    wrap_sampler_desc.min_filter =SG_FILTER_LINEAR;
+    wrap_sampler_desc.min_filter = SG_FILTER_LINEAR;
     wrap_sampler_desc.mag_filter = SG_FILTER_LINEAR;
     wrap_sampler_desc.wrap_u = SG_WRAP_REPEAT;
     wrap_sampler_desc.wrap_v = SG_WRAP_REPEAT;
@@ -209,7 +210,9 @@ void GLRenderer::Render() const
     for (auto& [freeElementType, binding] : state.free_element_bindings)
     {
         int freeElementVertexCount = state.free_element_vertex_count.at(freeElementType);
-        int freeElementInstanceCount = state.free_element_instance_count.at(freeElementType);
+        int freeElementInstanceCount = state.free_element_instance_count.contains(freeElementType)
+                                           ? state.free_element_instance_count.at(freeElementType)
+                                           : 0;
         if (freeElementInstanceCount > 0)
         {
             sg_apply_bindings(&binding);
@@ -364,7 +367,7 @@ void GLRenderer::BindWallVertices(const VerticesData<WallVertex>& vertices)
     state.wall_count = static_cast<uint32_t>(vertices.indices.size());
 }
 
-void GLRenderer::BindFreeElementVertices(const std::unordered_map<MR_UInt16, VerticesData<VertexWithTextureId>>& freeElements)
+void GLRenderer::BindFreeElementVertices(const std::unordered_map<int, VerticesData<VertexWithTextureId>>& freeElements)
 {
     for (const auto& [elementId, vertices] : freeElements)
     {
@@ -387,9 +390,9 @@ void GLRenderer::BindFreeElementVertices(const std::unordered_map<MR_UInt16, Ver
 }
 
 void GLRenderer::BindFreeElementInstances(
-    const std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> updatedFreeElementInstances)
+    const std::unordered_map<int, std::vector<FreeElementInstance>> updatedFreeElementInstances)
 {
-    if (this->freeElementInstances == updatedFreeElementInstances)
+    if (freeElementInstances == updatedFreeElementInstances)
     {
         // no change, nothing to do
         return;
@@ -399,7 +402,7 @@ void GLRenderer::BindFreeElementInstances(
     SDL_GL_MakeCurrent(glWindow, glContext);
 
     // delete any buffers for element types which now no longer exist
-    for (const auto& [elementId, instances] : this->freeElementInstances)
+    for (const auto& [elementId, instances] : freeElementInstances)
     {
         if (!updatedFreeElementInstances.contains(elementId))
         {
@@ -419,7 +422,10 @@ void GLRenderer::BindFreeElementInstances(
             throw std::runtime_error("Free element type not bound");
         }
 
-        if (this->freeElementInstances.empty() || instances.size() != this->freeElementInstances.at(elementId).size())
+        int previousElementInstanceCount = freeElementInstances.contains(elementId)
+                                               ? freeElementInstances.at(elementId).size()
+                                               : 0;
+        if (freeElementInstances.empty() || instances.size() != previousElementInstanceCount)
         {
             if (state.free_element_bindings[elementId].vertex_buffers[1].id != SG_INVALID_ID)
             {
@@ -431,7 +437,7 @@ void GLRenderer::BindFreeElementInstances(
                 .size = instances.size() * sizeof(FreeElementInstance),
                 .label = "free_element-instances",
             };
-            state.free_element_bindings[elementId].vertex_buffers[1] =  sg_make_buffer(&instance_buf_desc);
+            state.free_element_bindings[elementId].vertex_buffers[1] = sg_make_buffer(&instance_buf_desc);
         }
         sg_update_buffer(state.free_element_bindings[elementId].vertex_buffers[1], make_sg_range(instances));
         state.free_element_instance_count[elementId] = instances.size();
@@ -439,7 +445,8 @@ void GLRenderer::BindFreeElementInstances(
     this->freeElementInstances = updatedFreeElementInstances;
 }
 
-unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap)
+unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id,
+                                              const MR_ResBitmap* bitmap)
 {
     auto it = std::ranges::find_if(collection, [=](const auto& t) { return t.id == id; });
     if (it == collection.end())
@@ -508,7 +515,7 @@ void GLRenderer::BindBackgroundTexture(const MR_UInt8* backImage)
     auto bkg_texture = sg_make_image(&img_desc);
 
     state.bkg_bindings.images[0] = bkg_texture;
-    delete[] rgbaBackImg;   // todo
+    delete[] rgbaBackImg; // todo
 }
 
 uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
@@ -545,7 +552,7 @@ uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
 uint32_t* GLRenderer::ConvertBackgroundToRGBA8(const MR_UInt8* backImage)
 {
     auto palette = videoBuffer->GetPalette();
-    int srcWidth = MR_BACK_Y_RES;   // image is rotated 90 degrees
+    int srcWidth = MR_BACK_Y_RES; // image is rotated 90 degrees
     int srcHeight = MR_BACK_X_RES;
     int destWidth = srcHeight;
     int destHeight = srcWidth;

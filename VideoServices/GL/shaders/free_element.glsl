@@ -32,7 +32,7 @@ vec3 rotateY(vec3 pos, float angleRadians) {
 }
 
 void main() {
-    if (type == 152) {  // PowerUp rotates on the spot
+    if (type == 22) {  // PowerUp rotates on the spot
         const float ANGLE_TO_RADIANS = 2.0 * 3.14159265359 / 4096.0;
         float wrappedTime = mod(float(time), 4096.0);
         float angleRadians = wrappedTime * ANGLE_TO_RADIANS;

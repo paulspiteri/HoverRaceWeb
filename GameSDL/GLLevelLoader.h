@@ -11,7 +11,7 @@ class GLLevelLoader
 public:
     explicit GLLevelLoader(GLRenderer* glRenderer);
     void LoadLevel(const MR_Level* level, const MR_UInt8* backImage);
-    std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> GetFreeElementInstances(const MR_Level* level);
+    std::unordered_map<int, std::vector<FreeElementInstance>> GetFreeElementInstances(const MR_Level* level);
 
 private:
     void LoadBackground(const MR_UInt8* backImage);
@@ -27,11 +27,10 @@ private:
     void AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_SurfaceElement* surfaceElement);
     void AddRegularWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, int textureAtlasId, float bitmapWidth, float bitmapHeight, std::optional<int> maxHeight);
     void AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, int textureAtlasId, float bitmapWidth, float bitmapHeight, std::optional<int> maxHeight, int rotationSpeed, int rotationLength);
-    void LoadRoomFreeElements(const MR_Level* level, int roomId);
+    std::unordered_map<int, VerticesData<VertexWithTextureId>> LoadGameFreeElements();
 
     VerticesData<Vertex> bkgVerts;
     VerticesData<VertexWithTextureId> worldVerts;
     VerticesData<WallVertex> wallVerts;
-    std::unordered_map<MR_UInt16, VerticesData<VertexWithTextureId>> freeElementVerts;
     GLRenderer* glRenderer;
 };

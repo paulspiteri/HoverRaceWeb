@@ -119,7 +119,7 @@ class GLRenderer
 {
     std::vector<TextureData> textures;
     std::vector<TextureData> free_element_textures;
-    std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> freeElementInstances;
+    std::unordered_map<int, std::vector<FreeElementInstance>> freeElementInstances;
     MR_VideoBuffer* videoBuffer;
 
     uint32_t* ConvertTextureToRGBA8(const MR_ResBitmap* bitmap);
@@ -138,8 +138,8 @@ public:
     void BindWorldTextures();
     void BindWorldVertices(const VerticesData<VertexWithTextureId>& vertices);
     void BindWallVertices(const VerticesData<WallVertex>& vertices);
-    void BindFreeElementVertices(const std::unordered_map<MR_UInt16, VerticesData<VertexWithTextureId>>& freeElements);
-    void BindFreeElementInstances(const std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> updatedFreeElementInstances);
+    void BindFreeElementVertices(const std::unordered_map<int, VerticesData<VertexWithTextureId>>& freeElements);
+    void BindFreeElementInstances(const std::unordered_map<int, std::vector<FreeElementInstance>> updatedFreeElementInstances);
     unsigned long LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
     unsigned long LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
     unsigned long GetNextFreeElementTextureId() { return free_element_textures.size(); }
