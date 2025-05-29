@@ -115,12 +115,6 @@ void MR_SDLGameApp::Simulate()
 
 void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
 {
-   if (mGLRenderer)
-   {
-      auto freeElementInstances = mGLLevelLoader->GetFreeElementInstances(mCurrentSession->GetCurrentLevel());
-      mGLRenderer->BindFreeElementInstances(freeElementInstances);
-   }
-
    // Game processing
    if( mVideoBuffer != NULL )
    {
@@ -168,6 +162,8 @@ void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
 
    if (mGLRenderer)
    {
+      auto freeElementInstances = mGLLevelLoader->GetFreeElementInstances(mCurrentSession->GetCurrentLevel());
+      mGLRenderer->BindFreeElementInstances(freeElementInstances);
       mGLRenderer->Render();
    }
 

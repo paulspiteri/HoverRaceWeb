@@ -155,7 +155,10 @@ GLRenderer::~GLRenderer()
     {
         sg_destroy_buffer(binding.vertex_buffers[0]);
         sg_destroy_buffer(binding.index_buffer);
-        sg_destroy_buffer(binding.vertex_buffers[1]);
+        if (binding.vertex_buffers[1].id != SG_INVALID_ID)
+        {
+            sg_destroy_buffer(binding.vertex_buffers[1]);
+        }
     }
 
     sg_destroy_buffer(state.wall_bindings.vertex_buffers[0]);
@@ -203,10 +206,13 @@ void GLRenderer::Render() const
     sg_apply_uniforms(1, SG_RANGE(state.free_element_atlas_coords));
     for (auto& [freeElementType, binding] : state.free_element_bindings)
     {
-        sg_apply_bindings(&binding);
         int freeElementVertexCount = state.free_element_vertex_count.at(freeElementType);
         int freeElementInstanceCount = state.free_element_instance_count.at(freeElementType);
-        sg_draw(0, freeElementVertexCount, freeElementInstanceCount);
+        if (freeElementInstanceCount > 0)
+        {
+            sg_apply_bindings(&binding);
+            sg_draw(0, freeElementVertexCount, freeElementInstanceCount);
+        }
     }
 
     sg_end_pass();
@@ -375,37 +381,60 @@ void GLRenderer::BindFreeElementVertices(const std::unordered_map<MR_UInt16, Ver
         state.free_element_bindings[elementId].index_buffer = sg_make_buffer(&index_buf_desc);
         state.free_element_bindings[elementId].samplers[0] = state.edge_sampler;
         state.free_element_vertex_count[elementId] = static_cast<int>(vertices.indices.size());
-
-        sg_buffer_desc instance_buf_desc = {
-            .type = SG_BUFFERTYPE_VERTEXBUFFER,
-            .usage = SG_USAGE_DYNAMIC,
-            .size = freeElements.size() * sizeof(FreeElementInstance),  // assume at least 1 instance of each type
-            .label = "free_element-instances",
-        };
-        state.free_element_bindings[elementId].vertex_buffers[1] =  sg_make_buffer(&instance_buf_desc);
     }
 }
 
 void GLRenderer::BindFreeElementInstances(
-    const std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> freeElementInstances)
+    const std::unordered_map<MR_UInt16, std::vector<FreeElementInstance>> updatedFreeElementInstances)
 {
-    if (this->freeElementInstances == freeElementInstances)
+    if (this->freeElementInstances == updatedFreeElementInstances)
     {
         // no change, nothing to do
         return;
     }
 
-    for (const auto& [elementId, instances] : freeElementInstances)
+    // first make current (probably only necessary while SDL version is running
+    SDL_GL_MakeCurrent(glWindow, glContext);
+
+    // delete any buffers for element types which now no longer exist
+    for (const auto& [elementId, instances] : this->freeElementInstances)
+    {
+        if (!updatedFreeElementInstances.contains(elementId))
+        {
+            if (state.free_element_bindings[elementId].vertex_buffers[1].id != SG_INVALID_ID)
+            {
+                sg_destroy_buffer(state.free_element_bindings[elementId].vertex_buffers[1]);
+            }
+            state.free_element_instance_count[elementId] = 0;
+        }
+    }
+
+    // update buffers for each element type. delete+recreate if necessary (when size changed)
+    for (const auto& [elementId, instances] : updatedFreeElementInstances)
     {
         if (!state.free_element_bindings.contains(elementId))
         {
-            throw std::runtime_error("Free element instance not bound");
+            throw std::runtime_error("Free element type not bound");
         }
 
+        if (this->freeElementInstances.empty() || instances.size() != this->freeElementInstances.at(elementId).size())
+        {
+            if (state.free_element_bindings[elementId].vertex_buffers[1].id != SG_INVALID_ID)
+            {
+                sg_destroy_buffer(state.free_element_bindings[elementId].vertex_buffers[1]);
+            }
+            sg_buffer_desc instance_buf_desc = {
+                .type = SG_BUFFERTYPE_VERTEXBUFFER,
+                .usage = SG_USAGE_DYNAMIC,
+                .size = instances.size() * sizeof(FreeElementInstance),
+                .label = "free_element-instances",
+            };
+            state.free_element_bindings[elementId].vertex_buffers[1] =  sg_make_buffer(&instance_buf_desc);
+        }
         sg_update_buffer(state.free_element_bindings[elementId].vertex_buffers[1], make_sg_range(instances));
         state.free_element_instance_count[elementId] = instances.size();
     }
-    this->freeElementInstances = freeElementInstances;
+    this->freeElementInstances = updatedFreeElementInstances;
 }
 
 unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap)
