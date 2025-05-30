@@ -109,6 +109,10 @@ int MR_ResBitmap::GetHeight()const
 
 int MR_ResBitmap::GetMaxXRes()const
 {
+   if (mResourceId == 28)
+   {
+      return mYRes;  // !! this is a hack for bitmap 28 (on the CX vehicle engine) which is strangely not a square, 32x31 !!
+   }
    return mXRes;
 }
 

@@ -445,8 +445,8 @@ void GLRenderer::BindFreeElementInstances(
                 sg_destroy_buffer(state.free_element_bindings[elementId].vertex_buffers[1]);
             }
             sg_buffer_desc instance_buf_desc = {
-                .type = SG_BUFFERTYPE_VERTEXBUFFER,
                 .size = instances.size() * sizeof(FreeElementInstance),
+                .type = SG_BUFFERTYPE_VERTEXBUFFER,
                 .usage = SG_USAGE_DYNAMIC,
                 .label = "free_element-instances",
             };

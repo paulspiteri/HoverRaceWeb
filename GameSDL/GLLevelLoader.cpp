@@ -540,13 +540,13 @@ std::unordered_map<int, VerticesData<FreeElementVertex>> GLLevelLoader::LoadGame
 {
     std::unordered_map<int, VerticesData<FreeElementVertex>> result;
     auto electroCar = gObjectFactoryData->mResourceLib.GetActor(MR_ELECTRO_CAR);
-   // auto hitechCar = gObjectFactoryData->mResourceLib.GetActor(MR_HITECH_CAR);
+    auto hitechCar = gObjectFactoryData->mResourceLib.GetActor(MR_HITECH_CAR);
     auto biturboCar = gObjectFactoryData->mResourceLib.GetActor(MR_BITURBO_CAR);
     auto powerUp = gObjectFactoryData->mResourceLib.GetActor(MR_PWRUP);
     auto mine = gObjectFactoryData->mResourceLib.GetActor(MR_MINE);
     auto bumperGate = gObjectFactoryData->mResourceLib.GetActor(MR_BUMPERGATE);
     auto missile = gObjectFactoryData->mResourceLib.GetActor(MR_MISSILE);
-    std::array actors = { electroCar, biturboCar, powerUp, mine, bumperGate, missile};
+    std::array actors = { electroCar, hitechCar, biturboCar, powerUp, mine, bumperGate, missile};
 
     for (auto actor : actors)
     {
@@ -558,15 +558,14 @@ std::unordered_map<int, VerticesData<FreeElementVertex>> GLLevelLoader::LoadGame
                 auto patches = actor->GetPatches(seqIdx, frameIdx);
                 for (auto patch : patches)
                 {
-                    int lBitmapXRes = patch->mBitmap->GetXRes(0);
-                    int lBitmapYRes = patch->mBitmap->GetYRes(0);
+                    int lBitmapXRes = patch->mBitmap->GetMaxXRes();
+                    int lBitmapYRes = patch->mBitmap->GetMaxYRes();
                     int lURes = patch->GetURes();
                     int lVRes = patch->GetVRes();
                     float lBitmapRowInc = static_cast<float>(lBitmapXRes) / static_cast<float>(lVRes - 1);
                     float lBitmapColInc = static_cast<float>(lBitmapYRes) / static_cast<float>(lURes - 1);
                     const MR_3DCoordinate* lNodeList = patch->GetNodeList();
-                    int textureId = glRenderer->LoadFreeElementTexture(patch->mBitmap->GetResourceId(),
-                                                                       patch->mBitmap);
+                    int textureId = glRenderer->LoadFreeElementTexture(patch->mBitmap->GetResourceId(), patch->mBitmap);
                     uint16_t startVertexIdx = verts.vertices.size();
                     for (int lV = 0; lV < lVRes; lV++)
                     {
