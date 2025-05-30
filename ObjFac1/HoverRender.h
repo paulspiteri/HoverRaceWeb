@@ -76,7 +76,8 @@ class MR_HoverRender: public MR_MainCharacterRenderer
       MR_ContinuousSound* GetMotorSound();
       MR_ContinuousSound* GetFrictionSound();
 
-
+      const MR_ResActor* GetActor(int hoverModel) const;
+      const int GetFrame() const { return mFrame; }
 };
 
 

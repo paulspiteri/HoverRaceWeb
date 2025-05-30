@@ -1,13 +1,12 @@
 #include "GLLevelLoader.h"
-
+#include <numbers>
 #include "../ObjFacTools/ResBitmap.h"
 #include "../ObjFacTools/BitmapSurface.h"
 #include "../ObjFacTools/FreeElementBase.h"
 #include "../ObjFacTools/ObjectFactoryData.h"
 #include "../ObjFac1/ObjFac1Res.h"
-#include <numbers>
-
-#include "../ObjFac1/PowerUp.h"
+#include "../ObjFac1/HoverRender.h"
+#include "../MainCharacter/MainCharacter.h"
 
 GLLevelLoader::GLLevelLoader(GLRenderer* renderer): glRenderer(renderer)
 {
@@ -52,20 +51,49 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
         while (lHandle != nullptr)
         {
             MR_FreeElement* lElement = MR_Level::GetFreeElement(lHandle);
-            auto freeElementBase = dynamic_cast<MR_FreeElementBase*>(lElement);
-            if (freeElementBase != nullptr)
+            auto actorPosition = lElement->mPosition;
+            auto position = SwapYZ(glm::ivec3(actorPosition.mX, actorPosition.mY, actorPosition.mZ));
+            const MR_ResActor* actor = nullptr;
+            int sequence = 0, frame = 0;
+            if (lElement->mId.mDllId == MR_MAIN_CHARACTER_DLL_ID && lElement->mId.mClassId == MR_MAIN_CHARACTER_CLASS_ID)
             {
-                auto actorPosition = freeElementBase->mPosition;
-                auto position = SwapYZ(glm::ivec3(actorPosition.mX, actorPosition.mY, actorPosition.mZ));
-                auto type = freeElementBase->GetActor()->GetResourceId();
-                auto orientation = type == MR_PWRUP ? 0 : freeElementBase->mOrientation;    // orientation for powerups implemented in the shader to avoid unncessary vertex updates
-                int sequence = freeElementBase->GetCurrentSequence();
-                int frame = freeElementBase->GetCurrentFrame();
+                auto mainCharacter = static_cast<MR_MainCharacter*>(lElement);
+                auto mainCharacterRenderer = mainCharacter->GetRenderer();
+                auto hoverRenderer = dynamic_cast<MR_HoverRender*>(mainCharacterRenderer);
+                if (hoverRenderer == nullptr)
+                {
+                    throw std::runtime_error("MainCharacter has unknown renderer");
+                }
+                auto hoverModelId = mainCharacter->GetHoverModel();
+                actor = hoverRenderer->GetActor(hoverModelId);
+                bool isMotorOn =  mainCharacter->GetMotorDisplay() > 0;
+                sequence = isMotorOn ? 1 : 0;
+                if(isMotorOn)
+                {
+                    frame = hoverRenderer->GetFrame();  // note - is dependent on legacy renderer running
+                }
+            }
+            else
+            {
+                auto freeElementBase = dynamic_cast<MR_FreeElementBase*>(lElement);
+                if (freeElementBase != nullptr)
+                {
+                    actor = freeElementBase->GetActor();
+                    sequence = freeElementBase->GetCurrentSequence();
+                    frame = freeElementBase->GetCurrentFrame();
+                }
+            }
+
+            if (actor != nullptr)
+            {
+                auto type = actor->GetResourceId();
+                auto orientation = type == MR_PWRUP ? 0 : lElement->mOrientation;    // orientation for powerups implemented in the shader to avoid unncessary vertex updates
                 FreeElementInstance instance = {
                     .position = position, .type = type, .orientation = orientation, .sequence = sequence, .frame = frame
                 };
                 freeElementInstances[type].push_back(instance);
             }
+
             lHandle = MR_Level::GetNextFreeElement(lHandle);
         }
     }
@@ -511,11 +539,12 @@ void GLLevelLoader::AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, in
 std::unordered_map<int, VerticesData<FreeElementVertex>> GLLevelLoader::LoadGameFreeElements()
 {
     std::unordered_map<int, VerticesData<FreeElementVertex>> result;
+    auto electroCar = gObjectFactoryData->mResourceLib.GetActor(MR_ELECTRO_CAR);
     auto powerUp = gObjectFactoryData->mResourceLib.GetActor(MR_PWRUP);
     auto mine = gObjectFactoryData->mResourceLib.GetActor(MR_MINE);
     auto bumperGate = gObjectFactoryData->mResourceLib.GetActor(MR_BUMPERGATE);
     auto missile = gObjectFactoryData->mResourceLib.GetActor(MR_MISSILE);
-    std::array actors = {powerUp, mine, bumperGate, missile};
+    std::array actors = { electroCar, powerUp, mine, bumperGate, missile};
 
     for (auto actor : actors)
     {

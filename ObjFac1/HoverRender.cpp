@@ -166,6 +166,16 @@ MR_ContinuousSound* MR_HoverRender::GetFrictionSound()
    return mFrictionSound;
 }
 
+const MR_ResActor* MR_HoverRender::GetActor(int hoverModel) const
+{
+   switch(hoverModel)
+   {
+      case 1: return mActor1;
+      case 2: return mActor2;
+      default: return mActor0;
+   }
+}
+
 
 void MR_ResActorFriend::Draw( const MR_ResActor* pActor, MR_3DViewPort* pDest, const MR_PositionMatrix& pMatrix, int pSequence, int pFrame, const MR_Bitmap* pCockpitBitmap )
 {

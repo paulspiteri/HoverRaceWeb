@@ -219,6 +219,9 @@ class MR_MainCharacter:public MR_FreeElement
       MR_DllDeclare int                HitQueueCount()const;
       MR_DllDeclare int                GetHitQueue();
 
+      MR_MainCharacterRenderer* GetRenderer() const { return mRenderer; }
+      int GetMotorDisplay() const {return mMotorDisplay; }
+
    protected:
       // Logic interface
       int   Simulate( MR_SimulationTime pDuration, MR_Level* pLevel, int pRoom );
