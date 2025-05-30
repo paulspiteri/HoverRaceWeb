@@ -104,7 +104,7 @@ class MR_ResActor
 
       MR_DllDeclare void Serialize( NoMFC::CArchive& pArchive, MR_ResourceLib* pLib=NULL );
       MR_DllDeclare void Draw( MR_3DViewPort* pDest, const MR_PositionMatrix& pMatrix, int pSequence, int pFrame )const;
-      std::vector<Patch*> GetActorPatches() const;
+      std::vector<Patch*> GetPatches(int pSequence, int pFrame)const;
 };
 
 

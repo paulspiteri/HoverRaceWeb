@@ -105,14 +105,23 @@ struct TextureData
     uint32_t* pixels;
 };
 
+
+struct FreeElementVertex
+{
+    VertexWithTextureId vertex;
+    int sequence;
+    int frame;
+};
+
 struct FreeElementInstance
 {
     glm::i32vec3 position;
     int type;
+    int orientation;
+    int sequence;
+    int frame;
 
-    bool operator==(const FreeElementInstance& other) const {
-        return position == other.position && type == other.type;
-    }
+    bool operator==(const FreeElementInstance& other) const = default;
 };
 
 class GLRenderer
@@ -138,11 +147,10 @@ public:
     void BindWorldTextures();
     void BindWorldVertices(const VerticesData<VertexWithTextureId>& vertices);
     void BindWallVertices(const VerticesData<WallVertex>& vertices);
-    void BindFreeElementVertices(const std::unordered_map<int, VerticesData<VertexWithTextureId>>& freeElements);
-    void BindFreeElementInstances(const std::unordered_map<int, std::vector<FreeElementInstance>> updatedFreeElementInstances);
+    void BindFreeElementVertices(const std::unordered_map<int, VerticesData<FreeElementVertex>>& freeElements);
+    void BindFreeElementInstances(const std::unordered_map<int, std::vector<FreeElementInstance>>& updatedFreeElementInstances);
     unsigned long LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
     unsigned long LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
-    unsigned long GetNextFreeElementTextureId() { return free_element_textures.size(); }
     void BindFreeElementTextures();
     void BindBackgroundVertices(const VerticesData<Vertex>& vertices);
     void BindBackgroundTexture(const MR_UInt8* backImage);

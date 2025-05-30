@@ -54,6 +54,8 @@ class MR_FreeElementBase:public MR_FreeElement
       // Rendering stuff
       MR_DllDeclare void Render( MR_3DViewPort* pDest, MR_SimulationTime pTime );
       const MR_ResActor* GetActor() const { return mActor; }
+      const int GetCurrentSequence() const { return mCurrentSequence; }
+      const int GetCurrentFrame() const { return mCurrentFrame; }
 };
 
 #undef MR_DllDeclare

@@ -13,10 +13,15 @@ layout(binding = 1) uniform FreeElementAtlasCoords {
 in ivec4 position;
 in vec2 texcoord0;
 in int textureIdx;
+in int sequence;
+in int frame;
 
 // Per-instance attributes (buffer 1)
 in ivec3 instancePosition;
 in int type;
+in int orientation;
+in int instance_sequence;
+in int instance_frame;
 
 out vec2 free_element_uv;
 flat out vec4 atlas_coord;
@@ -32,17 +37,22 @@ vec3 rotateY(vec3 pos, float angleRadians) {
 }
 
 void main() {
-    if (type == 22) {  // PowerUp rotates on the spot
-        const float ANGLE_TO_RADIANS = 2.0 * 3.14159265359 / 4096.0;
-        float wrappedTime = mod(float(time), 4096.0);
-        float angleRadians = wrappedTime * ANGLE_TO_RADIANS;
-        vec3 rotatedPos = rotateY(position.xyz, angleRadians);
-        vec4 worldPos = vec4(rotatedPos.xyz + instancePosition, 1);
-        gl_Position = proj * view * worldPos;
-    } else {
-        vec4 worldPos = vec4(position.xyz + instancePosition, 1);
-        gl_Position = proj * view * worldPos;
+    if (sequence != instance_sequence || frame != instance_frame) {
+        gl_Position = vec4(0.0, 0.0, 0.0, -1.0);
+        return;
     }
+    const float ANGLE_TO_RADIANS = 2.0 * 3.14159265359 / 4096.0;
+    float angleRadians;
+    if (type == 22) {  // PowerUp rotates on the spot using the time rather than orientation parameter
+        float wrappedTime = mod(float(time), 4096.0);
+        angleRadians = wrappedTime * ANGLE_TO_RADIANS;
+
+    } else {
+        angleRadians = orientation * ANGLE_TO_RADIANS;
+    }
+    vec3 rotatedPos = rotateY(position.xyz, angleRadians);
+    vec4 worldPos = vec4(rotatedPos.xyz + instancePosition, 1);
+    gl_Position = proj * view * worldPos;
     free_element_uv = texcoord0;
     atlas_coord = atlas_coords[textureIdx];
 }

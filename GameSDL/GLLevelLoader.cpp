@@ -7,6 +7,8 @@
 #include "../ObjFac1/ObjFac1Res.h"
 #include <numbers>
 
+#include "../ObjFac1/PowerUp.h"
+
 GLLevelLoader::GLLevelLoader(GLRenderer* renderer): glRenderer(renderer)
 {
 }
@@ -53,10 +55,16 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
             auto freeElementBase = dynamic_cast<MR_FreeElementBase*>(lElement);
             if (freeElementBase != nullptr)
             {
-                auto type = freeElementBase->GetActor()->GetResourceId();
                 auto actorPosition = freeElementBase->mPosition;
                 auto position = SwapYZ(glm::ivec3(actorPosition.mX, actorPosition.mY, actorPosition.mZ));
-                freeElementInstances[type].push_back({.position = position, .type = type});
+                auto type = freeElementBase->GetActor()->GetResourceId();
+                auto orientation = type == MR_PWRUP ? 0 : freeElementBase->mOrientation;    // orientation for powerups implemented in the shader to avoid unncessary vertex updates
+                int sequence = freeElementBase->GetCurrentSequence();
+                int frame = freeElementBase->GetCurrentFrame();
+                FreeElementInstance instance = {
+                    .position = position, .type = type, .orientation = orientation, .sequence = sequence, .frame = frame
+                };
+                freeElementInstances[type].push_back(instance);
             }
             lHandle = MR_Level::GetNextFreeElement(lHandle);
         }
@@ -500,64 +508,75 @@ void GLLevelLoader::AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, in
     }
 }
 
-std::unordered_map<int, VerticesData<VertexWithTextureId>> GLLevelLoader::LoadGameFreeElements()
+std::unordered_map<int, VerticesData<FreeElementVertex>> GLLevelLoader::LoadGameFreeElements()
 {
-    std::unordered_map<int, VerticesData<VertexWithTextureId>> result;
+    std::unordered_map<int, VerticesData<FreeElementVertex>> result;
     auto powerUp = gObjectFactoryData->mResourceLib.GetActor(MR_PWRUP);
     auto mine = gObjectFactoryData->mResourceLib.GetActor(MR_MINE);
     auto bumperGate = gObjectFactoryData->mResourceLib.GetActor(MR_BUMPERGATE);
     auto missile = gObjectFactoryData->mResourceLib.GetActor(MR_MISSILE);
-    std::array actors = { powerUp, mine, bumperGate, missile };
+    std::array actors = {powerUp, mine, bumperGate, missile};
 
     for (auto actor : actors)
     {
-        VerticesData<VertexWithTextureId> verts;
-        auto patches = actor->GetActorPatches();
-        for (auto patch : patches)
+        VerticesData<FreeElementVertex> verts;
+        for (int seqIdx = 0; seqIdx < actor->GetSequenceCount(); seqIdx++)
         {
-            int lBitmapXRes = patch->mBitmap->GetXRes(0);
-            int lBitmapYRes = patch->mBitmap->GetYRes(0);
-            int lURes = patch->GetURes();
-            int lVRes = patch->GetVRes();
-            float lBitmapRowInc = static_cast<float>(lBitmapXRes) / static_cast<float>(lVRes - 1);
-            float lBitmapColInc = static_cast<float>(lBitmapYRes) / static_cast<float>(lURes - 1);
-            const MR_3DCoordinate* lNodeList = patch->GetNodeList();
-            int textureId = glRenderer->LoadFreeElementTexture(glRenderer->GetNextFreeElementTextureId(),
-                                                               patch->mBitmap);
-            uint16_t startVertexIdx = verts.vertices.size();
-            for (int lV = 0; lV < lVRes; lV++)
+            for (int frameIdx = 0; frameIdx < actor->GetFrameCount(seqIdx); frameIdx++)
             {
-                float v = (lV * lBitmapRowInc) / lBitmapYRes;
-
-                for (int lU = 0; lU < lURes; lU++)
+                auto patches = actor->GetPatches(seqIdx, frameIdx);
+                for (auto patch : patches)
                 {
-                    float u = (lU * lBitmapColInc) / lBitmapXRes;
-                    int index = lV * lURes + lU;
-                    auto node = lNodeList[index];
+                    int lBitmapXRes = patch->mBitmap->GetXRes(0);
+                    int lBitmapYRes = patch->mBitmap->GetYRes(0);
+                    int lURes = patch->GetURes();
+                    int lVRes = patch->GetVRes();
+                    float lBitmapRowInc = static_cast<float>(lBitmapXRes) / static_cast<float>(lVRes - 1);
+                    float lBitmapColInc = static_cast<float>(lBitmapYRes) / static_cast<float>(lURes - 1);
+                    const MR_3DCoordinate* lNodeList = patch->GetNodeList();
+                    int textureId = glRenderer->LoadFreeElementTexture(patch->mBitmap->GetResourceId(),
+                                                                       patch->mBitmap);
+                    uint16_t startVertexIdx = verts.vertices.size();
+                    for (int lV = 0; lV < lVRes; lV++)
+                    {
+                        float v = (lV * lBitmapRowInc) / lBitmapYRes;
 
-                    verts.vertices.push_back(SwapYZ(
-                        makeVertexWithTextureId(node.mX, node.mY, node.mZ, u, 1 - v, textureId)));
-                }
-            }
+                        for (int lU = 0; lU < lURes; lU++)
+                        {
+                            float u = (lU * lBitmapColInc) / lBitmapXRes;
+                            int index = lV * lURes + lU;
+                            auto node = lNodeList[index];
 
-            for (int lV = 0; lV < lVRes - 1; lV++)
-            {
-                for (int lU = 0; lU < lURes - 1; lU++)
-                {
-                    // Calculate indices for the four corners of the current grid cell
-                    // Offset by startVertexIdx to account for existing vertices
-                    uint16_t bottomLeft = startVertexIdx + lV * lURes + lU;
-                    uint16_t bottomRight = bottomLeft + 1;
-                    uint16_t topLeft = bottomLeft + lURes;
-                    uint16_t topRight = topLeft + 1;
+                            auto freeElementVertex = FreeElementVertex{
+                                .vertex = SwapYZ(
+                                    makeVertexWithTextureId(node.mX, node.mY, node.mZ, u, 1 - v, textureId)),
+                                .sequence = seqIdx,
+                                .frame = frameIdx
+                            };
+                            verts.vertices.push_back(freeElementVertex);
+                        }
+                    }
 
-                    verts.indices.push_back(bottomLeft);
-                    verts.indices.push_back(bottomRight);
-                    verts.indices.push_back(topLeft);
+                    for (int lV = 0; lV < lVRes - 1; lV++)
+                    {
+                        for (int lU = 0; lU < lURes - 1; lU++)
+                        {
+                            // Calculate indices for the four corners of the current grid cell
+                            // Offset by startVertexIdx to account for existing vertices
+                            uint16_t bottomLeft = startVertexIdx + lV * lURes + lU;
+                            uint16_t bottomRight = bottomLeft + 1;
+                            uint16_t topLeft = bottomLeft + lURes;
+                            uint16_t topRight = topLeft + 1;
 
-                    verts.indices.push_back(bottomRight);
-                    verts.indices.push_back(topRight);
-                    verts.indices.push_back(topLeft);
+                            verts.indices.push_back(bottomLeft);
+                            verts.indices.push_back(bottomRight);
+                            verts.indices.push_back(topLeft);
+
+                            verts.indices.push_back(bottomRight);
+                            verts.indices.push_back(topRight);
+                            verts.indices.push_back(topLeft);
+                        }
+                    }
                 }
             }
         }

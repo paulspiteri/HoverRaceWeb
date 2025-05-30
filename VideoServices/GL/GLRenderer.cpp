@@ -101,10 +101,20 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_texcoord0].buffer_index = 0;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_textureIdx].format = SG_VERTEXFORMAT_INT;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_textureIdx].buffer_index = 0;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_sequence].format = SG_VERTEXFORMAT_INT;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_sequence].buffer_index = 0;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_frame].format = SG_VERTEXFORMAT_INT;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_frame].buffer_index = 0;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instancePosition].format = SG_VERTEXFORMAT_INT3;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instancePosition].buffer_index = 1;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_type].format = SG_VERTEXFORMAT_INT;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_type].buffer_index = 1;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_orientation].format = SG_VERTEXFORMAT_INT;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_orientation].buffer_index = 1;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_sequence].format = SG_VERTEXFORMAT_INT;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_sequence].buffer_index = 1;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_frame].format = SG_VERTEXFORMAT_INT;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_frame].buffer_index = 1;
     free_element_pipeline_desc.layout.buffers[0].step_func = SG_VERTEXSTEP_PER_VERTEX;
     free_element_pipeline_desc.layout.buffers[0].step_rate = 1;
     free_element_pipeline_desc.layout.buffers[1].step_func = SG_VERTEXSTEP_PER_INSTANCE;
@@ -306,7 +316,10 @@ std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal
     int i = 0;
     for (const auto& texture : collection)
     {
-        if (i >= 32) break;
+        if (i >= 32)
+        {
+            throw std::runtime_error("Too many textures in atlas");
+        }
         atlas_coords[i] = glm::vec4(
             texture.atlas_coords.u1,
             texture.atlas_coords.v1,
@@ -367,7 +380,7 @@ void GLRenderer::BindWallVertices(const VerticesData<WallVertex>& vertices)
     state.wall_count = static_cast<uint32_t>(vertices.indices.size());
 }
 
-void GLRenderer::BindFreeElementVertices(const std::unordered_map<int, VerticesData<VertexWithTextureId>>& freeElements)
+void GLRenderer::BindFreeElementVertices(const std::unordered_map<int, VerticesData<FreeElementVertex>>& freeElements)
 {
     for (const auto& [elementId, vertices] : freeElements)
     {
@@ -390,7 +403,7 @@ void GLRenderer::BindFreeElementVertices(const std::unordered_map<int, VerticesD
 }
 
 void GLRenderer::BindFreeElementInstances(
-    const std::unordered_map<int, std::vector<FreeElementInstance>> updatedFreeElementInstances)
+    const std::unordered_map<int, std::vector<FreeElementInstance>>& updatedFreeElementInstances)
 {
     if (freeElementInstances == updatedFreeElementInstances)
     {
@@ -398,7 +411,7 @@ void GLRenderer::BindFreeElementInstances(
         return;
     }
 
-    // first make current (probably only necessary while SDL version is running
+    // first make current (probably only necessary while legacy renderer is running)
     SDL_GL_MakeCurrent(glWindow, glContext);
 
     // delete any buffers for element types which now no longer exist
@@ -433,8 +446,8 @@ void GLRenderer::BindFreeElementInstances(
             }
             sg_buffer_desc instance_buf_desc = {
                 .type = SG_BUFFERTYPE_VERTEXBUFFER,
-                .usage = SG_USAGE_DYNAMIC,
                 .size = instances.size() * sizeof(FreeElementInstance),
+                .usage = SG_USAGE_DYNAMIC,
                 .label = "free_element-instances",
             };
             state.free_element_bindings[elementId].vertex_buffers[1] = sg_make_buffer(&instance_buf_desc);
