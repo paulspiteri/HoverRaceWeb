@@ -160,8 +160,9 @@ void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
       }
    }
 
-   if (mGLRenderer)
+   if (mGLRenderer != nullptr)
    {
+      mGLRenderer->MakeGLContextCurrent();
       auto freeElementInstances = mGLLevelLoader->GetFreeElementInstances(mCurrentSession->GetCurrentLevel());
       mGLRenderer->BindFreeElementInstances(freeElementInstances);
       mGLRenderer->Render();

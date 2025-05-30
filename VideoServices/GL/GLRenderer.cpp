@@ -194,7 +194,6 @@ void GLRenderer::Render() const
         .swapchain = state.swapchain
     };
 
-    SDL_GL_MakeCurrent(glWindow, glContext);
     sg_begin_pass(&pass);
 
     sg_apply_pipeline(state.bkg_pipeline);
@@ -411,9 +410,6 @@ void GLRenderer::BindFreeElementInstances(
         return;
     }
 
-    // first make current (probably only necessary while legacy renderer is running)
-    SDL_GL_MakeCurrent(glWindow, glContext);
-
     // delete any buffers for element types which now no longer exist
     for (const auto& [elementId, instances] : freeElementInstances)
     {
@@ -529,6 +525,11 @@ void GLRenderer::BindBackgroundTexture(const MR_UInt8* backImage)
 
     state.bkg_bindings.images[0] = bkg_texture;
     delete[] rgbaBackImg; // todo
+}
+
+void GLRenderer::MakeGLContextCurrent() const
+{
+    SDL_GL_MakeCurrent(glWindow, glContext);
 }
 
 uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)

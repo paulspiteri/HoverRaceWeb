@@ -154,5 +154,6 @@ public:
     void BindFreeElementTextures();
     void BindBackgroundVertices(const VerticesData<Vertex>& vertices);
     void BindBackgroundTexture(const MR_UInt8* backImage);
+    void MakeGLContextCurrent() const;
     void Render() const;
 };
