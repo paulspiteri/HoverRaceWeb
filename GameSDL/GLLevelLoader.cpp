@@ -211,8 +211,11 @@ void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId)
                 delete neighborRoomShape;
             }
         }
-        waterLevel = std::max(roomShape->ZMin(), waterLevel-250);
-        LoadWater(roomShape.get(), surfaceElement, waterLevel);
+        if (waterLevel > roomShape->ZMin())
+        {
+            waterLevel -= (waterLevel - roomShape->ZMin()) / 4;
+            LoadWater(roomShape.get(), surfaceElement, waterLevel);
+        }
     }
     LoadFloor(roomShape.get(), surfaceElement);
 }
