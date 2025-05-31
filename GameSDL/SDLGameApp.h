@@ -22,23 +22,6 @@ class MR_SDLGameApp
 
       int                      mClrScrTodo;
 
-      // Keyboard configuration
-      int mMotorOn1;
-      int mRight1;
-      int mLeft1;
-      int mJump1;
-      int mFire1;
-      int mBreak1;
-      int mWeapon1;
-
-      int mMotorOn2;
-      int mRight2;
-      int mLeft2;
-      int mJump2;
-      int mFire2;
-      int mBreak2;
-      int mWeapon2;
-
       double mGamma;
       double mContrast;
       double mBrightness;
@@ -47,7 +30,7 @@ class MR_SDLGameApp
 
    public:
 
-      MR_SDLGameApp(SDL_Texture* texture, SDL_Window* glWindow, SDL_GLContext glContext);
+      MR_SDLGameApp(SDL_Window* glWindow, SDL_GLContext glContext);
       ~MR_SDLGameApp();
 
       void Clean();

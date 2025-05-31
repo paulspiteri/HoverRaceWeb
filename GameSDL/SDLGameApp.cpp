@@ -15,7 +15,7 @@ static BOOL         gKeyFilled        = TRUE;   // disabled demo mode
 MR_SDLGameApp* MR_SDLGameApp::This;
 
 
-MR_SDLGameApp::MR_SDLGameApp(SDL_Texture* texture, SDL_Window* glWindow, SDL_GLContext glContext)
+MR_SDLGameApp::MR_SDLGameApp(SDL_Window* glWindow, SDL_GLContext glContext)
 {
    This             = this;
    mVideoBuffer     = NULL;
@@ -26,24 +26,6 @@ MR_SDLGameApp::MR_SDLGameApp(SDL_Texture* texture, SDL_Window* glWindow, SDL_GLC
    mGLRenderer = nullptr;
    mGLLevelLoader = nullptr;
    mClrScrTodo = 2;
-
-   // Built-in defaults
-   // Controls
-   mMotorOn1   = 1;
-   mRight1     = 5;
-   mLeft1      = 6;
-   mJump1      = 3;
-   mFire1      = 2;
-   mBreak1     = 4;
-   mWeapon1    = 11;
-
-   mMotorOn2   = 38;
-   mRight2     = 18;
-   mLeft2      = 31;
-   mJump2      = 17;
-   mFire2      = 13;
-   mBreak2     = 16;
-   mWeapon2    = 29;
 
    // Screen
    mGamma       = 1.2;

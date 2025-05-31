@@ -100,7 +100,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     SDL_GL_SetSwapInterval(1); // VSync
     SDL_GL_MakeCurrent(glWindow, glContext);
 
-    game = new MR_SDLGameApp(texture, glWindow, glContext);
+    game = new MR_SDLGameApp(glWindow, glContext);
     game->InitGame();
     std::cout << "Init Game completed" << std::endl;
 

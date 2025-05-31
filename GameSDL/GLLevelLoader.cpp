@@ -54,7 +54,7 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
             auto actorPosition = lElement->mPosition;
             auto position = SwapYZ(glm::ivec3(actorPosition.mX, actorPosition.mY, actorPosition.mZ));
             const MR_ResActor* actor = nullptr;
-            int sequence = 0, frame = 0;
+            int type = 0, orientation = 0, sequence = 0, frame = 0;
             if (lElement->mId.mDllId == MR_MAIN_CHARACTER_DLL_ID && lElement->mId.mClassId == MR_MAIN_CHARACTER_CLASS_ID)
             {
                 auto mainCharacter = static_cast<MR_MainCharacter*>(lElement);
@@ -66,6 +66,8 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
                 }
                 auto hoverModelId = mainCharacter->GetHoverModel();
                 actor = hoverRenderer->GetActor(hoverModelId);
+                type = actor->GetResourceId();
+                orientation = mainCharacter->GetCabinOrientation();
                 bool isMotorOn =  mainCharacter->GetMotorDisplay() > 0;
                 sequence = isMotorOn ? 1 : 0;
                 if(isMotorOn)
@@ -79,15 +81,14 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
                 if (freeElementBase != nullptr)
                 {
                     actor = freeElementBase->GetActor();
+                    type = actor->GetResourceId();
+                    orientation = type == MR_PWRUP ? 0 : lElement->mOrientation;    // orientation for powerups implemented in the shader to avoid unnecessary vertex updates
                     sequence = freeElementBase->GetCurrentSequence();
                     frame = freeElementBase->GetCurrentFrame();
                 }
             }
-
             if (actor != nullptr)
             {
-                auto type = actor->GetResourceId();
-                auto orientation = type == MR_PWRUP ? 0 : lElement->mOrientation;    // orientation for powerups implemented in the shader to avoid unncessary vertex updates
                 FreeElementInstance instance = {
                     .position = position, .type = type, .orientation = orientation, .sequence = sequence, .frame = frame
                 };
