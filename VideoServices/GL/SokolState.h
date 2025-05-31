@@ -5,6 +5,7 @@
 #include "sokol_gfx.h"
 #include "shaders/background.h"
 #include "shaders/world.h"
+#include "shaders/water.h"
 #include "shaders/wall.h"
 #include "shaders/free_element.h"
 
@@ -24,6 +25,11 @@ struct Sokol_State {
     WorldUniforms_t world_uniforms;
     sg_bindings world_bindings;
     int world_count;
+
+    sg_pipeline water_pipeline;
+    WaterUniforms_t water_uniforms;
+    sg_bindings water_bindings;
+    int water_count;
 
     sg_pipeline wall_pipeline;
     WallUniforms_t wall_uniforms;

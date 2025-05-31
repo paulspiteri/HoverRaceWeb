@@ -70,6 +70,26 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     world_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
     state.world_pipeline = sg_make_pipeline(&world_pipeline_desc);
 
+    const sg_shader_desc* water_shdr_desc = world_shader_desc(sg_query_backend());
+    sg_shader water_shader = sg_make_shader(water_shdr_desc);
+    sg_pipeline_desc water_pipeline_desc = {};
+    water_pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
+    water_pipeline_desc.shader = water_shader;
+    water_pipeline_desc.sample_count = 16;
+    water_pipeline_desc.label = "water-pipeline";
+    water_pipeline_desc.layout.attrs[ATTR_water_position].format = SG_VERTEXFORMAT_INT3;
+    water_pipeline_desc.layout.attrs[ATTR_water_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
+    water_pipeline_desc.layout.attrs[ATTR_water_textureIdx].format = SG_VERTEXFORMAT_INT;
+    water_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
+    water_pipeline_desc.depth.write_enabled = true;
+    water_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
+    water_pipeline_desc.colors[0].blend.enabled = true;
+    water_pipeline_desc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA;
+    water_pipeline_desc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+    water_pipeline_desc.colors[0].blend.src_factor_alpha = SG_BLENDFACTOR_ONE;
+    water_pipeline_desc.colors[0].blend.dst_factor_alpha = SG_BLENDFACTOR_ZERO;
+    state.water_pipeline = sg_make_pipeline(&water_pipeline_desc);
+
     const sg_shader_desc* wall_shdr_desc = wall_shader_desc(sg_query_backend());
     sg_shader wall_shader = sg_make_shader(wall_shdr_desc);
     sg_pipeline_desc wall_pipeline_desc = {};
@@ -137,6 +157,7 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     wrap_sampler_desc.wrap_v = SG_WRAP_REPEAT;
     state.wrap_sampler = sg_make_sampler(&wrap_sampler_desc);
     state.world_bindings.samplers[0] = state.wrap_sampler;
+    state.water_bindings.samplers[0] = state.wrap_sampler;
     state.wall_bindings.samplers[0] = state.wrap_sampler;
 
     sg_sampler_desc edge_sampler_desc = {};
@@ -178,10 +199,13 @@ GLRenderer::~GLRenderer()
     sg_destroy_buffer(state.wall_bindings.index_buffer);
     sg_destroy_buffer(state.world_bindings.vertex_buffers[0]);
     sg_destroy_buffer(state.world_bindings.index_buffer);
+    sg_destroy_buffer(state.water_bindings.vertex_buffers[0]);
+    sg_destroy_buffer(state.water_bindings.index_buffer);
     sg_destroy_image(state.world_bindings.images[0]);
     sg_destroy_sampler(state.world_bindings.samplers[0]);
     sg_destroy_pipeline(state.free_element_pipeline);
     sg_destroy_pipeline(state.world_pipeline);
+    sg_destroy_pipeline(state.water_pipeline);
     sg_destroy_pipeline(state.wall_pipeline);
 
     sg_shutdown();
@@ -228,6 +252,13 @@ void GLRenderer::Render() const
             sg_draw(0, freeElementVertexCount, freeElementInstanceCount);
         }
     }
+
+    // water should be last as it has alpha
+    sg_apply_pipeline(state.water_pipeline);
+    sg_apply_uniforms(0, SG_RANGE(state.water_uniforms));
+    sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
+    sg_apply_bindings(&state.water_bindings);
+    sg_draw(0, state.water_count, 1);
 
     sg_end_pass();
     sg_commit();
@@ -335,6 +366,7 @@ void GLRenderer::BindWorldTextures()
 {
     auto [atlas_texture, atlas_coords] = BindTexturesInternal(textures);
     state.world_bindings.images[0] = atlas_texture;
+    state.water_bindings.images[0] = atlas_texture;
     state.wall_bindings.images[0] = atlas_texture;
     state.world_atlas_coords = atlas_coords;
 }
@@ -357,6 +389,26 @@ void GLRenderer::BindWorldVertices(const VerticesData<VertexWithTextureId>& vert
     state.world_bindings.index_buffer = sg_make_buffer(&index_buf_desc);
 
     state.world_count = static_cast<uint32_t>(vertices.indices.size());
+}
+
+void GLRenderer::BindWaterVertices(const VerticesData<VertexWithTextureId>& vertices)
+{
+    sg_buffer_desc buf_desc = {
+        .type = SG_BUFFERTYPE_VERTEXBUFFER,
+        .usage = SG_USAGE_IMMUTABLE,
+        .data = make_sg_range(vertices.vertices),
+        .label = "water-vertices"
+    };
+    state.water_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
+
+    sg_buffer_desc index_buf_desc = {
+        .type = SG_BUFFERTYPE_INDEXBUFFER,
+        .data = make_sg_range(vertices.indices),
+        .label = "water-indices"
+    };
+    state.water_bindings.index_buffer = sg_make_buffer(&index_buf_desc);
+
+    state.water_count = static_cast<uint32_t>(vertices.indices.size());
 }
 
 void GLRenderer::BindWallVertices(const VerticesData<WallVertex>& vertices)
@@ -455,7 +507,7 @@ void GLRenderer::BindFreeElementInstances(
 }
 
 unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id,
-                                              const MR_ResBitmap* bitmap)
+                                              const MR_ResBitmap* bitmap, u_int8_t alpha)
 {
     auto it = std::ranges::find_if(collection, [=](const auto& t) { return t.id == id; });
     if (it == collection.end())
@@ -464,16 +516,16 @@ unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData>& collecti
         textureData.id = id;
         textureData.width = bitmap->GetMaxXRes();
         textureData.height = bitmap->GetMaxYRes();
-        textureData.pixels = ConvertTextureToRGBA8(bitmap);
+        textureData.pixels = ConvertTextureToRGBA8(bitmap, alpha);
         collection.push_back(textureData);
         return collection.size() - 1;
     }
     return std::distance(collection.begin(), it);
 }
 
-unsigned long GLRenderer::LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap)
+unsigned long GLRenderer::LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap, u_int8_t alpha)
 {
-    return LoadTextureInternal(textures, id, bitmap);
+    return LoadTextureInternal(textures, id, bitmap, alpha);
 }
 
 unsigned long GLRenderer::LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitmap* bitmap)
@@ -532,7 +584,7 @@ void GLRenderer::MakeGLContextCurrent() const
     SDL_GL_MakeCurrent(glWindow, glContext);
 }
 
-uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
+uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, u_int8_t alpha)
 {
     auto palette = videoBuffer->GetPalette();
     int width = bitmap->GetMaxXRes();
@@ -550,7 +602,7 @@ uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap)
             int pixelIdx = y * width + x;
             MR_UInt8 pixelColorPaletteIdx = lSrc[pixelIdx];
             NoMFC::PALETTEENTRY& paletteEntry = palette[pixelColorPaletteIdx];
-            uint32_t color = (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
+            uint32_t color =  (alpha << 24) | (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
 
             // textures appear to be rotated 90 degrees, which this code corrects
             int rotated_x = y;

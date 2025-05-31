@@ -34,6 +34,7 @@ void GLLevelLoader::LoadLevel(const MR_Level* level, const MR_UInt8* backImage)
     LoadBackground(backImage);
     glRenderer->BindBackgroundVertices(bkgVerts);
     glRenderer->BindWorldVertices(worldVerts);
+    glRenderer->BindWaterVertices(waterVerts);
     glRenderer->BindWallVertices(wallVerts);
     glRenderer->BindWorldTextures();
     glRenderer->BindFreeElementVertices(LoadGameFreeElements());
@@ -210,7 +211,8 @@ void GLLevelLoader::LoadRoomFloor(const MR_Level* level, int roomId)
                 delete neighborRoomShape;
             }
         }
-        //LoadWater(roomShape, surfaceElement, waterLevel);
+        waterLevel = std::max(roomShape->ZMin(), waterLevel-250);
+        LoadWater(roomShape.get(), surfaceElement, waterLevel);
     }
     LoadFloor(roomShape.get(), surfaceElement);
 }
@@ -298,27 +300,28 @@ void GLLevelLoader::LoadFloor(MR_PolygonShape* shape, MR_SurfaceElement* surface
     }
 }
 
-void GLLevelLoader::LoadWater(MR_PolygonShape* shape, MR_SurfaceElement* surfaceElement, MR_Int32 level)
+void GLLevelLoader::LoadWater(MR_PolygonShape* shape, MR_SurfaceElement* surfaceElement, MR_Int32 waterLevel)
 {
     auto bitmap = surfaceElement->GetResBitmap();
     auto lNbVertex = shape->VertexCount();
-    auto baseIndex = worldVerts.vertices.size();
-    auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+    auto baseIndex = waterVerts.vertices.size();
+    int textureId = surfaceElement->mId.mClassId | 0x40000000; // turn on high bit for alpha copy
+    auto textureAtlasId = glRenderer->LoadTexture(textureId, bitmap, 0x80);
 
     for (auto i = 0; i < lNbVertex; i++)
     {
         float u = shape->X(i) / static_cast<float>(bitmap->GetWidth());
         float v = shape->Y(i) / static_cast<float>(bitmap->GetHeight());
-        worldVerts.vertices.push_back(
-            SwapYZ(makeVertexWithTextureId(shape->X(i), shape->Y(i), level, u, v, textureAtlasId)));
+        waterVerts.vertices.push_back(
+            SwapYZ(makeVertexWithTextureId(shape->X(i), shape->Y(i), waterLevel, u, v, textureAtlasId)));
     }
 
     // Triangulate using fan
     for (auto j = 1; j < lNbVertex - 1; ++j)
     {
-        worldVerts.indices.push_back(baseIndex);
-        worldVerts.indices.push_back(baseIndex + j + 0);
-        worldVerts.indices.push_back(baseIndex + j + 1);
+        waterVerts.indices.push_back(baseIndex);
+        waterVerts.indices.push_back(baseIndex + j + 0);
+        waterVerts.indices.push_back(baseIndex + j + 1);
     }
 }
 
