@@ -8,9 +8,7 @@
 #include <optional>
 #include <filesystem>
 
-#include "imgui.h"
-#include "imgui_impl_sdl3.h"
-#include "imgui_impl_opengl3.h"
+#include "backends/imgui_impl_sdl3.h"
 
 SDL_Window *sdlWindow = nullptr;
 SDL_Renderer *renderer = nullptr;
@@ -104,22 +102,20 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     SDL_GL_SetSwapInterval(1); // VSync
     SDL_GL_MakeCurrent(glWindow, glContext);
 
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui_ImplSDL3_InitForOpenGL(glWindow, glContext);
-    ImGui_ImplOpenGL3_Init("#version 130"); // or your GLSL version
-
-
     game = new MR_SDLGameApp(glWindow, glContext);
     game->InitGame();
     std::cout << "Init Game completed" << std::endl;
 
     auto track = GetTrack();
-    if (track.has_value()) {
-        game->LoadSelectedTrack(track.value().c_str());
-        return SDL_APP_CONTINUE;
+    if (!track.has_value())
+    {
+        return SDL_APP_FAILURE;
     }
-    return SDL_APP_FAILURE;
+
+    game->LoadSelectedTrack(track.value().c_str());
+    ImGui_ImplSDL3_InitForOther(glWindow);
+    return SDL_APP_CONTINUE;
+
 }
 
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
@@ -229,10 +225,6 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(sdlWindow);
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
 
     SDL_GL_DestroyContext(glContext);
     SDL_DestroyWindow(glWindow);

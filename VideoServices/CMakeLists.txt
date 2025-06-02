@@ -11,8 +11,9 @@ add_library(VideoServices STATIC
     VideoBuffer.cpp          
     VideoBuffer2DDraw.cpp
     GL/GLRenderer.cpp
-        GL/GLViewport.cpp
-        GL/GLViewport.h
+    GL/GLViewport.cpp
+    GL/GLViewport.h
+    GL/sokol_impl.cpp
 )
 
 target_compile_definitions(VideoServices PRIVATE
@@ -25,5 +26,5 @@ if(NOT EMSCRIPTEN)
 endif()
 
 
-target_link_libraries(VideoServices PRIVATE ColorTools Util SDL3::SDL3-static glm::glm sokol
+target_link_libraries(VideoServices PRIVATE ColorTools Util SDL3::SDL3-static glm::glm sokol imgui
 )

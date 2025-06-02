@@ -44,6 +44,9 @@ struct Sokol_State {
 
     std::array<glm::vec4, 32> world_atlas_coords;
     std::array<glm::vec4, 32> free_element_atlas_coords;
+    std::array<glm::vec4, 32> sprite_atlas_coords;
+
+    sg_image sprites_image;
 };
 
 template<typename T>

@@ -39,6 +39,8 @@ void GLLevelLoader::LoadLevel(const MR_Level* level, const MR_UInt8* backImage)
     glRenderer->BindWorldTextures();
     glRenderer->BindFreeElementVertices(LoadGameFreeElements());
     glRenderer->BindFreeElementTextures();
+    LoadGameSprites();
+    glRenderer->BindSpriteTextures();
 }
 
 std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFreeElementInstances(
@@ -56,7 +58,8 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
             auto position = SwapYZ(glm::ivec3(actorPosition.mX, actorPosition.mY, actorPosition.mZ));
             const MR_ResActor* actor = nullptr;
             int type = 0, orientation = 0, sequence = 0, frame = 0;
-            if (lElement->mId.mDllId == MR_MAIN_CHARACTER_DLL_ID && lElement->mId.mClassId == MR_MAIN_CHARACTER_CLASS_ID)
+            if (lElement->mId.mDllId == MR_MAIN_CHARACTER_DLL_ID && lElement->mId.mClassId ==
+                MR_MAIN_CHARACTER_CLASS_ID)
             {
                 auto mainCharacter = static_cast<MR_MainCharacter*>(lElement);
                 auto mainCharacterRenderer = mainCharacter->GetRenderer();
@@ -69,11 +72,11 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
                 actor = hoverRenderer->GetActor(hoverModelId);
                 type = actor->GetResourceId();
                 orientation = mainCharacter->GetCabinOrientation();
-                bool isMotorOn =  mainCharacter->GetMotorDisplay() > 0;
+                bool isMotorOn = mainCharacter->GetMotorDisplay() > 0;
                 sequence = isMotorOn ? 1 : 0;
-                if(isMotorOn)
+                if (isMotorOn)
                 {
-                    frame = hoverRenderer->GetFrame();  // note - is dependent on legacy renderer running
+                    frame = hoverRenderer->GetFrame(); // note - is dependent on legacy renderer running
                 }
             }
             else
@@ -83,7 +86,8 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
                 {
                     actor = freeElementBase->GetActor();
                     type = actor->GetResourceId();
-                    orientation = type == MR_PWRUP ? 0 : lElement->mOrientation;    // orientation for powerups implemented in the shader to avoid unnecessary vertex updates
+                    orientation = type == MR_PWRUP ? 0 : lElement->mOrientation;
+                    // orientation for powerups implemented in the shader to avoid unnecessary vertex updates
                     sequence = freeElementBase->GetCurrentSequence();
                     frame = freeElementBase->GetCurrentFrame();
                 }
@@ -553,7 +557,7 @@ std::unordered_map<int, VerticesData<FreeElementVertex>> GLLevelLoader::LoadGame
     auto mine = gObjectFactoryData->mResourceLib.GetActor(MR_MINE);
     auto bumperGate = gObjectFactoryData->mResourceLib.GetActor(MR_BUMPERGATE);
     auto missile = gObjectFactoryData->mResourceLib.GetActor(MR_MISSILE);
-    std::array actors = { electroCar, hitechCar, biturboCar, powerUp, mine, bumperGate, missile};
+    std::array actors = {electroCar, hitechCar, biturboCar, powerUp, mine, bumperGate, missile};
 
     for (auto actor : actors)
     {
@@ -620,4 +624,17 @@ std::unordered_map<int, VerticesData<FreeElementVertex>> GLLevelLoader::LoadGame
         result[actor->GetResourceId()] = verts;
     }
     return result;
+}
+
+void GLLevelLoader::LoadGameSprites()
+{
+    const MR_ResSprite* missileSprite = gObjectFactoryData->mResourceLib.GetSprite(MR_MISSILE_STAT);
+    const MR_ResSprite* mineSprite = gObjectFactoryData->mResourceLib.GetSprite(MR_MINE_STAT);
+    const MR_ResSprite* powerUpSprite = gObjectFactoryData->mResourceLib.GetSprite(MR_PWRUP_STAT);
+    std::array sprites = { missileSprite, mineSprite, powerUpSprite };
+
+    for (auto sprite : sprites)
+    {
+        glRenderer->LoadSprite(sprite->GetResourceId(), sprite);
+    }
 }

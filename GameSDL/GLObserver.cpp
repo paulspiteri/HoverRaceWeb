@@ -1,7 +1,8 @@
 #include "Observer.h"
 #include "imgui.h"
-#include "imgui_impl_sdl3.h"
-#include "imgui_impl_opengl3.h"
+#define SOKOL_IMGUI_NO_SOKOL_APP
+
+#include "util/sokol_imgui.h"
 
 void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime)
 {
@@ -35,12 +36,14 @@ void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_Sim
     mGLView.SetSimulationTime(pTime);
 }
 
-void MR_Observer::RenderGLHUD(const MR_MainCharacter* pViewingCharacter)
+void MR_Observer::RenderGLHUD(const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime)
 {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplSDL3_NewFrame();
-    ImGui::NewFrame();
+    RenderGLHUDBars(pViewingCharacter);
+    RenderGLHUDWeapon(pViewingCharacter, pTime);
+}
 
+void MR_Observer::RenderGLHUDBars(const MR_MainCharacter* pViewingCharacter)
+{
     ImDrawList* draw_list = ImGui::GetForegroundDrawList();
     ImGuiIO& io = ImGui::GetIO();
     float screenWidth = io.DisplaySize.x;
@@ -69,15 +72,63 @@ void MR_Observer::RenderGLHUD(const MR_MainCharacter* pViewingCharacter)
     ImVec2 dir_bar_end = ImVec2(lSpeedMeterLen, lYMargin + lMeterHeight + lMeterHeight);
     draw_list->AddRectFilled(dir_bar_start, dir_bar_end, IM_COL32(193, 202, 231, 0xFF));
     draw_list->AddRectFilled(dir_bar_start, ImVec2(dir_bar_start.x + std::abs(lDirSpeedLen), dir_bar_end.y),
-        lDirSpeedLen > 0 ? IM_COL32(84, 115, 207, 0xFF) :  IM_COL32(204, 21, 77, 0xFF));
+                             lDirSpeedLen > 0 ? IM_COL32(84, 115, 207, 0xFF) : IM_COL32(204, 21, 77, 0xFF));
 
     // fuel
     ImVec2 fuel_bar_start = ImVec2(screenWidth - lXMargin - lFuelMeterLen, lYMargin);
     ImVec2 fuel_bar_end = ImVec2(screenWidth - lXMargin, lYMargin + lMeterHeight + lMeterHeight);
     draw_list->AddRectFilled(fuel_bar_start, fuel_bar_end, IM_COL32(193, 202, 231, 0xFF));
-    draw_list->AddRectFilled(fuel_bar_start, ImVec2(fuel_bar_start.x + lFuelLen, dir_bar_end.y), IM_COL32(84, 115, 207, 0xFF));
+    draw_list->AddRectFilled(fuel_bar_start, ImVec2(fuel_bar_start.x + lFuelLen, dir_bar_end.y),
+                             IM_COL32(84, 115, 207, 0xFF));
+}
 
+void MR_Observer::RenderGLHUDWeapon(const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime)
+{
+    ImDrawList* draw_list = ImGui::GetForegroundDrawList();
+    ImGuiIO& io = ImGui::GetIO();
+    float screenWidth = io.DisplaySize.x;
+    float screenHeight = io.DisplaySize.y;
 
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    MR_SpriteHandle* lWeaponSprite = nullptr;
+    int lWeaponSpriteIndex = 0;
+
+    if (pViewingCharacter->GetCurrentWeapon() == MR_MainCharacter::eMissile)
+    {
+        lWeaponSprite = mMissileLevel;
+        lWeaponSpriteIndex = pViewingCharacter->GetMissileRefillLevel(mMissileLevel->GetSprite()->GetNbItem());
+    }
+    else if (pViewingCharacter->GetCurrentWeapon() == MR_MainCharacter::eMine)
+    {
+        lWeaponSprite = mMineDisp;
+        lWeaponSpriteIndex = pViewingCharacter->GetMineCount();
+
+        if (lWeaponSpriteIndex > 0)
+        {
+            lWeaponSpriteIndex = ((lWeaponSpriteIndex - 1) * 2) + 1;
+            if ((pTime >> 9) & 1)
+            {
+                lWeaponSpriteIndex++;
+            }
+        }
+    }
+    else if (pViewingCharacter->GetCurrentWeapon() == MR_MainCharacter::ePowerUp)
+    {
+        lWeaponSprite = mPowerUpDisp;
+        lWeaponSpriteIndex = pViewingCharacter->GetPowerUpFraction(4);
+        if (lWeaponSpriteIndex == 0)
+        {
+            lWeaponSpriteIndex = pViewingCharacter->GetPowerUpCount();
+        }
+        else
+        {
+            lWeaponSpriteIndex = 9 - lWeaponSpriteIndex;
+        }
+    }
+
+    if (lWeaponSprite != nullptr)
+    {
+        float lMissileScaling = 1 + (310 / screenWidth);
+        auto sprite = lWeaponSprite->GetSprite();
+        //   draw_list->AddImage(nullptr, )
+    }
 }

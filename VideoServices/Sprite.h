@@ -67,6 +67,7 @@ class MR_DllDeclare MR_Sprite
 
       void Serialize( NoMFC::CArchive& pArchive );
 
+      MR_UInt8* GetData()const { return mData; }
 };
 
 

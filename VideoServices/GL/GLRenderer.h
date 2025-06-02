@@ -4,6 +4,7 @@
 
 #include "Camera.h"
 #include "SokolState.h"
+#include "../Sprite.h"
 #include "SDL3/SDL.h"
 #include "../../ObjFacTools/ResBitmap.h"
 #include "../VideoBuffer.h"
@@ -128,11 +129,13 @@ class GLRenderer
 {
     std::vector<TextureData> textures;
     std::vector<TextureData> free_element_textures;
+    std::vector<TextureData> sprites;
     std::unordered_map<int, std::vector<FreeElementInstance>> freeElementInstances;
     MR_VideoBuffer* videoBuffer;
 
     uint32_t* ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, u_int8_t alpha = 0xFF);
     uint32_t* ConvertBackgroundToRGBA8(const MR_UInt8* backImage);
+    uint32_t* ConvertSpriteToRGBA8(const MR_Sprite* sprite);
     unsigned long LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap, u_int8_t alpha = 0xFF);
     std::tuple<sg_image, std::array<glm::vec4, 32>> BindTexturesInternal(std::vector<TextureData>& collection);
 
@@ -152,9 +155,14 @@ public:
     void BindFreeElementInstances(const std::unordered_map<int, std::vector<FreeElementInstance>>& updatedFreeElementInstances);
     unsigned long LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap, u_int8_t alpha = 0xFF);
     unsigned long LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
+    unsigned long LoadSprite(MR_UInt32 id, const MR_Sprite* sprite);
     void BindFreeElementTextures();
+    void BindSpriteTextures();
     void BindBackgroundVertices(const VerticesData<Vertex>& vertices);
     void BindBackgroundTexture(const MR_UInt8* backImage);
     void MakeGLContextCurrent() const;
-    void Render() const;
+    void BeginRender() const;
+    void EndRender() const;
+    void BeginImguiFrame() const;
+    void EndImguiFrame() const;
 };

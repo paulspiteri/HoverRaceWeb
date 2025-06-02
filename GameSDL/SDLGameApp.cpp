@@ -147,10 +147,13 @@ void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
 
       auto freeElementInstances = mGLLevelLoader->GetFreeElementInstances(mCurrentSession->GetCurrentLevel());
       mGLRenderer->BindFreeElementInstances(freeElementInstances);
-      mGLRenderer->Render();
+      mGLRenderer->BeginRender();
 
-      mObserver1->RenderGLHUD(mCurrentSession->GetMainCharacter());
+      mGLRenderer->BeginImguiFrame();
+      mObserver1->RenderGLHUD(mCurrentSession->GetMainCharacter(), mCurrentSession->GetSimulationTime());
+      mGLRenderer->EndImguiFrame();
 
+      mGLRenderer->EndRender();
       SDL_GL_SwapWindow(mGLWindow);
    }
 

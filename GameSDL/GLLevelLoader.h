@@ -28,6 +28,7 @@ private:
     void AddRegularWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, int textureAtlasId, float bitmapWidth, float bitmapHeight, std::optional<int> maxHeight);
     void AddAnimatedWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, int textureAtlasId, float bitmapWidth, float bitmapHeight, std::optional<int> maxHeight, int rotationSpeed, int rotationLength);
     std::unordered_map<int, VerticesData<FreeElementVertex>> LoadGameFreeElements();
+    void LoadGameSprites();
 
     VerticesData<Vertex> bkgVerts;
     VerticesData<VertexWithTextureId> worldVerts;

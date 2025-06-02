@@ -1,7 +1,6 @@
 #include "GLRenderer.h"
 #include <cstring>
 
-#include "sokol_gfx.h"
 #include "SDL3/SDL_video.h"
 
 #define STB_RECT_PACK_IMPLEMENTATION
@@ -10,17 +9,12 @@
 #include "stb_rect_pack.h"
 #include "../3DViewport.h"
 
-#define SOKOL_DEBUG
-#ifdef __EMSCRIPTEN__
-    #define SOKOL_GLES3
-#else
-#define SOKOL_GLCORE
-#endif
-
-#define SOKOL_LOG_IMPL
 #include "sokol_log.h"
-#define SOKOL_GFX_IMPL
-#include "sokol_gfx.h"
+#include "imgui.h"
+#define SOKOL_IMGUI_NO_SOKOL_APP
+#include <chrono>
+
+#include "util/sokol_imgui.h"
 
 GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer)
     : glWindow(glWindow), glContext(glContext), videoBuffer(videoBuffer)
@@ -175,10 +169,16 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
         .color_format = SG_PIXELFORMAT_RGBA8,
         .depth_format = SG_PIXELFORMAT_DEPTH,
     };
+
+    simgui_desc_t simgui_desc = {};
+    simgui_setup(&simgui_desc);
 }
 
 GLRenderer::~GLRenderer()
 {
+    simgui_shutdown();
+    ImGui::DestroyContext();
+
     sg_destroy_buffer(state.bkg_bindings.vertex_buffers[0]);
     sg_destroy_buffer(state.bkg_bindings.index_buffer);
     sg_destroy_image(state.bkg_bindings.images[0]);
@@ -211,7 +211,7 @@ GLRenderer::~GLRenderer()
     sg_shutdown();
 }
 
-void GLRenderer::Render() const
+void GLRenderer::BeginRender() const
 {
     sg_pass pass = {
         .action = state.pass_action,
@@ -259,9 +259,33 @@ void GLRenderer::Render() const
     sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
     sg_apply_bindings(&state.water_bindings);
     sg_draw(0, state.water_count, 1);
+}
 
+void GLRenderer::EndRender() const
+{
     sg_end_pass();
     sg_commit();
+}
+
+void GLRenderer::BeginImguiFrame() const
+{
+    static auto last_time = std::chrono::high_resolution_clock::now();
+    auto current_time = std::chrono::high_resolution_clock::now();
+    float actual_delta = std::chrono::duration<float>(current_time - last_time).count();
+    last_time = current_time;
+
+    simgui_frame_desc_t frame_desc = {
+        .width = state.swapchain.width,
+        .height = state.swapchain.height,
+        .delta_time = actual_delta,
+        .dpi_scale = 1.0f
+    };
+    simgui_new_frame(&frame_desc);
+}
+
+void GLRenderer::EndImguiFrame() const
+{
+    simgui_render();
 }
 
 std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal(std::vector<TextureData>& collection)
@@ -532,6 +556,22 @@ unsigned long GLRenderer::LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitma
     return LoadTextureInternal(free_element_textures, id, bitmap);
 }
 
+unsigned long GLRenderer::LoadSprite(MR_UInt32 id, const MR_Sprite* sprite)
+{
+    auto it = std::ranges::find_if(sprites, [=](const auto& t) { return t.id == id; });
+    if (it == sprites.end())
+    {
+        TextureData textureData = {};
+        textureData.id = id;
+        textureData.width = sprite->GetItemWidth(),
+        textureData.height = sprite->GetItemHeight();
+        textureData.pixels = ConvertSpriteToRGBA8(sprite);
+        sprites.push_back(textureData);
+        return sprites.size() - 1;
+    }
+    return std::distance(sprites.begin(), it);
+}
+
 void GLRenderer::BindFreeElementTextures()
 {
     auto [atlas_texture, atlas_coords] = BindTexturesInternal(free_element_textures);
@@ -540,6 +580,13 @@ void GLRenderer::BindFreeElementTextures()
         binding.images[0] = atlas_texture;
     }
     state.free_element_atlas_coords = atlas_coords;
+}
+
+void GLRenderer::BindSpriteTextures()
+{
+    auto [atlas_texture, atlas_coords] = BindTexturesInternal(sprites);
+    state.sprites_image = atlas_texture;
+    state.sprite_atlas_coords = atlas_coords;
 }
 
 void GLRenderer::BindBackgroundVertices(const VerticesData<Vertex>& vertices)
@@ -581,6 +628,27 @@ void GLRenderer::BindBackgroundTexture(const MR_UInt8* backImage)
 void GLRenderer::MakeGLContextCurrent() const
 {
     SDL_GL_MakeCurrent(glWindow, glContext);
+}
+
+uint32_t* GLRenderer::ConvertSpriteToRGBA8(const MR_Sprite* sprite)
+{
+    auto palette = videoBuffer->GetPalette();
+    int width = sprite->GetItemWidth();
+    int height = sprite->GetItemHeight();
+    MR_UInt8* lSrc = sprite->GetData();
+    auto lDest = new uint32_t[width * height];
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            int pixelIdx = y * width + x;
+            MR_UInt8 pixelColorPaletteIdx = lSrc[pixelIdx];
+            NoMFC::PALETTEENTRY& paletteEntry = palette[pixelColorPaletteIdx];
+            uint32_t color =  0xFF | (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
+            lDest[pixelIdx] = color;
+        }
+    }
+    return lDest;
 }
 
 uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, u_int8_t alpha)
