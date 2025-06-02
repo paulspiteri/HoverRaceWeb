@@ -262,7 +262,6 @@ void GLRenderer::Render() const
 
     sg_end_pass();
     sg_commit();
-    SDL_GL_SwapWindow(glWindow);
 }
 
 std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal(std::vector<TextureData>& collection)

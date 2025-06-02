@@ -3,7 +3,6 @@
 #include "../VideoServices/ColorPalette.h"
 #include "../MainCharacter/MainCharacter.h"
 #include "../Util/FuzzyLogic.h"
-#include "../Util/Profiler.h"
 #include "../Util/StrRes.h"
 #include "../ObjFac1/ObjFac1.h"
 #include <SDL3/SDL.h>
@@ -145,9 +144,14 @@ void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
    if (mGLRenderer != nullptr)
    {
       mGLRenderer->MakeGLContextCurrent();
+
       auto freeElementInstances = mGLLevelLoader->GetFreeElementInstances(mCurrentSession->GetCurrentLevel());
       mGLRenderer->BindFreeElementInstances(freeElementInstances);
       mGLRenderer->Render();
+
+      mObserver1->RenderGLHUD(mCurrentSession->GetMainCharacter());
+
+      SDL_GL_SwapWindow(mGLWindow);
    }
 
    // Sound refresh

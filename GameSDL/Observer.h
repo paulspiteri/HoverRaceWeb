@@ -115,7 +115,7 @@ class MR_Observer
 
       void PlaySounds( const MR_Level* pLevel, MR_MainCharacter* pViewingCharacter );
 
-
+      void RenderGLHUD(const MR_MainCharacter* pViewingCharacter);
 };
 
 
