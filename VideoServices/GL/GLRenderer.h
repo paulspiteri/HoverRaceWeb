@@ -97,9 +97,6 @@ struct AtlasCoords
 struct TextureData
 {
     MR_UInt32 id;   // high bit for 'b' animation frame
-
-    sg_image img;
-    //   sg_sampler sampler;
     int width;
     int height;
     AtlasCoords atlas_coords;

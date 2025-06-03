@@ -177,7 +177,6 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
 GLRenderer::~GLRenderer()
 {
     simgui_shutdown();
-    ImGui::DestroyContext();
 
     sg_destroy_buffer(state.bkg_bindings.vertex_buffers[0]);
     sg_destroy_buffer(state.bkg_bindings.index_buffer);
@@ -644,7 +643,7 @@ uint32_t* GLRenderer::ConvertSpriteToRGBA8(const MR_Sprite* sprite)
             int pixelIdx = y * width + x;
             MR_UInt8 pixelColorPaletteIdx = lSrc[pixelIdx];
             NoMFC::PALETTEENTRY& paletteEntry = palette[pixelColorPaletteIdx];
-            uint32_t color =  0xFF | (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
+            uint32_t color =  ((pixelColorPaletteIdx == 0 ? 0 : 0xFF) << 24) | (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
             lDest[pixelIdx] = color;
         }
     }

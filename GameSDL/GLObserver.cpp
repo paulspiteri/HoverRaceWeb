@@ -36,10 +36,11 @@ void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_Sim
     mGLView.SetSimulationTime(pTime);
 }
 
-void MR_Observer::RenderGLHUD(const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime)
+void MR_Observer::RenderGLHUD(const GLRenderer* glRenderer, const MR_MainCharacter* pViewingCharacter,
+                              MR_SimulationTime pTime)
 {
     RenderGLHUDBars(pViewingCharacter);
-    RenderGLHUDWeapon(pViewingCharacter, pTime);
+    RenderGLHUDWeapon(glRenderer, pViewingCharacter, pTime);
 }
 
 void MR_Observer::RenderGLHUDBars(const MR_MainCharacter* pViewingCharacter)
@@ -82,7 +83,8 @@ void MR_Observer::RenderGLHUDBars(const MR_MainCharacter* pViewingCharacter)
                              IM_COL32(84, 115, 207, 0xFF));
 }
 
-void MR_Observer::RenderGLHUDWeapon(const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime)
+void MR_Observer::RenderGLHUDWeapon(const GLRenderer* glRenderer, const MR_MainCharacter* pViewingCharacter,
+                                    MR_SimulationTime pTime)
 {
     ImDrawList* draw_list = ImGui::GetForegroundDrawList();
     ImGuiIO& io = ImGui::GetIO();
@@ -127,8 +129,24 @@ void MR_Observer::RenderGLHUDWeapon(const MR_MainCharacter* pViewingCharacter, M
 
     if (lWeaponSprite != nullptr)
     {
+
+
+        ImTextureID texture_id = simgui_imtextureid(glRenderer->state.sprites_image);
+
         float lMissileScaling = 1 + (310 / screenWidth);
+    //    lWeaponSprite->GetSprite()->Blt( lXRes, lYRes/16, &m3DView, MR_Sprite::eRight, MR_Sprite::eTop, lWeaponSpriteIndex, lMissileScaling );
+
         auto sprite = lWeaponSprite->GetSprite();
-        //   draw_list->AddImage(nullptr, )
+        auto atlas_uv = glRenderer->state.sprite_atlas_coords[0];
+
+        ImVec2 size(sprite->GetItemWidth(), sprite->GetItemHeight());
+        ImVec2 pos(screenWidth - sprite->GetItemWidth(), screenHeight / 16);
+
+        draw_list->AddImage(
+            texture_id,
+            pos,
+            ImVec2(pos.x + size.x, pos.y + size.y),
+            ImVec2(atlas_uv.x, atlas_uv.y), ImVec2(atlas_uv.z, atlas_uv.w)
+        );
     }
 }
