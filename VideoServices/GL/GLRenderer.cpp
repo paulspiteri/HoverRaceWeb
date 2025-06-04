@@ -608,10 +608,19 @@ unsigned long GLRenderer::LoadSprite(MR_UInt32 id, const MR_Sprite* sprite)
         TextureData textureData = {};
         textureData.id = id;
         textureData.width = sprite->GetItemWidth(),
-        textureData.height = sprite->GetItemHeight();
+        textureData.height = sprite->GetItemHeight() * sprite->GetNbItem();
         textureData.pixels = ConvertSpriteToRGBA8(sprite);
         sprites.push_back(textureData);
         return sprites.size() - 1;
+    }
+    return std::distance(sprites.begin(), it);
+}
+
+unsigned long GLRenderer::GetSpriteAtlasIndex(MR_UInt32 id) const
+{
+    auto it = std::ranges::find_if(sprites, [id](const auto& t) { return t.id == id; });
+    if (it == sprites.end()) {
+        throw std::out_of_range("Sprite ID " + std::to_string(id) + " not found in atlas");
     }
     return std::distance(sprites.begin(), it);
 }
@@ -678,7 +687,7 @@ uint32_t* GLRenderer::ConvertSpriteToRGBA8(const MR_Sprite* sprite)
 {
     auto palette = videoBuffer->GetPalette();
     int width = sprite->GetItemWidth();
-    int height = sprite->GetItemHeight();
+    int height = sprite->GetItemHeight() * sprite->GetNbItem();
     MR_UInt8* lSrc = sprite->GetData();
     auto lDest = new uint32_t[width * height];
     for (int y = 0; y < height; y++)

@@ -129,15 +129,13 @@ void MR_Observer::RenderGLHUDWeapon(const GLRenderer* glRenderer, const MR_MainC
 
     if (lWeaponSprite != nullptr)
     {
-
-
         ImTextureID texture_id = simgui_imtextureid(glRenderer->state.sprites_image);
 
-        float lMissileScaling = 1 + (310 / screenWidth);
-    //    lWeaponSprite->GetSprite()->Blt( lXRes, lYRes/16, &m3DView, MR_Sprite::eRight, MR_Sprite::eTop, lWeaponSpriteIndex, lMissileScaling );
-
         auto sprite = lWeaponSprite->GetSprite();
-        auto atlas_uv = glRenderer->state.sprite_atlas_coords[0];
+        auto resSprite = static_cast<const MR_ResSprite*>(sprite);
+        auto atlasIndex = glRenderer->GetSpriteAtlasIndex(resSprite->GetResourceId());
+        auto atlas_uv = glRenderer->state.sprite_atlas_coords[atlasIndex];
+        float atlasSpriteHeight = (atlas_uv.w - atlas_uv.y) / sprite->GetNbItem();
 
         ImVec2 size(sprite->GetItemWidth(), sprite->GetItemHeight());
         ImVec2 pos(screenWidth - sprite->GetItemWidth(), screenHeight / 16);
@@ -146,7 +144,8 @@ void MR_Observer::RenderGLHUDWeapon(const GLRenderer* glRenderer, const MR_MainC
             texture_id,
             pos,
             ImVec2(pos.x + size.x, pos.y + size.y),
-            ImVec2(atlas_uv.x, atlas_uv.y), ImVec2(atlas_uv.z, atlas_uv.w)
+            ImVec2(atlas_uv.x, atlas_uv.y + (atlasSpriteHeight * lWeaponSpriteIndex)),
+            ImVec2(atlas_uv.z, atlas_uv.y + (atlasSpriteHeight * (lWeaponSpriteIndex + 1)))
         );
     }
 }

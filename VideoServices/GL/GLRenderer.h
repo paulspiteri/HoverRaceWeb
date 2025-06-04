@@ -153,6 +153,7 @@ public:
     unsigned long LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap, u_int8_t alpha = 0xFF);
     unsigned long LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
     unsigned long LoadSprite(MR_UInt32 id, const MR_Sprite* sprite);
+    unsigned long GetSpriteAtlasIndex(MR_UInt32 id) const;
     void BindFreeElementTextures();
     void BindSpriteTextures();
     void BindBackgroundVertices(const VerticesData<Vertex>& vertices);
