@@ -46,13 +46,20 @@ void GLViewport::SetMapSize(const glm::ivec4& size)
 {
     int centerX = sizeX + (size.x + size.z) / 2;
     int centerY = sizeY + (size.y + size.w) / 2;
-    // int width = size.z - size.x;
-    // int height = size.w - size.y;
-    // int z = std::max(width, height) / 1.5f;
+    int width = size.z - size.x;
+    int height = size.w - size.y;
+
     map_camera.setPosition(SwapYZ(glm::vec3(centerX, centerY, 200000)));
 
+    float halfWidth = width / 2.0f;
+    float halfHeight = height / 2.0f;
+
     glm::mat4 map_view = map_camera.getViewMatrix();
-    glm::mat4 map_projection = map_camera.getProjectionMatrix(1.0f);
+    glm::mat4 map_projection = map_camera.getOrthographicMatrix(
+        -halfWidth, halfWidth,
+        -halfHeight, halfHeight
+    );
+
     std::memcpy(glRenderer->state.world_minimap_uniforms.view, &map_view, sizeof(map_view));
     std::memcpy(glRenderer->state.world_minimap_uniforms.proj, &map_projection, sizeof(map_projection));
 }

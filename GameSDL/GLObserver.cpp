@@ -150,8 +150,3 @@ void MR_Observer::RenderGLHUDWeapon(const GLRenderer* glRenderer, const MR_MainC
         );
     }
 }
-
-void MR_Observer::SetMapSize(glm::ivec4 vec)
-{
-    mMapSize = vec;
-}

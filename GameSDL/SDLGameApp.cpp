@@ -154,7 +154,7 @@ void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
       mGLRenderer->EndImguiFrame();
 
       mGLRenderer->EndRender();
-      mGLRenderer->RenderMiniMap();
+      mGLRenderer->RenderMiniMap(mObserver1->GetMapSize());
       SDL_GL_SwapWindow(mGLWindow);
    }
 

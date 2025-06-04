@@ -268,7 +268,7 @@ void GLRenderer::EndRender() const
     sg_end_pass();
 }
 
-void GLRenderer::RenderMiniMap() const
+void GLRenderer::RenderMiniMap(glm::ivec4 size) const
 {
     sg_pass pass = {
         .action = {
@@ -279,9 +279,22 @@ void GLRenderer::RenderMiniMap() const
     };
     sg_begin_pass(&pass);
 
-    int miniMapHeight = state.swapchain.height / 2;
-    int miniMapWidth = (state.swapchain.width / state.swapchain.height) * miniMapHeight;
-    sg_apply_viewport(0, 0, miniMapWidth, miniMapHeight, true);
+    int margin = state.swapchain.height / 16;
+    int maxMinimapSize = state.swapchain.height / 4;
+    int mapWidth = size.z - size.x;
+    int mapHeight = size.w - size.y;
+    float mapRatio = static_cast<float>(mapWidth) / static_cast<float>(mapHeight);
+    int viewportWidth, viewportHeight;
+    if (mapRatio > 1.0f) {
+        // Map is wider than it is tall
+        viewportWidth = maxMinimapSize;
+        viewportHeight = static_cast<int>(maxMinimapSize / mapRatio);
+    } else {
+        // Map is taller than it is wide (or square)
+        viewportWidth = static_cast<int>(maxMinimapSize * mapRatio);
+        viewportHeight = maxMinimapSize;
+    }
+    sg_apply_viewport(margin, margin, viewportWidth, viewportHeight, true);
 
     sg_apply_pipeline(state.world_pipeline);
     sg_apply_uniforms(0, SG_RANGE(state.world_minimap_uniforms));

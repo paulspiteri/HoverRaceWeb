@@ -160,7 +160,7 @@ public:
     void MakeGLContextCurrent() const;
     void BeginRender() const;
     void EndRender() const;
-    void RenderMiniMap() const;
+    void RenderMiniMap(glm::ivec4 size) const;
     void BeginImguiFrame() const;
     void EndImguiFrame() const;
 };
