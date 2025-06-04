@@ -49,7 +49,7 @@ void GLViewport::SetMapSize(const glm::ivec4& size)
     int width = size.z - size.x;
     int height = size.w - size.y;
 
-    map_camera.setPosition(SwapYZ(glm::vec3(centerX, centerY, 200000)));
+    map_camera.setPosition(SwapYZ(glm::vec3(centerX, centerY, 1000.0f)));
 
     float halfWidth = width / 2.0f;
     float halfHeight = height / 2.0f;
