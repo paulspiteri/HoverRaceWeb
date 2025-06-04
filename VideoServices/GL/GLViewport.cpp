@@ -62,10 +62,13 @@ void GLViewport::SetMapSize(const glm::ivec4& size)
 
     std::memcpy(glRenderer->state.world_minimap_uniforms.view, &map_view, sizeof(map_view));
     std::memcpy(glRenderer->state.world_minimap_uniforms.proj, &map_projection, sizeof(map_projection));
+    std::memcpy(glRenderer->state.free_element_minimap_uniforms.view, &map_view, sizeof(map_view));
+    std::memcpy(glRenderer->state.free_element_minimap_uniforms.proj, &map_projection, sizeof(map_projection));
 }
 
 void GLViewport::SetSimulationTime(const MR_SimulationTime pTime)
 {
     glRenderer->state.wall_uniforms.time = pTime;
     glRenderer->state.free_element_uniforms.time = pTime;
+    glRenderer->state.free_element_minimap_uniforms.time = pTime;
 }

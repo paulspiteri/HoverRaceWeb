@@ -61,7 +61,7 @@ public:
 
     glm::mat4 getOrthographicMatrix(float left, float right, float bottom, float top) const
     {
-        const float nearPlane = 0.0f;
+        const float nearPlane = -10000.0f;
         const float farPlane = 10000.0f;
         return glm::ortho(left, right, bottom, top, nearPlane, farPlane);
     }

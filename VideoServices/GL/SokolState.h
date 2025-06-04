@@ -39,6 +39,7 @@ struct Sokol_State {
 
     sg_pipeline free_element_pipeline;
     FreeElementUniforms_t free_element_uniforms;
+    FreeElementUniforms_t free_element_minimap_uniforms;
     std::unordered_map<int, sg_bindings> free_element_bindings;
     std::unordered_map<int, int> free_element_vertex_count;
     std::unordered_map<int, int> free_element_instance_count;

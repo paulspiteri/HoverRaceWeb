@@ -270,11 +270,14 @@ void GLRenderer::EndRender() const
 
 void GLRenderer::RenderMiniMap(glm::ivec4 size) const
 {
+    sg_color_attachment_action loadColorAction = { .load_action = SG_LOADACTION_LOAD };
+    sg_depth_attachment_action clearDepthAction = { .load_action = SG_LOADACTION_CLEAR, .clear_value = 1.0f };
+    sg_pass_action pass_action = {
+        .colors[0] = loadColorAction,
+        .depth = clearDepthAction
+    };
     sg_pass pass = {
-        .action = {
-            .colors[0] = { .load_action = SG_LOADACTION_LOAD },
-            .depth = { .load_action = SG_LOADACTION_CLEAR, .clear_value = 1.0f }
-        },
+        .action = pass_action,
         .swapchain = state.swapchain
     };
     sg_begin_pass(&pass);
@@ -290,7 +293,7 @@ void GLRenderer::RenderMiniMap(glm::ivec4 size) const
         viewportWidth = maxMinimapSize;
         viewportHeight = static_cast<int>(maxMinimapSize / mapRatio);
     } else {
-        // Map is taller than it is wide (or square)
+        // Map is taller than it is wide
         viewportWidth = static_cast<int>(maxMinimapSize * mapRatio);
         viewportHeight = maxMinimapSize;
     }
@@ -301,6 +304,22 @@ void GLRenderer::RenderMiniMap(glm::ivec4 size) const
     sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
     sg_apply_bindings(&state.world_bindings);
     sg_draw(0, state.world_count, 1);
+
+    sg_apply_pipeline(state.free_element_pipeline);
+    sg_apply_uniforms(0, SG_RANGE(state.free_element_minimap_uniforms));
+    sg_apply_uniforms(1, SG_RANGE(state.free_element_atlas_coords));
+    for (auto& [freeElementType, binding] : state.free_element_bindings)
+    {
+        int freeElementVertexCount = state.free_element_vertex_count.at(freeElementType);
+        int freeElementInstanceCount = state.free_element_instance_count.contains(freeElementType)
+                                           ? state.free_element_instance_count.at(freeElementType)
+                                           : 0;
+        if (freeElementInstanceCount > 0)
+        {
+            sg_apply_bindings(&binding);
+            sg_draw(0, freeElementVertexCount, freeElementInstanceCount);
+        }
+    }
 
     sg_end_pass();
     sg_commit();
