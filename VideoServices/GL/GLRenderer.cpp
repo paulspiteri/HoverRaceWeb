@@ -218,7 +218,6 @@ void GLRenderer::BeginRender() const
     };
 
     sg_begin_pass(&pass);
-    sg_apply_viewport(0, 0, state.swapchain.width, state.swapchain.height, true);
 
     sg_apply_pipeline(state.bkg_pipeline);
     sg_apply_uniforms(0, SG_RANGE(state.bkg_uniforms));
@@ -280,9 +279,9 @@ void GLRenderer::RenderMiniMap() const
     };
     sg_begin_pass(&pass);
 
-    int miniMapHeight = state.swapchain.height / 3;
+    int miniMapHeight = state.swapchain.height / 2;
     int miniMapWidth = (state.swapchain.width / state.swapchain.height) * miniMapHeight;
-    sg_apply_viewport(state.swapchain.width/24, state.swapchain.height/16, miniMapWidth, miniMapHeight, true);
+    sg_apply_viewport(0, 0, miniMapWidth, miniMapHeight, true);
 
     sg_apply_pipeline(state.world_pipeline);
     sg_apply_uniforms(0, SG_RANGE(state.world_minimap_uniforms));
