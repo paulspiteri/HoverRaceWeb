@@ -1234,6 +1234,8 @@ void MR_Observer::RenderNormalDisplay( MR_VideoBuffer* pDest, GLRenderer* glRend
 
    m3DView.Setup( pDest, lXMargin, lYOffset+lYMargin, lXRes-2*lXMargin, lYRes-2*lYMargin, mApperture );
    mGLView.Setup(glRenderer, glRenderer->state.swapchain.width, glRenderer->state.swapchain.height);
+   mGLView.SetMapSize(mMapSize);
+
 
    // Clear screen if needed
    if( lXMargin > 0 )

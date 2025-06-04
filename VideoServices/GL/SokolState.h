@@ -23,6 +23,7 @@ struct Sokol_State {
 
     sg_pipeline world_pipeline;
     WorldUniforms_t world_uniforms;
+    WorldUniforms_t world_minimap_uniforms;
     sg_bindings world_bindings;
     int world_count;
 

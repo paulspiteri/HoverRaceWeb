@@ -61,6 +61,9 @@ public:
 
     glm::vec3 getPosition() const { return position; }
     glm::vec3 getFront() const { return front; }
+    void setFront(glm::vec3 value) { front = value; }
+    glm::vec3 getUp() const { return up; }
+    void setUp(glm::vec3 value) { up = value; }
     float getFov() const { return fov; }
 
     void setPosition(const glm::vec3& pos) { position = pos; }

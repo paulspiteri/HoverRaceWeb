@@ -218,6 +218,7 @@ void GLRenderer::BeginRender() const
     };
 
     sg_begin_pass(&pass);
+    sg_apply_viewport(0, 0, state.swapchain.width, state.swapchain.height, true);
 
     sg_apply_pipeline(state.bkg_pipeline);
     sg_apply_uniforms(0, SG_RANGE(state.bkg_uniforms));
@@ -252,16 +253,43 @@ void GLRenderer::BeginRender() const
         }
     }
 
-    // water should be last as it has alpha
-    sg_apply_pipeline(state.water_pipeline);
-    sg_apply_uniforms(0, SG_RANGE(state.water_uniforms));
-    sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
-    sg_apply_bindings(&state.water_bindings);
-    sg_draw(0, state.water_count, 1);
+    if (state.water_count > 0)
+    {
+        // water should be last as it has alpha
+        sg_apply_pipeline(state.water_pipeline);
+        sg_apply_uniforms(0, SG_RANGE(state.water_uniforms));
+        sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
+        sg_apply_bindings(&state.water_bindings);
+        sg_draw(0, state.water_count, 1);
+    }
 }
 
 void GLRenderer::EndRender() const
 {
+    sg_end_pass();
+}
+
+void GLRenderer::RenderMiniMap() const
+{
+    sg_pass pass = {
+        .action = {
+            .colors[0] = { .load_action = SG_LOADACTION_LOAD },
+            .depth = { .load_action = SG_LOADACTION_CLEAR, .clear_value = 1.0f }
+        },
+        .swapchain = state.swapchain
+    };
+    sg_begin_pass(&pass);
+
+    int miniMapHeight = state.swapchain.height / 3;
+    int miniMapWidth = (state.swapchain.width / state.swapchain.height) * miniMapHeight;
+    sg_apply_viewport(state.swapchain.width/24, state.swapchain.height/16, miniMapWidth, miniMapHeight, true);
+
+    sg_apply_pipeline(state.world_pipeline);
+    sg_apply_uniforms(0, SG_RANGE(state.world_minimap_uniforms));
+    sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
+    sg_apply_bindings(&state.world_bindings);
+    sg_draw(0, state.world_count, 1);
+
     sg_end_pass();
     sg_commit();
 }
@@ -415,6 +443,11 @@ void GLRenderer::BindWorldVertices(const VerticesData<VertexWithTextureId>& vert
 
 void GLRenderer::BindWaterVertices(const VerticesData<VertexWithTextureId>& vertices)
 {
+    if (vertices.vertices.empty())
+    {
+        return;
+    }
+
     sg_buffer_desc buf_desc = {
         .type = SG_BUFFERTYPE_VERTEXBUFFER,
         .usage = SG_USAGE_IMMUTABLE,

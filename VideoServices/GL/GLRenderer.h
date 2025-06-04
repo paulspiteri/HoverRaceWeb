@@ -160,6 +160,7 @@ public:
     void MakeGLContextCurrent() const;
     void BeginRender() const;
     void EndRender() const;
+    void RenderMiniMap() const;
     void BeginImguiFrame() const;
     void EndImguiFrame() const;
 };

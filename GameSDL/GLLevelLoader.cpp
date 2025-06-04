@@ -638,3 +638,23 @@ void GLLevelLoader::LoadGameSprites()
         glRenderer->LoadSprite(sprite->GetResourceId(), sprite);
     }
 }
+
+glm::ivec4 GLLevelLoader::GetLevelSize(const MR_Level* level) const
+{
+    std::unique_ptr<MR_PolygonShape> firstRoom(level->GetRoomShape(0));
+    int xMin = firstRoom->XMin();
+    int xMax = firstRoom->XMax();
+    int yMin = firstRoom->YMin();
+    int yMax = firstRoom->YMax();
+
+    for (int roomId = 1; roomId < level->GetRoomCount(); roomId++)
+    {
+        std::unique_ptr<MR_PolygonShape> roomShape(level->GetRoomShape(roomId));
+        xMin = std::min(xMin, roomShape->XMin());
+        xMax = std::max(xMax, roomShape->XMax());
+        yMin = std::min(yMin, roomShape->YMin());
+        yMax = std::max(yMax, roomShape->YMax());
+    }
+
+    return glm::ivec4(xMin, yMin, xMax, yMax);
+}

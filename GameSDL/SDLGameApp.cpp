@@ -154,6 +154,7 @@ void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
       mGLRenderer->EndImguiFrame();
 
       mGLRenderer->EndRender();
+      mGLRenderer->RenderMiniMap();
       SDL_GL_SwapWindow(mGLWindow);
    }
 
@@ -209,7 +210,8 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
       {
          auto level = lCurrentSession->GetCurrentLevel();
          mGLLevelLoader->LoadLevel(level, lCurrentSession->GetBackImage());
-
+         auto levelSize = mGLLevelLoader->GetLevelSize(level);
+         mObserver1->SetMapSize(levelSize);
          lCurrentSession->SetSimulationTime( -6000 );
       }
 

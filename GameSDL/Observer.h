@@ -44,6 +44,7 @@ class MR_Observer
            };
 
    private:
+      glm::ivec4 mMapSize;
       MR_3DCoordinate mLastCameraPos;
       std::optional<MR_3DCoordinate> mLastGlCameraPos;
       BOOL            mLastCameraPosValid;
@@ -118,6 +119,7 @@ class MR_Observer
       void RenderGLHUD(const GLRenderer* glRenderer, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime);
       void RenderGLHUDBars(const MR_MainCharacter* pViewingCharacter);
       void RenderGLHUDWeapon(const GLRenderer* glRenderer, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime);
+      void SetMapSize(glm::ivec4 vec);
 };
 
 

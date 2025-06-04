@@ -12,6 +12,7 @@ public:
     explicit GLLevelLoader(GLRenderer* glRenderer);
     void LoadLevel(const MR_Level* level, const MR_UInt8* backImage);
     std::unordered_map<int, std::vector<FreeElementInstance>> GetFreeElementInstances(const MR_Level* level);
+    glm::ivec4 GetLevelSize(const MR_Level* level) const;
 
 private:
     void LoadBackground(const MR_UInt8* backImage);
