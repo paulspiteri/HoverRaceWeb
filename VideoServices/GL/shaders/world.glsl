@@ -3,6 +3,7 @@
 layout(binding = 0) uniform WorldUniforms {
     mat4 view;
     mat4 proj;
+    float textureScale; // used for minimap
 };
 layout(binding = 1) uniform WorldAtlasCoords {
     vec4 atlas_coords[32];
@@ -17,7 +18,7 @@ flat out vec4 atlas_coord;
 
 void main() {
     gl_Position = proj * view * vec4(position);
-    world_uv = texcoord0;
+    world_uv = texcoord0 * textureScale;
     atlas_coord = atlas_coords[textureIdx];
 }
 @end

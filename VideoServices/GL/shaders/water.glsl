@@ -3,6 +3,7 @@
 layout(binding = 0) uniform WaterUniforms {
     mat4 view;
     mat4 proj;
+    float textureScale; // not actually used as water is not applied to minimap but necessary as this must match the world shader
 };
 layout(binding = 1) uniform WaterAtlasCoords {
     vec4 atlas_coords[32];

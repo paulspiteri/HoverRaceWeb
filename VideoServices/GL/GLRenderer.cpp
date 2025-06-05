@@ -64,6 +64,8 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     world_pipeline_desc.depth.write_enabled = true;
     world_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
     state.world_pipeline = sg_make_pipeline(&world_pipeline_desc);
+    state.world_uniforms.textureScale = 1.0f;
+    state.world_minimap_uniforms.textureScale = 2.0f;
 
     const sg_shader_desc* water_shdr_desc = world_shader_desc(sg_query_backend());
     sg_shader water_shader = sg_make_shader(water_shdr_desc);
