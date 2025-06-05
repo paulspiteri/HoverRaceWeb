@@ -1,4 +1,5 @@
 #include "GLRenderer.h"
+#include "../../ObjFac1/ObjFac1Res.h"
 #include <cstring>
 
 #include "SDL3/SDL_video.h"
@@ -138,6 +139,8 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     free_element_pipeline_desc.depth.write_enabled = true;
     free_element_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
     state.free_element_pipeline = sg_make_pipeline(&free_element_pipeline_desc);
+    state.free_element_uniforms.scale = 1.0f;
+    state.free_element_minimap_uniforms.scale = 10.0f;
 
     state.pass_action.colors[0] = {
         .load_action = SG_LOADACTION_CLEAR,
@@ -268,7 +271,20 @@ void GLRenderer::EndRender() const
     sg_end_pass();
 }
 
-void GLRenderer::RenderMiniMap(glm::ivec4 size) const
+float GetFreeElementMiniMapScale(int freeElementType)
+{
+    switch (freeElementType)
+    {
+        case MR_BUMPERGATE:
+            return 2.5f;
+        case MR_MINE:
+            return 7.5f;
+        default:
+            return 10.0f;
+    }
+}
+
+void GLRenderer::RenderMiniMap(glm::ivec4 size)
 {
     sg_color_attachment_action loadColorAction = { .load_action = SG_LOADACTION_LOAD };
     sg_depth_attachment_action clearDepthAction = { .load_action = SG_LOADACTION_CLEAR, .clear_value = 1.0f };
@@ -306,10 +322,11 @@ void GLRenderer::RenderMiniMap(glm::ivec4 size) const
     sg_draw(0, state.world_count, 1);
 
     sg_apply_pipeline(state.free_element_pipeline);
-    sg_apply_uniforms(0, SG_RANGE(state.free_element_minimap_uniforms));
     sg_apply_uniforms(1, SG_RANGE(state.free_element_atlas_coords));
     for (auto& [freeElementType, binding] : state.free_element_bindings)
     {
+        state.free_element_minimap_uniforms.scale = GetFreeElementMiniMapScale(freeElementType);
+        sg_apply_uniforms(0, SG_RANGE(state.free_element_minimap_uniforms));
         int freeElementVertexCount = state.free_element_vertex_count.at(freeElementType);
         int freeElementInstanceCount = state.free_element_instance_count.contains(freeElementType)
                                            ? state.free_element_instance_count.at(freeElementType)

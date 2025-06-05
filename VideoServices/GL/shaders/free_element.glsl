@@ -4,6 +4,7 @@ layout(binding = 0) uniform FreeElementUniforms {
     mat4 view;
     mat4 proj;
     int time;
+    float scale;
 };
 layout(binding = 1) uniform FreeElementAtlasCoords {
     vec4 atlas_coords[32];
@@ -51,7 +52,8 @@ void main() {
         angleRadians = orientation * ANGLE_TO_RADIANS;
     }
     vec3 rotatedPos = rotateY(position.xyz, angleRadians);
-    vec4 worldPos = vec4(rotatedPos.xyz + instancePosition, 1);
+    vec3 scaledPos = rotatedPos * scale;
+    vec4 worldPos = vec4(scaledPos.xyz + instancePosition, 1);
     gl_Position = proj * view * worldPos;
     free_element_uv = texcoord0;
     atlas_coord = atlas_coords[textureIdx];
