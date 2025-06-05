@@ -130,10 +130,10 @@ class GLRenderer
     std::unordered_map<int, std::vector<FreeElementInstance>> freeElementInstances;
     MR_VideoBuffer* videoBuffer;
 
-    uint32_t* ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, u_int8_t alpha = 0xFF);
+    uint32_t* ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF);
     uint32_t* ConvertBackgroundToRGBA8(const MR_UInt8* backImage);
     uint32_t* ConvertSpriteToRGBA8(const MR_Sprite* sprite);
-    unsigned long LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap, u_int8_t alpha = 0xFF);
+    unsigned long LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF);
     std::tuple<sg_image, std::array<glm::vec4, 32>> BindTexturesInternal(std::vector<TextureData>& collection);
 
 
@@ -150,7 +150,7 @@ public:
     void BindWallVertices(const VerticesData<WallVertex>& vertices);
     void BindFreeElementVertices(const std::unordered_map<int, VerticesData<FreeElementVertex>>& freeElements);
     void BindFreeElementInstances(const std::unordered_map<int, std::vector<FreeElementInstance>>& updatedFreeElementInstances);
-    unsigned long LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap, u_int8_t alpha = 0xFF);
+    unsigned long LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF);
     unsigned long LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
     unsigned long LoadSprite(MR_UInt32 id, const MR_Sprite* sprite);
     unsigned long GetSpriteAtlasIndex(MR_UInt32 id) const;

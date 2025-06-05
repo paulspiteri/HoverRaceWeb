@@ -160,10 +160,10 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     state.wall_bindings.samplers[0] = state.wrap_sampler;
 
     sg_sampler_desc edge_sampler_desc = {};
-    wrap_sampler_desc.min_filter = SG_FILTER_LINEAR;
-    wrap_sampler_desc.mag_filter = SG_FILTER_LINEAR;
-    wrap_sampler_desc.wrap_u = SG_WRAP_CLAMP_TO_EDGE;
-    wrap_sampler_desc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
+    edge_sampler_desc.min_filter = SG_FILTER_LINEAR;
+    edge_sampler_desc.mag_filter = SG_FILTER_LINEAR;
+    edge_sampler_desc.wrap_u = SG_WRAP_CLAMP_TO_EDGE;
+    edge_sampler_desc.wrap_v = SG_WRAP_CLAMP_TO_EDGE;
     state.edge_sampler = sg_make_sampler(&edge_sampler_desc);
     state.bkg_bindings.samplers[0] = state.edge_sampler;
 
@@ -290,10 +290,10 @@ void GLRenderer::RenderMiniMap(glm::ivec4 size)
 {
     sg_color_attachment_action loadColorAction = { .load_action = SG_LOADACTION_LOAD };
     sg_depth_attachment_action clearDepthAction = { .load_action = SG_LOADACTION_CLEAR, .clear_value = 1.0f };
-    sg_pass_action pass_action = {
-        .colors[0] = loadColorAction,
-        .depth = clearDepthAction
-    };
+    sg_pass_action pass_action = {};
+    pass_action.colors[0] = loadColorAction;
+    pass_action.depth = clearDepthAction;
+
     sg_pass pass = {
         .action = pass_action,
         .swapchain = state.swapchain
@@ -612,7 +612,7 @@ void GLRenderer::BindFreeElementInstances(
 }
 
 unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id,
-                                              const MR_ResBitmap* bitmap, u_int8_t alpha)
+                                              const MR_ResBitmap* bitmap, uint8_t alpha)
 {
     auto it = std::ranges::find_if(collection, [=](const auto& t) { return t.id == id; });
     if (it == collection.end())
@@ -628,7 +628,7 @@ unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData>& collecti
     return std::distance(collection.begin(), it);
 }
 
-unsigned long GLRenderer::LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap, u_int8_t alpha)
+unsigned long GLRenderer::LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha)
 {
     return LoadTextureInternal(textures, id, bitmap, alpha);
 }
@@ -742,7 +742,7 @@ uint32_t* GLRenderer::ConvertSpriteToRGBA8(const MR_Sprite* sprite)
     return lDest;
 }
 
-uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, u_int8_t alpha)
+uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, uint8_t alpha)
 {
     auto palette = videoBuffer->GetPalette();
     int width = bitmap->GetMaxXRes();
