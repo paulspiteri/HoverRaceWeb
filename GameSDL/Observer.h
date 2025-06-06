@@ -31,6 +31,16 @@
 #include "../ObjFacTools/SpriteHandle.h"
 #include "../VideoServices/GL/GLViewport.h"
 
+extern const char* gChartFinish;
+extern const char* gChart;
+extern const char* gHitChart;
+extern const char* gCountdownStr;
+extern const char* gFinishStr;
+extern const char* gFinishStrSingle;
+extern const char* gBestLapStr;
+extern const char* gHeaderStr;
+extern const char* gLastLapStr;
+extern const char* gCurLapStr;
 
 class MR_Observer
 {
@@ -116,9 +126,10 @@ class MR_Observer
 
       void PlaySounds( const MR_Level* pLevel, MR_MainCharacter* pViewingCharacter );
 
-      void RenderGLHUD(const GLRenderer* glRenderer, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime);
+      void RenderGLHUD(const GLRenderer* glRenderer, const MR_ClientSession* currentSession);
       void RenderGLHUDBars(const MR_MainCharacter* pViewingCharacter);
       void RenderGLHUDWeapon(const GLRenderer* glRenderer, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime);
+      void RenderGLHUDLapTimes(const MR_ClientSession* pSession);
       void SetMapSize(glm::ivec4 vec) { mMapSize = vec; }
       glm::ivec4 GetMapSize() const {  return mMapSize; };
 };

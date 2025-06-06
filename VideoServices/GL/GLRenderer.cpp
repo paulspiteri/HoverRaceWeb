@@ -177,6 +177,12 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
 
     simgui_desc_t simgui_desc = {};
     simgui_setup(&simgui_desc);
+    ImGuiIO& io = ImGui::GetIO();
+    ImFontConfig config;
+    config.GlyphExtraAdvanceX = 12.0f;
+    config.SizePixels = 57.0f;
+    ImFont* font = io.Fonts->AddFontFromFileTTF("Roboto-MediumItalic.ttf", 57.0f, &config);
+    io.FontDefault = font;
 }
 
 GLRenderer::~GLRenderer()

@@ -1,4 +1,5 @@
 #include "Observer.h"
+#include "../Util/StrRes.h"
 #include "imgui.h"
 #define SOKOL_IMGUI_NO_SOKOL_APP
 
@@ -36,11 +37,11 @@ void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_Sim
     mGLView.SetSimulationTime(pTime);
 }
 
-void MR_Observer::RenderGLHUD(const GLRenderer* glRenderer, const MR_MainCharacter* pViewingCharacter,
-                              MR_SimulationTime pTime)
+void MR_Observer::RenderGLHUD(const GLRenderer* glRenderer, const MR_ClientSession* currentSession)
 {
-    RenderGLHUDBars(pViewingCharacter);
-    RenderGLHUDWeapon(glRenderer, pViewingCharacter, pTime);
+    RenderGLHUDBars(currentSession->GetMainCharacter());
+    RenderGLHUDWeapon(glRenderer, currentSession->GetMainCharacter(), currentSession->GetSimulationTime());
+    RenderGLHUDLapTimes(currentSession);
 }
 
 void MR_Observer::RenderGLHUDBars(const MR_MainCharacter* pViewingCharacter)
@@ -147,5 +148,110 @@ void MR_Observer::RenderGLHUDWeapon(const GLRenderer* glRenderer, const MR_MainC
             ImVec2(atlas_uv.x, atlas_uv.y + (atlasSpriteHeight * lWeaponSpriteIndex)),
             ImVec2(atlas_uv.z, atlas_uv.y + (atlasSpriteHeight * (lWeaponSpriteIndex + 1)))
         );
+    }
+}
+
+void DrawTextWithEffect(ImVec2 pos, const char* text) {
+    ImDrawList* draw_list = ImGui::GetForegroundDrawList();
+
+    // Shadow (dark offset)
+    draw_list->AddText(
+        ImVec2(pos.x - 2.0f, pos.y + 2.0f),
+        IM_COL32(35, 35, 35, 192),
+        text);
+
+    // Highlight (light offset)
+    draw_list->AddText(
+        ImVec2(pos.x + 2.0f, pos.y - 2.0f),
+        IM_COL32(218, 218, 218, 128),
+        text);
+
+    // Main text
+    draw_list->AddText(pos, IM_COL32(221, 22, 83, 255), text);
+}
+
+void MR_Observer::RenderGLHUDLapTimes(const MR_ClientSession* pSession)
+{
+    auto pViewingCharacter = pSession->GetMainCharacter();
+    auto pTime = pSession->GetSimulationTime();
+
+    // Display timers
+    char lMainLineBuffer[80];
+    char lLapLineBuffer[80];
+    lLapLineBuffer[0] = 0;
+
+    if (pTime < 0)
+    {
+        pTime = -pTime;
+        sprintf(lMainLineBuffer, gCountdownStr, (pTime % 60000) / 1000, (pTime % 1000) / 10,
+                pViewingCharacter->GetTotalLap());
+    }
+    else if (pViewingCharacter->GetTotalLap() <= pViewingCharacter->GetLap())
+    {
+        MR_SimulationTime lTotalTime = pViewingCharacter->GetTotalTime();
+        MR_SimulationTime lBestLap = pViewingCharacter->GetBestLapDuration();
+
+        // Race is finish
+        if (pSession->GetNbPlayers() > 1)
+        {
+            sprintf(lMainLineBuffer, gFinishStr, lTotalTime / 60000, (lTotalTime % 60000) / 1000,
+                    (lTotalTime % 1000) / 10, pSession->GetRank(pViewingCharacter), pSession->GetNbPlayers());
+        }
+        else
+        {
+            sprintf(lMainLineBuffer, gFinishStrSingle, lTotalTime / 60000, (lTotalTime % 60000) / 1000,
+                    (lTotalTime % 1000) / 10);
+        }
+        sprintf(lLapLineBuffer, gBestLapStr, lBestLap / 60000, (lBestLap % 60000) / 1000, (lBestLap % 1000) / 10);
+    }
+    else if (pViewingCharacter->GetLap() == 0)
+    {
+        // First lap
+        sprintf(lMainLineBuffer, gHeaderStr, pTime / 60000, (pTime % 60000) / 1000, (pTime % 1000) / 10, 1,
+                pViewingCharacter->GetTotalLap());
+        // sprintf( lLapLineBuffer, "Current lap %d.%02d.%02d", pTime/60000, (pTime%60000)/1000, (pTime%1000)/10 );
+    }
+    else if (pViewingCharacter->GetLastLapCompletion() > (pTime - 8000))
+    {
+        // Lap terminated less than 8 sec ago
+        MR_SimulationTime lBestLap = pViewingCharacter->GetBestLapDuration();
+        MR_SimulationTime lLastLap = pViewingCharacter->GetLastLapDuration();
+
+        // More than one lap completed
+        sprintf(lMainLineBuffer, gHeaderStr, pTime / 60000, (pTime % 60000) / 1000, (pTime % 1000) / 10,
+                pViewingCharacter->GetLap() + 1, pViewingCharacter->GetTotalLap());
+        sprintf(lLapLineBuffer, gLastLapStr,
+                lLastLap / 60000, (lLastLap % 60000) / 1000, (lLastLap % 1000) / 10,
+                lBestLap / 60000, (lBestLap % 60000) / 1000, (lBestLap % 1000) / 10);
+    }
+    else
+    {
+        MR_SimulationTime lBestLap = pViewingCharacter->GetBestLapDuration();
+        MR_SimulationTime lCurrentLap = pTime - pViewingCharacter->GetLastLapCompletion();
+
+        // More than one lap completed
+        sprintf(lMainLineBuffer, gHeaderStr, pTime / 60000, (pTime % 60000) / 1000, (pTime % 1000) / 10,
+                pViewingCharacter->GetLap() + 1, pViewingCharacter->GetTotalLap());
+        sprintf(lLapLineBuffer, gCurLapStr,
+                lCurrentLap / 60000, (lCurrentLap % 60000) / 1000, (lCurrentLap % 1000) / 10,
+                lBestLap / 60000, (lBestLap % 60000) / 1000, (lBestLap % 1000) / 10);
+    }
+
+    ImGuiIO& io = ImGui::GetIO();
+    float screenWidth = io.DisplaySize.x;
+    float screenHeight = io.DisplaySize.y;
+    ImVec2 mainTextPos(screenWidth / 2, screenHeight / 16);
+    ImVec2 mainTextSize = ImGui::CalcTextSize(lMainLineBuffer);
+    mainTextPos.x -= mainTextSize.x / 2; // Center horizontally
+
+    DrawTextWithEffect(mainTextPos, lMainLineBuffer);
+
+    if (strlen(lLapLineBuffer) > 0)
+    {
+        ImVec2 lapTextPos(screenWidth / 2, screenHeight - 1);
+        ImVec2 lapTextSize = ImGui::CalcTextSize(lLapLineBuffer);
+        lapTextPos.x -= lapTextSize.x / 2;
+        lapTextPos.y -= lapTextSize.y;
+        DrawTextWithEffect(lapTextPos, lLapLineBuffer);
     }
 }

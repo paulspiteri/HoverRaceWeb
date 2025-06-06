@@ -150,7 +150,7 @@ void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
       mGLRenderer->BeginRender();
 
       mGLRenderer->BeginImguiFrame();
-      mObserver1->RenderGLHUD(mGLRenderer, mCurrentSession->GetMainCharacter(), mCurrentSession->GetSimulationTime());
+      mObserver1->RenderGLHUD(mGLRenderer, mCurrentSession);
       mGLRenderer->EndImguiFrame();
 
       mGLRenderer->EndRender();
