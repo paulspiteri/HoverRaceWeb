@@ -15,11 +15,12 @@ if(EMSCRIPTEN)
     LINK_FLAGS "-s MIN_WEBGL_VERSION=2 -s USE_WEBGL2=1 -sASSERTIONS -s EXPORTED_FUNCTIONS=['_main','_ChangeToTrack'] -s EXPORTED_RUNTIME_METHODS=['ccall']")
     target_link_options(GameSDL PRIVATE
     "--shell-file=${CMAKE_SOURCE_DIR}/Emscripten/Hover.html"
-    "--preload-file=${CMAKE_SOURCE_DIR}/ObjFac1.dat@ObjFac1.dat"
-    "--preload-file=${CMAKE_SOURCE_DIR}/Tracks/ClassicH.trk@ClassicH.trk"
-    "--preload-file=${CMAKE_SOURCE_DIR}/Tracks/Steeplechase.trk@Steeplechase.trk"
-    "--preload-file=${CMAKE_SOURCE_DIR}/Tracks/The Alley2.trk@The Alley2.trk"
-    "--preload-file=${CMAKE_SOURCE_DIR}/Tracks/The River.trk@The River.trk"
+    "--preload-file=${CMAKE_SOURCE_DIR}/Assets/ObjFac1.dat@ObjFac1.dat"
+    "--preload-file=${CMAKE_SOURCE_DIR}/Assets/Fonts/Roboto-MediumItalic.ttf@Roboto-MediumItalic.ttf"
+    "--preload-file=${CMAKE_SOURCE_DIR}/Assets/Tracks/ClassicH.trk@ClassicH.trk"
+    "--preload-file=${CMAKE_SOURCE_DIR}/Assets/Tracks/Steeplechase.trk@Steeplechase.trk"
+    "--preload-file=${CMAKE_SOURCE_DIR}/Assets/Tracks/The Alley2.trk@The Alley2.trk"
+    "--preload-file=${CMAKE_SOURCE_DIR}/Assets/Tracks/The River.trk@The River.trk"
   )
 else()
     find_package(OpenGL REQUIRED)
