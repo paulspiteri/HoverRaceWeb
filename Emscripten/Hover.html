@@ -3,52 +3,41 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Emscripten-Generated Code</title>
+    <title>HoverRace</title>
+    <script src="https://unpkg.com/nipplejs@0.10.2/dist/nipplejs.js"></script>
+
     <style>
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
       textarea.emscripten { font-family: monospace; width: 80%; }
       div.emscripten { text-align: center; }
       div.emscripten_border {  }
       /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-      canvas.emscripten { border: 0px none; background-color: black; }
+      canvas.emscripten { border: 0 none; background-color: black; }
 
-      .spinner {
-        height: 50px;
-        width: 50px;
-        margin: 0px auto;
-        -webkit-animation: rotation .8s linear infinite;
-        -moz-animation: rotation .8s linear infinite;
-        -o-animation: rotation .8s linear infinite;
-        animation: rotation 0.8s linear infinite;
-        border-left: 10px solid rgb(0,150,240);
-        border-right: 10px solid rgb(0,150,240);
-        border-bottom: 10px solid rgb(0,150,240);
-        border-top: 10px solid rgb(100,0,200);
-        border-radius: 100%;
-        background-color: rgb(200,100,250);
-      }
-      @-webkit-keyframes rotation {
-        from {-webkit-transform: rotate(0deg);}
-        to {-webkit-transform: rotate(360deg);}
-      }
-      @-moz-keyframes rotation {
-        from {-moz-transform: rotate(0deg);}
-        to {-moz-transform: rotate(360deg);}
-      }
-      @-o-keyframes rotation {
-        from {-o-transform: rotate(0deg);}
-        to {-o-transform: rotate(360deg);}
-      }
-      @keyframes rotation {
-        from {transform: rotate(0deg);}
-        to {transform: rotate(360deg);}
+      #joystick-zone {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        width: 150px;
+        height: 150px;
+        background-color: rgba(0, 0, 255, 0.3);
+        border-radius: 50%;
+        z-index: 1000;
       }
 
+      #weapon-joystick-zone {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 150px;
+        height: 150px;
+        background-color: rgba(255, 0, 0, 0.3);
+        border-radius: 50%;
+        z-index: 1000;
+      }
     </style>
   </head>
   <body>
-    <hr/>
-    <figure style="overflow:visible;" id="spinner"><div class="spinner"></div><center style="margin-top:0.5em"><strong>emscripten</strong></center></figure>
     <div class="emscripten" id="status">Downloading...</div>
     <div class="emscripten">
       <progress value="0" max="100" id="progress" hidden=1></progress>  
@@ -65,14 +54,15 @@
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
       <input type="button" value="Fullscreen" onclick="Module.requestFullscreen(false, false)" />
     </div>
-    
-    <hr/>
-    <textarea class="emscripten" id="output" rows="8"></textarea>
-    <hr>
+    <div id="joystick-zone"></div>
+    <div id="weapon-joystick-zone">
+      <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); color: black; font-size: 12px; pointer-events: none;">↑ Switch</div>
+      <div style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); color: black; font-size: 12px; pointer-events: none;">↓ Fire</div>
+    </div>
+
     <script type='text/javascript'>
       var statusElement = document.getElementById('status');
       var progressElement = document.getElementById('progress');
-      var spinnerElement = document.getElementById('spinner');
       var canvasElement = document.getElementById('canvas');
       var outputElement = document.getElementById('output');
       if (outputElement) outputElement.value = ''; // clear browser cache
@@ -113,12 +103,10 @@
             progressElement.value = parseInt(m[2])*100;
             progressElement.max = parseInt(m[4])*100;
             progressElement.hidden = false;
-            spinnerElement.hidden = false;
           } else {
             progressElement.value = null;
             progressElement.max = null;
             progressElement.hidden = true;
-            if (!text) spinnerElement.hidden = true;
           }
           statusElement.innerHTML = text;
         },
@@ -131,12 +119,142 @@
       Module.setStatus('Downloading...');
       window.onerror = () => {
         Module.setStatus('Exception thrown, see JavaScript console');
-        spinnerElement.style.display = 'none';
         Module.setStatus = (text) => {
           if (text) console.error('[post-exception status] ' + text);
         };
       };
     </script>
+
+    <script type='text/javascript'>
+      function initVirtualJoysticks() {
+        // Movement joystick (left side) - your existing code
+        const joystickZone = document.getElementById('joystick-zone');
+        const movementManager = nipplejs.create({
+          zone: joystickZone,
+          mode: 'static',
+          position: { left: '50%', top: '50%' },
+          color: 'blue',
+          size: 120
+        });
+
+        // Weapon joystick (right side) - new joystick
+        const weaponJoystickZone = document.getElementById('weapon-joystick-zone');
+        const weaponManager = nipplejs.create({
+          zone: weaponJoystickZone,
+          mode: 'static',
+          position: { left: '50%', top: '50%' },
+          color: 'red',
+          size: 120
+        });
+
+        // Movement joystick logic (your existing code)
+        let currentMovementKeys = new Set();
+
+        movementManager.on('move', function (evt, data) {
+          currentMovementKeys.forEach(key => {
+            simulateKeyUp(key);
+          });
+          currentMovementKeys.clear();
+
+          const angle = data.angle.degree;
+          const force = data.force;
+
+          if (force > 0.3) {
+            let keys = [];
+
+            if (angle >= 315 || angle < 45) {
+              keys.push('ArrowRight');
+            }
+            if (angle >= 45 && angle < 135) {
+              keys.push('ArrowUp');
+            }
+            if (angle >= 135 && angle < 225) {
+              keys.push('ArrowLeft');
+            }
+            if (angle >= 225 && angle < 315) {
+              keys.push('ArrowDown');
+            }
+
+            keys.forEach(key => {
+              simulateKeyDown(key);
+              currentMovementKeys.add(key);
+            });
+          }
+        });
+
+        movementManager.on('end', function () {
+          currentMovementKeys.forEach(key => {
+            simulateKeyUp(key);
+          });
+          currentMovementKeys.clear();
+        });
+
+        // Weapon joystick logic (new)
+        let currentWeaponKeys = new Set();
+
+        weaponManager.on('move', function (evt, data) {
+          // Clear previous weapon keys
+          currentWeaponKeys.forEach(key => {
+            simulateKeyUp(key);
+          });
+          currentWeaponKeys.clear();
+
+          const angle = data.angle.degree;
+          const force = data.force;
+
+          if (force > 0.3) {
+            let keys = [];
+
+            // UP = Tab (switch weapon)
+            if (angle >= 45 && angle < 135) {
+              keys.push('Tab');
+            }
+
+            // DOWN = Ctrl (fire weapon)
+            if (angle >= 225 && angle < 315) {
+              keys.push('ControlLeft');
+            }
+
+            keys.forEach(key => {
+              simulateKeyDown(key);
+              currentWeaponKeys.add(key);
+            });
+          }
+        });
+
+        weaponManager.on('end', function () {
+          currentWeaponKeys.forEach(key => {
+            simulateKeyUp(key);
+          });
+          currentWeaponKeys.clear();
+        });
+      }
+
+      function simulateKeyDown(key) {
+        const event = new KeyboardEvent('keydown', {
+          key: key,
+          code: key,
+          bubbles: true,
+          cancelable: true
+        });
+        document.getElementById('canvas').dispatchEvent(event);
+      }
+
+      function simulateKeyUp(key) {
+        const event = new KeyboardEvent('keyup', {
+          key: key,
+          code: key,
+          bubbles: true,
+          cancelable: true
+        });
+        document.getElementById('canvas').dispatchEvent(event);
+      }
+
+      window.addEventListener('load', function() {
+        initVirtualJoysticks();
+      });
+    </script>
+
     {{{ SCRIPT }}}
   </body>
 </html>
