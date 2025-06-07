@@ -222,7 +222,13 @@
           }
         });
 
+        weaponManager.on('start', function () {
+          simulateKeyDown('ShiftLeft');
+        });
+
         weaponManager.on('end', function () {
+          simulateKeyUp('ShiftLeft');
+
           currentWeaponKeys.forEach(key => {
             simulateKeyUp(key);
           });
