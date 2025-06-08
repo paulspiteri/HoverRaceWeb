@@ -22,6 +22,9 @@ if(EMSCRIPTEN)
     "--preload-file=${CMAKE_SOURCE_DIR}/Assets/Tracks/The Alley2.trk@The Alley2.trk"
     "--preload-file=${CMAKE_SOURCE_DIR}/Assets/Tracks/The River.trk@The River.trk"
   )
+
+    # Add the HTML file as a dependency so CMake tracks changes to it
+    set_property(TARGET GameSDL PROPERTY LINK_DEPENDS "${CMAKE_SOURCE_DIR}/Emscripten/Hover.html")
 else()
     find_package(OpenGL REQUIRED)
     target_link_libraries(GameSDL PRIVATE OpenGL::GL)

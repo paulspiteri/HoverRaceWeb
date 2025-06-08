@@ -24,6 +24,9 @@ void ChangeToTrack(const char *trackFile) {
     if (game != nullptr) {
         game->Clean();
         game->LoadSelectedTrack(trackFile);
+        int width, height;
+        SDL_GetWindowSize(glWindow, &width, &height);
+        game->SetOpenGLResolution(width, height);
     }
 }
 }
