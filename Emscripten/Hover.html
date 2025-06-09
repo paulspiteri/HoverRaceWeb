@@ -13,6 +13,7 @@
         width: 100%;
         height: 100%;
         overflow: hidden;
+        user-select: none;
       }
 
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
@@ -36,25 +37,34 @@
       }
 
       #joystick-zone {
+        display: none;
         position: fixed;
         bottom: 30px;
         left: 30px;
-        width: 150px;
-        height: 150px;
-        background-color: rgba(0, 0, 255, 0.3);
+        width: 165px;
+        height: 165px;
+        background-color: rgba(0, 0, 255, 0.2);
         border-radius: 50%;
         z-index: 1000;
       }
 
       #weapon-joystick-zone {
+        display: none;
         position: fixed;
         bottom: 30px;
         right: 30px;
-        width: 150px;
-        height: 150px;
-        background-color: rgba(255, 0, 0, 0.3);
+        width: 165px;
+        height: 165px;
+        background-color: rgba(255, 0, 0, 0.2);
         border-radius: 50%;
         z-index: 1000;
+      }
+
+      @media (pointer: coarse) {
+        #joystick-zone,
+        #weapon-joystick-zone {
+          display: block;
+        }
       }
     </style>
   </head>
@@ -65,6 +75,12 @@
     </div>
     <div class="emscripten_border">
       <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+
+      <div id="joystick-zone"></div>
+      <div id="weapon-joystick-zone">
+        <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); color: black; font-size: 12px; pointer-events: none;">↑ Weapon</div>
+        <div style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); color: black; font-size: 12px; pointer-events: none;">↓ Fire</div>
+      </div>
     </div>
     <hr/>
     <div class="emscripten trackselection">
@@ -73,13 +89,9 @@
       <input type="button" value="The Alley2" onclick="Module.ccall('ChangeToTrack', null, ['string'], ['The Alley2.trk'])" />
       <input type="button" value="The River" onclick="Module.ccall('ChangeToTrack', null, ['string'], ['The River.trk'])" />
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <input type="button" value="Fullscreen" onclick="Module.requestFullscreen(false, true)" />
+      <input type="button" value="Fullscreen" onclick="goFullscreen()" />
     </div>
-    <div id="joystick-zone"></div>
-    <div id="weapon-joystick-zone">
-      <div style="position: absolute; top: -25px; left: 50%; transform: translateX(-50%); color: black; font-size: 12px; pointer-events: none;">↑ Switch</div>
-      <div style="position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); color: black; font-size: 12px; pointer-events: none;">↓ Fire</div>
-    </div>
+
 
     <script type='text/javascript'>
       var statusElement = document.getElementById('status');
@@ -147,8 +159,11 @@
     </script>
 
     <script type='text/javascript'>
+      function goFullscreen() {
+        Module.requestFullscreen(false, false);
+      }
+
       function initVirtualJoysticks() {
-        // Movement joystick (left side) - your existing code
         const joystickZone = document.getElementById('joystick-zone');
         const movementManager = nipplejs.create({
           zone: joystickZone,
@@ -158,7 +173,6 @@
           size: 120
         });
 
-        // Weapon joystick (right side) - new joystick
         const weaponJoystickZone = document.getElementById('weapon-joystick-zone');
         const weaponManager = nipplejs.create({
           zone: weaponJoystickZone,
@@ -168,9 +182,7 @@
           size: 120
         });
 
-        // Movement joystick logic (your existing code)
         let currentMovementKeys = new Set();
-
         movementManager.on('move', function (evt, data) {
           currentMovementKeys.forEach(key => {
             simulateKeyUp(key);
@@ -180,20 +192,22 @@
           const angle = data.angle.degree;
           const force = data.force;
 
-          if (force > 0.3) {
+          if (force > 0.1) {
             let keys = [];
-
-            if (angle >= 315 || angle < 45) {
-              keys.push('ArrowRight');
-            }
-            if (angle >= 45 && angle < 135) {
-              keys.push('ArrowUp');
-            }
-            if (angle >= 135 && angle < 225) {
+            if (angle >= 120 && angle < 240) {
               keys.push('ArrowLeft');
             }
-            if (angle >= 225 && angle < 315) {
-              keys.push('ArrowDown');
+            if (angle >= 300 || angle < 60) {
+              keys.push('ArrowRight');
+            }
+            if (force > 0.3) {
+              if (angle >= 60 && angle < 120) {
+                keys.push('ArrowUp');
+              }
+
+              if (angle >= 240 && angle < 300) {
+                keys.push('ArrowDown');
+              }
             }
 
             keys.forEach(key => {
@@ -210,11 +224,8 @@
           currentMovementKeys.clear();
         });
 
-        // Weapon joystick logic (new)
         let currentWeaponKeys = new Set();
-
         weaponManager.on('move', function (evt, data) {
-          // Clear previous weapon keys
           currentWeaponKeys.forEach(key => {
             simulateKeyUp(key);
           });
@@ -223,7 +234,7 @@
           const angle = data.angle.degree;
           const force = data.force;
 
-          if (force > 0.3) {
+          if (force > 0.9) {
             let keys = [];
 
             // UP = Tab (switch weapon)
