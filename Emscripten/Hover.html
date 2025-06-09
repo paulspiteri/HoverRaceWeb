@@ -3,9 +3,11 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>HoverRace</title>
     <script src="https://unpkg.com/nipplejs@0.10.2/dist/nipplejs.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
     <style>
       html, body {
         margin: 0;
@@ -18,7 +20,7 @@
 
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
       div.emscripten { text-align: center; }
-      div.emscripten_border {  }
+      div.emscripten_border { width: 100%; height: 100%; }
       /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
       canvas.emscripten {
         border: 0 none;
@@ -66,6 +68,23 @@
           display: block;
         }
       }
+
+      @media (max-aspect-ratio: 1/1) {
+        #joystick-zone,
+        #weapon-joystick-zone {
+          width: 120px;
+          height: 120px;
+          bottom: 15px;
+        }
+
+        #joystick-zone {
+          left: 15px;
+        }
+
+        #weapon-joystick-zone {
+          right: 15px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -73,7 +92,7 @@
     <div class="emscripten">
       <progress value="0" max="100" id="progress" hidden=1></progress>  
     </div>
-    <div class="emscripten_border">
+    <div class="emscripten_border" id="fullscreen-container">
       <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
 
       <div id="joystick-zone"></div>
@@ -147,6 +166,12 @@
         monitorRunDependencies(left) {
           this.totalDependencies = Math.max(this.totalDependencies, left);
           Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        },
+        onRuntimeInitialized() {
+          setTimeout(() => {
+            console.log('Runtime initialized');
+            updateCanvasSize(undefined);
+          }, 0);
         }
       };
       Module.setStatus('Downloading...');
@@ -160,7 +185,29 @@
 
     <script type='text/javascript'>
       function goFullscreen() {
-        Module.requestFullscreen(false, false);
+        const container = document.getElementById("fullscreen-container");
+        if (container.requestFullscreen) {
+          container.requestFullscreen();
+        } else if (container.webkitRequestFullscreen) {
+          container.webkitRequestFullscreen(); // Safari
+        } else if (container.mozRequestFullScreen) {
+          container.mozRequestFullScreen(); // Firefox
+        } else if (container.msRequestFullscreen) {
+          container.msRequestFullscreen(); // IE/Edge
+        }
+      }
+
+      function updateCanvasSize(evt) {
+        const container = document.getElementById("fullscreen-container");
+        const rect = container.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        const w = rect.width * dpr;
+        const h = rect.height * dpr;
+        Module.ccall('ChangeWindowSize', null, ['number', 'number'], [w, h])
+
+        if (evt?.type !== 'resize'){
+          window.dispatchEvent(new Event('resize'));
+        }
       }
 
       function initVirtualJoysticks() {
@@ -291,6 +338,10 @@
       window.addEventListener('load', function() {
         initVirtualJoysticks();
       });
+
+      window.addEventListener("resize", updateCanvasSize);
+      window.addEventListener("orientationchange", updateCanvasSize);
+      window.addEventListener("fullscreenchange", updateCanvasSize);
     </script>
 
     {{{ SCRIPT }}}

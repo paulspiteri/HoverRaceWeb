@@ -19,18 +19,22 @@ MR_SDLGameApp *game = nullptr;
 int lControlState = 0;
 
 extern "C" {
-void ChangeToTrack(const char *trackFile) {
-    printf("ChangeToTrack: %s\n", trackFile);
-    if (game != nullptr) {
-        game->Clean();
-        game->LoadSelectedTrack(trackFile);
-        int width, height;
-        SDL_GetWindowSize(glWindow, &width, &height);
-        game->SetOpenGLResolution(width, height);
+    void ChangeToTrack(const char *trackFile) {
+        printf("ChangeToTrack: %s\n", trackFile);
+        if (game != nullptr) {
+            game->Clean();
+            game->LoadSelectedTrack(trackFile);
+            int width, height;
+            SDL_GetWindowSize(glWindow, &width, &height);
+            game->SetOpenGLResolution(width, height);
+        }
+    }
+
+    void ChangeWindowSize(const int width, const int height) {
+        std::cout << "ChangeWindowSize " << width << "x" << height << std::endl;
+        SDL_SetWindowSize(glWindow, width, height);
     }
 }
-}
-
 std::optional<std::string> GetTrack() {
     std::string defaultTrackFile = "Steeplechase.trk";
     if (std::filesystem::exists(defaultTrackFile)) {
