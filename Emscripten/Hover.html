@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>HoverRace</title>
     <script src="https://unpkg.com/nipplejs@0.10.2/dist/nipplejs.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
@@ -14,7 +14,7 @@
         padding: 0;
         width: 100%;
         height: 100%;
-        overflow: hidden;
+        overflow: auto;
         user-select: none;
       }
 
@@ -35,7 +35,16 @@
 
       .trackselection {
         position: absolute;
-        top: 0;
+        top: 0px;
+      }
+
+      @supports (-webkit-touch-callout: none) {
+        @media only screen
+        and (orientation: landscape) {
+          #fullscreen-btn {
+            visibility: collapse;
+          }
+        }
       }
 
       #joystick-zone {
@@ -102,13 +111,13 @@
       </div>
     </div>
     <hr/>
-    <div class="emscripten trackselection">
+    <div id="trackselection" class="emscripten trackselection">
       <input type="button" value="ClassicH" onclick="Module.ccall('ChangeToTrack', null, ['string'], ['ClassicH.trk'])" />
       <input type="button" value="Steeplechase" onclick="Module.ccall('ChangeToTrack', null, ['string'], ['Steeplechase.trk'])" />
       <input type="button" value="The Alley2" onclick="Module.ccall('ChangeToTrack', null, ['string'], ['The Alley2.trk'])" />
       <input type="button" value="The River" onclick="Module.ccall('ChangeToTrack', null, ['string'], ['The River.trk'])" />
       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <input type="button" value="Fullscreen" onclick="goFullscreen()" />
+      <input id="fullscreen-btn" type="button" value="Fullscreen" onclick="goFullscreen()" />
     </div>
 
 
@@ -126,6 +135,8 @@
         alert('WebGL context lost. You will need to reload the page.');
         e.preventDefault();
       }, false);
+
+      var isInitialized = false;
 
       var Module = {
         print(...args) {
@@ -168,6 +179,7 @@
           Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
         },
         onRuntimeInitialized() {
+          isInitialized = true;
           setTimeout(() => {
             console.log('Runtime initialized');
             updateCanvasSize(undefined);
@@ -198,6 +210,9 @@
       }
 
       function updateCanvasSize(evt) {
+        if (!isInitialized) {
+          return;
+        }
         const container = document.getElementById("fullscreen-container");
         const rect = container.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
@@ -207,6 +222,13 @@
 
         if (evt?.type !== 'resize'){
           window.dispatchEvent(new Event('resize'));
+        }
+
+        const isIOS = /iPad|iPhone/.test(navigator.userAgent);
+        if (isIOS) {
+          canvasElement.style.top = '85px';
+          document.getElementById("trackselection").style.top = '85px';
+          window.scrollTo(0, 85);
         }
       }
 
@@ -219,6 +241,8 @@
           color: 'blue',
           size: 120
         });
+        joystickZone.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+        joystickZone.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
         const weaponJoystickZone = document.getElementById('weapon-joystick-zone');
         const weaponManager = nipplejs.create({
@@ -228,6 +252,8 @@
           color: 'red',
           size: 120
         });
+        weaponJoystickZone.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+        weaponJoystickZone.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
         let currentMovementKeys = new Set();
         movementManager.on('move', function (evt, data) {
