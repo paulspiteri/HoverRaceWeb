@@ -6,10 +6,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
 
-add_library(sokol INTERFACE)
-target_include_directories(sokol INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/vendored/sokol)
+
 
 include(FetchContent)
+FetchContent_Declare(
+        sokol
+        GIT_REPOSITORY https://github.com/floooh/sokol.git
+        GIT_TAG 55af0a43deff7e9907ffeb5112b5c6ed1480bfb7
+)
+FetchContent_MakeAvailable(sokol)
+add_library(sokol INTERFACE)
+target_include_directories(sokol INTERFACE ${sokol_SOURCE_DIR})
+
 FetchContent_Declare(
         glm
         GIT_REPOSITORY	https://github.com/g-truc/glm.git

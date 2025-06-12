@@ -16,6 +16,7 @@
 #include <chrono>
 
 #include "util/sokol_imgui.h"
+#include "sokol_gfx.h"
 
 GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer)
     : glWindow(glWindow), glContext(glContext), videoBuffer(videoBuffer)
@@ -480,15 +481,19 @@ void GLRenderer::BindWorldTextures()
 void GLRenderer::BindWorldVertices(const VerticesData<VertexWithTextureId>& vertices)
 {
     sg_buffer_desc buf_desc = {
-        .type = SG_BUFFERTYPE_VERTEXBUFFER,
-        .usage = SG_USAGE_IMMUTABLE,
+        .usage= {
+            .vertex_buffer = true,
+            .immutable = true
+        },
         .data = make_sg_range(vertices.vertices),
         .label = "floor-vertices"
     };
     state.world_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
 
     sg_buffer_desc index_buf_desc = {
-        .type = SG_BUFFERTYPE_INDEXBUFFER,
+        .usage= {
+            .index_buffer = true,
+        },
         .data = make_sg_range(vertices.indices),
         .label = "floor-indices"
     };
@@ -505,15 +510,19 @@ void GLRenderer::BindWaterVertices(const VerticesData<VertexWithTextureId>& vert
     }
 
     sg_buffer_desc buf_desc = {
-        .type = SG_BUFFERTYPE_VERTEXBUFFER,
-        .usage = SG_USAGE_IMMUTABLE,
+        .usage= {
+            .vertex_buffer = true,
+            .immutable = true
+        },
         .data = make_sg_range(vertices.vertices),
         .label = "water-vertices"
     };
     state.water_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
 
     sg_buffer_desc index_buf_desc = {
-        .type = SG_BUFFERTYPE_INDEXBUFFER,
+        .usage= {
+            .index_buffer = true,
+        },
         .data = make_sg_range(vertices.indices),
         .label = "water-indices"
     };
@@ -525,15 +534,19 @@ void GLRenderer::BindWaterVertices(const VerticesData<VertexWithTextureId>& vert
 void GLRenderer::BindWallVertices(const VerticesData<WallVertex>& vertices)
 {
     sg_buffer_desc buf_desc = {
-        .type = SG_BUFFERTYPE_VERTEXBUFFER,
-        .usage = SG_USAGE_IMMUTABLE,
+        .usage= {
+            .vertex_buffer = true,
+            .immutable = true
+        },
         .data = make_sg_range(vertices.vertices),
         .label = "wall-vertices"
     };
     state.wall_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
 
     sg_buffer_desc index_buf_desc = {
-        .type = SG_BUFFERTYPE_INDEXBUFFER,
+        .usage= {
+            .index_buffer = true,
+        },
         .data = make_sg_range(vertices.indices),
         .label = "wall-indices"
     };
@@ -547,13 +560,17 @@ void GLRenderer::BindFreeElementVertices(const std::unordered_map<int, VerticesD
     for (const auto& [elementId, vertices] : freeElements)
     {
         sg_buffer_desc buf_desc = {
-            .type = SG_BUFFERTYPE_VERTEXBUFFER,
-            .usage = SG_USAGE_IMMUTABLE,
+            .usage= {
+                .vertex_buffer = true,
+                .immutable = true
+            },
             .data = make_sg_range(vertices.vertices),
             .label = "free_element-vertices"
         };
         sg_buffer_desc index_buf_desc = {
-            .type = SG_BUFFERTYPE_INDEXBUFFER,
+            .usage= {
+                .index_buffer = true,
+            },
             .data = make_sg_range(vertices.indices),
             .label = "free_element-indices"
         };
@@ -605,8 +622,10 @@ void GLRenderer::BindFreeElementInstances(
             }
             sg_buffer_desc instance_buf_desc = {
                 .size = instances.size() * sizeof(FreeElementInstance),
-                .type = SG_BUFFERTYPE_VERTEXBUFFER,
-                .usage = SG_USAGE_DYNAMIC,
+                .usage= {
+                    .vertex_buffer = true,
+                    .dynamic_update = true
+                },
                 .label = "free_element-instances",
             };
             state.free_element_bindings[elementId].vertex_buffers[1] = sg_make_buffer(&instance_buf_desc);
@@ -689,15 +708,19 @@ void GLRenderer::BindSpriteTextures()
 void GLRenderer::BindBackgroundVertices(const VerticesData<Vertex>& vertices)
 {
     sg_buffer_desc buf_desc = {
-        .type = SG_BUFFERTYPE_VERTEXBUFFER,
-        .usage = SG_USAGE_IMMUTABLE,
+        .usage= {
+            .vertex_buffer = true,
+            .immutable = true
+        },
         .data = make_sg_range(vertices.vertices),
         .label = "background-vertices"
     };
     state.bkg_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
 
     sg_buffer_desc index_buf_desc = {
-        .type = SG_BUFFERTYPE_INDEXBUFFER,
+        .usage= {
+            .index_buffer = true,
+        },
         .data = make_sg_range(vertices.indices),
         .label = "background-indices"
     };
