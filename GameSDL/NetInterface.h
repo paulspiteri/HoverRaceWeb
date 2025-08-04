@@ -24,7 +24,13 @@
 #ifndef NET_INTERFACE_H
 #define NET_INTERFACE_H
 
-#include <WINSOCK.h>
+#include <sys/socket.h>     // Core socket functions
+#include <netinet/in.h>     // Internet address family
+#include <arpa/inet.h>      // inet_addr(), inet_ntoa()
+#include <netdb.h>          // gethostbyname(), gethostbyaddr()
+#include <unistd.h>         // close()
+#include <fcntl.h>          // fcntl() for non-blocking sockets
+#include <string>
 
 #include "../Util/MR_Types.h"
 
@@ -40,18 +46,17 @@
 #define MR_NOT_REQUIRED         0
 #define MR_NET_DATAGRAM        -1
 
+
+using SOCKET = int;
+
 class MR_NetMessageBuffer
 {
    public:
-      // MR_UInt16  mSendingTime:10; // 4ms of precision on a +-2sec range (if a datagram take more than 2 sec to travel..it will be droped (UDP only)
-                                     // Not used yet
       MR_UInt16  mDatagramNumber:8;  // used only for datagram
       MR_UInt16  mDatagramQueue:2;   // used only for datagram
       MR_UInt16  mMessageType:6;
       MR_UInt8   mDataLen;
       MR_UInt8   mData[ MR_MAX_NET_MESSAGE_LEN ];
-
-      // int MessageLen()const { return mDataLen+5; }
 };
 
 #define MR_NET_HEADER_LEN  (sizeof( MR_NetMessageBuffer )-MR_MAX_NET_MESSAGE_LEN)
@@ -60,13 +65,11 @@ class MR_NetMessageBuffer
 class MR_NetworkPort
 {
    private:
-      // CString mNetAddr;
-      // int     mPort;
-      SOCKET  mSocket;      
+      SOCKET  mSocket;
 
       // UDP Information
       SOCKET        mUDPRecvSocket;
-      SOCKADDR_IN   mUDPRemoteAddr;
+      sockaddr_in   mUDPRemoteAddr;
 
       MR_UInt8      mLastSendedDatagramNumber[4];
       MR_UInt8      mLastReceivedDatagramNumber[4];
@@ -97,19 +100,19 @@ class MR_NetworkPort
       void SetRemoteUDPPort( unsigned int pPort );
       unsigned int GetUDPPort()const;
       void Disconnect();
-      BOOL IsConnected()const;
+      bool IsConnected()const;
 
       SOCKET GetSocket()const;
       SOCKET GetUDPSocket()const;
 
       const MR_NetMessageBuffer* Poll( );
       void                       Send( const MR_NetMessageBuffer* pMessage, int pReqLevel );
-      BOOL                       UDPSend( SOCKET pSocket, MR_NetMessageBuffer* pMessage, unsigned pQueueId, BOOL pResendLast );
+      bool                       UDPSend( SOCKET pSocket, MR_NetMessageBuffer* pMessage, unsigned pQueueId, bool pResendLast );
 
 
       // Time related stuff
-      BOOL  AddLagSample( int pLag );
-      BOOL  LagDone()const;
+      bool  AddLagSample( int pLag );
+      bool  LagDone()const;
 
       int           GetAvgLag()const;
       int           GetMinLag()const;
@@ -131,13 +134,13 @@ class MR_NetworkInterface
    private:
 
 
-      CString  mPlayer;
+      std::string  mPlayer;
       int      mId;
-      BOOL     mServerMode;
+      bool     mServerMode;
       SOCKET   mRegistrySocket;
       int      mServerPort;
-      CString  mServerAddr;
-      CString  mGameName;
+      std::string  mServerAddr;
+      std::string  mGameName;
 
       // UDP port
       SOCKET   mUDPOutShortPort;
@@ -145,22 +148,22 @@ class MR_NetworkInterface
 
       // Data
       MR_NetworkPort mClient[ eMaxClient ];
-      CString        mClientName[ eMaxClient ];
-      BOOL           mAllPreLoguedRecv; // Used by client to know if all prelogued have been received
-      BOOL           mCanBePreLogued[ eMaxClient ];
-      BOOL           mPreLoguedClient[ eMaxClient ];
-      BOOL           mConnected[ eMaxClient ];       // Correctly connected state used by the server
-      DWORD          mClientAddr[ eMaxClient ];      // Used only in server mode
+      std::string    mClientName[ eMaxClient ];
+      bool           mAllPreLoguedRecv; // Used by client to know if all prelogued have been received
+      bool           mCanBePreLogued[ eMaxClient ];
+      bool           mPreLoguedClient[ eMaxClient ];
+      bool           mConnected[ eMaxClient ];       // Correctly connected state used by the server
+      uint32_t       mClientAddr[ eMaxClient ];      // Used only in server mode
       int            mClientPort[ eMaxClient ];      // Used only in server mode
 
       int            mReturnMessage; // Message to return to the parent window in modeless mode
 
       // Dialog functions
       static MR_NetworkInterface* mActiveInterface;
-      static BOOL CALLBACK ServerPortCallBack(   HWND pWindow, UINT  pMsgId, WPARAM  pWParam, LPARAM  pLParam );
-      static BOOL CALLBACK ServerAddrCallBack(   HWND pWindow, UINT  pMsgId, WPARAM  pWParam, LPARAM  pLParam );
-      static BOOL CALLBACK WaitGameNameCallBack( HWND pWindow, UINT  pMsgId, WPARAM  pWParam, LPARAM  pLParam );
-      static BOOL CALLBACK ListCallBack(         HWND pWindow, UINT  pMsgId, WPARAM  pWParam, LPARAM  pLParam );
+      // static BOOL CALLBACK ServerPortCallBack(   HWND pWindow, UINT  pMsgId, WPARAM  pWParam, LPARAM  pLParam );
+      // static BOOL CALLBACK ServerAddrCallBack(   HWND pWindow, UINT  pMsgId, WPARAM  pWParam, LPARAM  pLParam );
+      // static BOOL CALLBACK WaitGameNameCallBack( HWND pWindow, UINT  pMsgId, WPARAM  pWParam, LPARAM  pLParam );
+      // static BOOL CALLBACK ListCallBack(         HWND pWindow, UINT  pMsgId, WPARAM  pWParam, LPARAM  pLParam );
 
       // Helper func
       void SendConnectionDoneIfNeeded();
@@ -173,9 +176,9 @@ class MR_NetworkInterface
       void  SetPlayerName( const char* pPlayerName );
       const char* GetPlayerName()const;
 
-      BOOL MasterConnect( HWND pWindow, const char* pGameName, BOOL pPromptForPort = TRUE, unsigned pDefaultPort = MR_DEFAULT_NET_PORT, HWND* pModalessDlg = NULL, int pReturnMessage = 0);
-      BOOL SlavePreConnect( HWND pWindow, CString& pGameName );
-      BOOL SlaveConnect( HWND pWindow, const char* pServerIP=NULL, unsigned pPort = MR_DEFAULT_NET_PORT, const char* pGameName = NULL, HWND* pModalessDlg = NULL, int pReturnMessage = 0 );
+      // bool MasterConnect( HWND pWindow, const char* pGameName, bool pPromptForPort = TRUE, unsigned pDefaultPort = MR_DEFAULT_NET_PORT, HWND* pModalessDlg = NULL, int pReturnMessage = 0);
+      // bool SlavePreConnect( HWND pWindow, CString& pGameName );
+      // bool SlaveConnect( HWND pWindow, const char* pServerIP=NULL, unsigned pPort = MR_DEFAULT_NET_PORT, const char* pGameName = NULL, HWND* pModalessDlg = NULL, int pReturnMessage = 0 );
 
       void Disconnect();
 
@@ -186,13 +189,13 @@ class MR_NetworkInterface
       int  GetAvgLag( int pClient )const;
       int  GetMinLag( int pClient )const;
 
-      BOOL UDPSend( int pClient, MR_NetMessageBuffer* pMessage, BOOL pLongPort, BOOL pResendLast = FALSE ); // return TRUE if queue not full
-      BOOL BroadcastMessage( MR_NetMessageBuffer* pMessage, int pReqLevel );
+      bool UDPSend( int pClient, MR_NetMessageBuffer* pMessage, bool pLongPort, bool pResendLast = false ); // return TRUE if queue not full
+      bool BroadcastMessage( MR_NetMessageBuffer* pMessage, int pReqLevel );
       // BOOL BroadcastMessage( DWORD  pTimeStamp, int  pMessageType, int pMessageLen, const MR_UInt8* pMessage );
-      BOOL FetchMessage(     DWORD& pTimeStamp, int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage, int& pClientId ); // pTimeStamp must be set to current time stamp before fetch
+      bool FetchMessage(     uint32_t& pTimeStamp, int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage, int& pClientId ); // pTimeStamp must be set to current time stamp before fetch
 
       const char* GetPlayerName( int pIndex )const;
-      BOOL        IsConnected( int pIndex )const;
+      bool        IsConnected( int pIndex )const;
       
 };
 
