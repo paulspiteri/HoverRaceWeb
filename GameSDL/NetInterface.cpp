@@ -19,12 +19,9 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
-#include <Mmsystem.h>
+#include "../Util/nomfc_stdafx.h"
 
 #include "NetInterface.h"
-#include "resource.h"
 #include "../Util/StrRes.h"
 
 
@@ -54,9 +51,8 @@
 #define MR_PING_RETRY_TIME   750
 
 // Local prototypes
-static CString   GetLocalAddrStr();
+static std::string   GetLocalAddrStr();
 static MR_UInt32 GetAddrFromStr( const char *pName );
-static BOOL CALLBACK DialogProc( HWND hwndDlg, UINT uMsg,WPARAM wParam,LPARAM lParam );
 
 
 MR_NetworkInterface* MR_NetworkInterface::mActiveInterface = NULL;
@@ -66,23 +62,7 @@ MR_NetworkInterface::MR_NetworkInterface()
 {
    ASSERT( MR_NET_HEADER_LEN == 3 );
 
-   WORD    lVersionRequested = MAKEWORD(1, 1); 
-   WSADATA lWsaData;
- 
-   if( WSAStartup( lVersionRequested, &lWsaData) )
-   {
-      ASSERT( FALSE );
-   }
-
-   char lNameBuffer[80];
-   DWORD lNameLen = sizeof( lNameBuffer );
-
-   
-   if( GetUserName( lNameBuffer, &lNameLen ) )
-   {
-      mPlayer           = lNameBuffer;
-   }
-
+   mPlayer           = "Unknown Player Name!";
    mId               = 0;
    mServerMode       = FALSE;
    mRegistrySocket   = INVALID_SOCKET;
@@ -180,7 +160,7 @@ const char* MR_NetworkInterface::GetPlayerName( int pIndex )const
    return lReturnValue;
 }
 
-BOOL MR_NetworkInterface::IsConnected( int pIndex )const
+bool MR_NetworkInterface::IsConnected( int pIndex )const
 {
    ASSERT( pIndex < eMaxClient );
 
@@ -270,7 +250,7 @@ int MR_NetworkInterface::GetAvgLag( int pClient )const
 }
 
 
-BOOL MR_NetworkInterface::UDPSend( int pClient, MR_NetMessageBuffer* pMessage, BOOL pLongPort, BOOL pResendLast )
+bool MR_NetworkInterface::UDPSend( int pClient, MR_NetMessageBuffer* pMessage, bool pLongPort, bool pResendLast )
 {
    ASSERT( (pClient >=0)&&(pClient<eMaxClient) );
 
@@ -278,7 +258,7 @@ BOOL MR_NetworkInterface::UDPSend( int pClient, MR_NetMessageBuffer* pMessage, B
 }
 
 
-BOOL MR_NetworkInterface::BroadcastMessage( MR_NetMessageBuffer* pMessage, int pReqLevel )
+bool MR_NetworkInterface::BroadcastMessage( MR_NetMessageBuffer* pMessage, int pReqLevel )
 {
    for( int lCounter = 0; lCounter < eMaxClient; lCounter++ )
    {
@@ -294,26 +274,8 @@ BOOL MR_NetworkInterface::BroadcastMessage( MR_NetMessageBuffer* pMessage, int p
    return TRUE;
 }
 
-/*
-BOOL MR_NetworkInterface::BroadcastMessage( DWORD  pTimeStamp, int  pMessageType, int pMessageLen, const MR_UInt8* pMessage )
-{
-   MR_NetMessageBuffer lMessage;
 
-   lMessage.mSendingTime = pTimeStamp;
-   lMessage.mMessageType = pMessageType;
-   lMessage.mDataLen     = pMessageLen;
-
-   if( pMessageLen > 0 )
-   {
-      memcpy( lMessage.mData, pMessage, pMessageLen );
-   }
-
-   return BroadcastMessage( &lMessage );
-
-}
-*/
-
-BOOL MR_NetworkInterface::FetchMessage( DWORD& pTimeStamp, int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage, int& pClientId )
+bool MR_NetworkInterface::FetchMessage( DWORD& pTimeStamp, int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage, int& pClientId )
 {
    BOOL       lReturnValue = FALSE;
    static int sLastClient  = 0;
@@ -336,24 +298,6 @@ BOOL MR_NetworkInterface::FetchMessage( DWORD& pTimeStamp, int& pMessageType, in
          pMessageLen  = lMessage->mDataLen;
          pMessageType = lMessage->mMessageType;
 
-         /*
-         DWORD lOtherSideEval = pTimeStamp-mClient[ lClient ].GetLag();
-
-         DWORD lOtherSideTime = lOtherSideEval&~4095 + lMessage->mSendingTime<<2;
-
-         int lDiff = lOtherSideTime-lOtherSideEval;
-
-         if( lDiff > 2048 )
-         {
-            lOtherSideTime -= 4096;
-         }
-         else if(lDiff < -2048 )
-         {
-            lOtherSideTime += 4096;
-         }
-
-         pTimeStamp = lOtherSideTime;   
-         */
          pTimeStamp = 0;
          
          pClientId = lClient;
@@ -370,10 +314,10 @@ void MR_NetworkInterface::SetPlayerName( const char* pPlayerName )
 
 const char* MR_NetworkInterface::GetPlayerName( )const
 {
-   return mPlayer;
+   return mPlayer.c_str();
 }
 
-BOOL MR_NetworkInterface::MasterConnect( HWND pWindow, const char* pGameName, BOOL pPromptForPort, unsigned pDefaultPort, HWND* pModalessDlg, int pReturnMessage )
+bool MR_NetworkInterface::MasterConnect( HWND pWindow, const char* pGameName, BOOL pPromptForPort, unsigned pDefaultPort, HWND* pModalessDlg, int pReturnMessage )
 {
    BOOL lReturnValue = FALSE;
    mActiveInterface = this;
@@ -467,7 +411,7 @@ BOOL MR_NetworkInterface::MasterConnect( HWND pWindow, const char* pGameName, BO
 
 
 
-BOOL MR_NetworkInterface::SlavePreConnect( HWND pWindow, CString& pGameName )
+bool MR_NetworkInterface::SlavePreConnect( HWND pWindow, CString& pGameName )
 {
    BOOL lReturnValue = FALSE;
    mActiveInterface  = this;
@@ -583,9 +527,9 @@ BOOL MR_NetworkInterface::SlaveConnect( HWND pWindow, const char* pServerIP, uns
 }
 
 
-BOOL CALLBACK MR_NetworkInterface::ServerPortCallBack( HWND pWindow, UINT  pMsgId, WPARAM  pWParam, LPARAM  pLParam )
+bool CALLBACK MR_NetworkInterface::ServerPortCallBack( HWND pWindow, UINT  pMsgId, WPARAM  pWParam, LPARAM  pLParam )
 {
-   BOOL lReturnValue = FALSE;
+   bool lReturnValue = FALSE;
 
    switch( pMsgId )
    {
@@ -1663,7 +1607,7 @@ void MR_NetworkPort::Disconnect()
 
 }
 
-BOOL MR_NetworkPort::IsConnected()const
+bool MR_NetworkPort::IsConnected()const
 {
    return( mSocket != INVALID_SOCKET );
 }
@@ -1767,9 +1711,9 @@ const MR_NetMessageBuffer* MR_NetworkPort::Poll( )
 }
 
 
-BOOL MR_NetworkPort::UDPSend( SOCKET pSocket, MR_NetMessageBuffer* pMessage, unsigned pQueueId, BOOL pResendLast )
+bool MR_NetworkPort::UDPSend( SOCKET pSocket, MR_NetMessageBuffer* pMessage, unsigned pQueueId, BOOL pResendLast )
 {
-   BOOL lReturnValue = TRUE;
+   bool lReturnValue = TRUE;
 
    // Debug lost packet simulation
    /*
@@ -1804,7 +1748,7 @@ void  MR_NetworkPort::Send( const MR_NetMessageBuffer* pMessage, int pReqLevel )
    // First try to send buffered data
    if( mSocket != INVALID_SOCKET )
    {
-      BOOL lEndQueueLoop = (mOutQueueLen==0);
+      bool lEndQueueLoop = (mOutQueueLen==0);
       
       while( !lEndQueueLoop )
       {
@@ -1921,7 +1865,7 @@ void  MR_NetworkPort::Send( const MR_NetMessageBuffer* pMessage, int pReqLevel )
    }
 }
 
-BOOL MR_NetworkPort::AddLagSample( int pLag )
+bool MR_NetworkPort::AddLagSample( int pLag )
 {
    mNbLagTest++;
 
@@ -1934,7 +1878,7 @@ BOOL MR_NetworkPort::AddLagSample( int pLag )
    return LagDone();
 }
 
-BOOL MR_NetworkPort::LagDone()const
+bool MR_NetworkPort::LagDone()const
 {
    return( mNbLagTest >= 5 );
 }
@@ -1962,9 +1906,9 @@ void MR_NetworkPort::SetLag( int pAvgLag, int pMinLag )
 
 // Helper functions
    
-CString GetLocalAddrStr()
+std::string GetLocalAddrStr()
 {
-   CString lReturnValue;
+   std::string lReturnValue;
 
    char     lHostname[100];
    HOSTENT *lHostEnt;
@@ -2032,25 +1976,3 @@ MR_UInt32 GetAddrFromStr( const char *pName )
    }
    return lReturnValue;
 }
-
-static BOOL CALLBACK DialogProc( HWND pWindow, UINT uMsg,WPARAM wParam,LPARAM lParam )
-{
-   switch( uMsg )
-   {
-      case WM_COMMAND:
-         switch(LOWORD( wParam))
-         {
-            case IDCANCEL:
-               EndDialog( pWindow, IDCANCEL );
-               return TRUE;
-
-            case IDOK:
-               EndDialog( pWindow, IDOK );
-               return TRUE;
-         }
-   }
-
-   return FALSE;
-}
-
-
