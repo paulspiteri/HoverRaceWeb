@@ -25,10 +25,12 @@
 #ifndef CLIENT_SESSION_H
 #define CLIENT_SESSION_H
 
+#include <string>
+#include <mutex>
+
 #include "../Model/GameSession.h"
 #include "../MainCharacter/MainCharacter.h"
 #include "../VideoServices/Sprite.h"
-#include <string>
 
 #define MR_CHAT_MESSAGE_STACK   8
 
@@ -42,6 +44,7 @@ class MR_ClientSession
             std::string mBuffer;
       };
 
+      std::mutex           mChatMutex;
       ChatMessage          mMessageStack[MR_CHAT_MESSAGE_STACK];
 
 

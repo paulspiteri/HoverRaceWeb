@@ -26,8 +26,9 @@
 #define NETWORK_SESSION_H
 
 #include "ClientSession.h"
-#include "NetInterface.h"
+#include "ENetInterface.h"
 
+#include "../Util/nomfc_stdafx.h"
 
 
 class MR_NetworkSession: public MR_ClientSession
@@ -56,7 +57,7 @@ class MR_NetworkSession: public MR_ClientSession
 
 
       BOOL                  mMasterMode;
-      MR_NetworkInterface   mNetInterface;
+      ENetInterface         mNetInterface;
       BOOL                  mTimeToSendCharacterCreation; // 0 mean sended
       BOOL                  mSended12SecClockUpdate; // User by server to adjust client clock
       BOOL                  mSended8SecClockUpdate;
@@ -64,11 +65,11 @@ class MR_NetworkSession: public MR_ClientSession
       int                   mMinorID;
 
       int                   mSendedPlayerStats;
-      MR_FreeElementHandle  mClient[ MR_NetworkInterface::eMaxClient ];
-      MR_MainCharacter*     mClientCharacter[ MR_NetworkInterface::eMaxClient ];
+      MR_FreeElementHandle  mClient[ ENetInterface::eMaxClient ];
+      MR_MainCharacter*     mClientCharacter[ ENetInterface::eMaxClient ];
 
       int                   mLastSendElemStateFuncTime;
-      int                   mLastSendElemStateTime[ MR_NetworkInterface::eMaxClient ];
+      int                   mLastSendElemStateTime[ ENetInterface::eMaxClient ];
 
       PlayerResult*        mResultList;
       PlayerResult*        mHitList;
@@ -76,7 +77,6 @@ class MR_NetworkSession: public MR_ClientSession
       char                 mChatEditBuffer[70];
 
       BOOL                 mInternetGame;
-      HWND                 mWindow;
 
       // Awfull Ladder patch
       int mOpponendMajorID;
@@ -106,7 +106,7 @@ class MR_NetworkSession: public MR_ClientSession
 
    public:
       // Creation and destruction
-      MR_NetworkSession( BOOL pInternetGame, int pMajorID, int pMinorID, HWND pWindow );
+      MR_NetworkSession();
       ~MR_NetworkSession();
 
       // Simulation control
@@ -120,9 +120,9 @@ class MR_NetworkSession: public MR_ClientSession
 
       void        SetPlayerName( const char* pPlayerName );
       const char* GetPlayerName()const;
-      BOOL WaitConnections( HWND pWindow, const char* pTrackName, BOOL pPromptForPort = TRUE, unsigned pDefaultPort = MR_DEFAULT_NET_PORT, HWND* pModalessDlg = NULL, int pReturnMessage = 0 );
-      BOOL PreConnectToServer( HWND pWindow, CString& pTrackName );
-      BOOL ConnectToServer( HWND pWindow, const char* pServerIP=NULL, unsigned pPort = MR_DEFAULT_NET_PORT, const char* pGameName = NULL, HWND* pModalessDlg = NULL, int pReturnMessage = 0 );
+      BOOL WaitConnections(const char* pTrackName, BOOL pPromptForPort = TRUE, unsigned pDefaultPort = MR_DEFAULT_NET_PORT, int pReturnMessage = 0 );
+      BOOL PreConnectToServer(std::string& pTrackName );
+      BOOL ConnectToServer(const char* pServerIP=NULL, unsigned pPort = MR_DEFAULT_NET_PORT, const char* pGameName = NULL, int pReturnMessage = 0 );
 
       int   ResultAvaillable()const; // Return the number of players desc avail
       void  GetResult( int pPosition, const char*& pPlayerName, int& pId, BOOL& pConnected, int& pNbLap, MR_SimulationTime& pFinishTime, MR_SimulationTime& pBestLap )const;

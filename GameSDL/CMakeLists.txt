@@ -5,7 +5,8 @@ add_executable(GameSDL
     SDLGameApp.cpp
     sdlmain.cpp
     GLLevelLoader.cpp
-    NetInterface.cpp
+    ENetInterface.cpp
+    NetworkSession.cpp
 )
 
 target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3-static sokol glm::glm imgui

@@ -19,12 +19,10 @@
 // and limitations under the License.
 //
 
-#include "stdafx.h"
-
-#include <Mmsystem.h>
 #include "NetworkSession.h"
-#include "InternetRoom.h"
-#include "resource.h"
+
+#include <chrono>
+
 #include "../Util/StrRes.h"
 
 
@@ -52,19 +50,20 @@ public:
 
 };
 
+// mimics the Windows mmsystem timeGetTime which is ms since system started
+uint32_t timeGetTime() {
+   static auto start = std::chrono::steady_clock::now();
+   auto now = std::chrono::steady_clock::now();
+   auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
+   return static_cast<uint32_t>(elapsed.count());
+}
 
-// Functions implementation
-
-MR_NetworkSession::MR_NetworkSession( BOOL pInternetGame, int pMajorID, int pMinorID, HWND pWindow )
+MR_NetworkSession::MR_NetworkSession()
                   :MR_ClientSession()
 {
    mMasterMode   = FALSE;
-   mInternetGame = pInternetGame;
-   mMajorID      = pMajorID;
-   mMinorID      = pMinorID;
-   mWindow       = pWindow;
 
-   for( int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for( int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
    {
       mClientCharacter[ lCounter ] = NULL;
       mLastSendElemStateTime[ lCounter ] = timeGetTime();
@@ -87,85 +86,6 @@ MR_NetworkSession::MR_NetworkSession( BOOL pInternetGame, int pMajorID, int pMin
 
 MR_NetworkSession::~MR_NetworkSession()
 {
-
-   if( mInternetGame && (mMainCharacter1 != NULL ) )
-   {
-      int lCurrentModel = mMainCharacter1->GetHoverModel();
-
-      // Send results to the record server
-      if( mMajorID != -1 )
-      {
-         /*
-         PlayerResult* lBest    = NULL;
-         PlayerResult* lCurrent = mResultList;
-
-         // Verify if we have the best lap
-         while( lCurrent!= NULL )
-         {
-            if(  (lCurrent->mCraftModel == lCurrentModel )
-               &&(lCurrent->mBestLap>0)
-               &&((lBest==NULL)||(lCurrent->mBestLap<lBest->mBestLap )))
-            {
-               lBest = lCurrent;
-            }
-            lCurrent = lCurrent->mNext;
-         }
-         */
-
-         // Find current user results
-         int lNbPlayer = 0;
-         PlayerResult* lCurrent = mResultList;
-         PlayerResult* lPlayer = NULL;
-
-         // Verify if we have the best lap
-         while( lCurrent!= NULL )
-         {
-            if(  lCurrent->mPlayerIndex == -1 )
-            {
-               lPlayer = lCurrent;
-            }
-            lCurrent = lCurrent->mNext;
-            lNbPlayer++;
-         }
-
-
-         if( lPlayer!=NULL )
-         {
-
-            int lTotalLap = mMainCharacter1->GetTotalLap();
-
-            MR_SendRaceResult( mWindow, 
-                               mSession.GetTitle(),
-                               lPlayer->mBestLap,
-                               mMajorID, mMinorID, 
-                               mNetInterface.GetPlayerName( -1 ), 
-                               mSession.GetCurrentMazeFile()->GetCheckSum(), 
-                               mMainCharacter1->GetHoverModel(), 
-                               (lPlayer->mNbCompletedLap==-1)?lPlayer->mFinishTime:0,
-                               (lPlayer->mNbCompletedLap==-1)?lTotalLap:0,
-                               lNbPlayer                                                    
-                             );
-
-            // Report ladder matchs
-            if( lNbPlayer == 2 )
-            {
-               int lWinnerIndex = mResultList->mPlayerIndex;
-               // If you lost and the other player have finished
-               if( ( lWinnerIndex!=-1)&&(mResultList->mNbCompletedLap==-1) )
-               {
-                  // Report the Lost
-                  MR_SendLadderResult( mWindow,
-                                       mNetInterface.GetPlayerName( lWinnerIndex ), mOpponendMajorID, mOpponendMinorID,
-                                       mNetInterface.GetPlayerName( -1 ), mMajorID, mMinorID,
-                                       mSession.GetTitle(), lTotalLap   );
-
-               }
-            }
-         }                     
-      }
-   }
-
-
    PlayerResult* lCurrent = mResultList;
 
    mResultList = NULL;
@@ -177,7 +97,6 @@ MR_NetworkSession::~MR_NetworkSession()
       lCurrent = lCurrent->mNext;
       delete lPrev;
    }
-
 }
 
 
@@ -259,45 +178,6 @@ void MR_NetworkSession::GetHitResult( int pPosition, const char*& pPlayerName, i
    }
 }
 
-
-/*
-BOOL MR_NetworkSession::GetResult( int pPosition, const char*& pPlayer, MR_SimulationTime& pFinishTime, MR_SimulationTime& pBestLap )const
-{
-   BOOL lReturnValue = TRUE;
-
-   PlayerResult* lCurrent = mResultList;
-
-   for( int lCounter = 0; (lCounter<=pPosition)&&lReturnValue; lCounter++ )
-   {
-      if( lCurrent == NULL )
-      {
-         lReturnValue = FALSE;
-      }
-      else
-      {
-         if( lCounter == pPosition )
-         {
-            // We got it
-            pPlayer     = mNetInterface.GetPlayerName( lCurrent->mPlayerIndex );
-
-            pFinishTime = lCurrent->mFinishTime;
-            pBestLap    = lCurrent->mBestLap;
-         }
-         else
-         {
-            lCurrent = lCurrent->mNext;
-         }
-      }
-   }
-   return lReturnValue;
-}
-
-BOOL MR_NetworkSession::ResultAvaillable()const
-{
-   return( mResultList!=NULL );
-}
-*/
-
 int MR_NetworkSession::GetNbPlayers()const
 {
    // Return the number of players still playing???
@@ -313,7 +193,7 @@ const MR_MainCharacter* MR_NetworkSession::GetPlayer( int pPlayerIndex )const
    {
       lReturnValue = mMainCharacter1;
    }
-   else if( pPlayerIndex <= MR_NetworkInterface::eMaxClient )
+   else if( pPlayerIndex <= ENetInterface::eMaxClient )
    {
       lReturnValue = mClientCharacter[ pPlayerIndex-1 ];
    }
@@ -561,9 +441,10 @@ void MR_NetworkSession::ReadNet( )
             break;
 
          case MRNM_CHAT_MESSAGE:
-            EnterCriticalSection( &mChatMutex );
-            AddChatMessage( lClientId, (const char*)lMessage, lMessageLen );
-            LeaveCriticalSection( &mChatMutex );
+            {
+               std::lock_guard lock(mChatMutex);
+               AddChatMessage( lClientId, (const char*)lMessage, lMessageLen );
+            }
             break;
 
          case MRNM_HIT_MESSAGE:
@@ -656,19 +537,19 @@ void MR_NetworkSession::WriteNet( )
    // Remove disconnected opponents
 
    sClientToCheck++;
-   if( sClientToCheck >= MR_NetworkInterface::eMaxClient )
+   if( sClientToCheck >= ENetInterface::eMaxClient )
    {
       sClientToCheck = 0;
    }
 
    if( (mClientCharacter[ sClientToCheck ] != NULL )&& !mNetInterface.IsConnected(sClientToCheck) )
    {
-      CString lMessage;
+      std::string lMessage;
       // Add a message indicating the the guy disconnected
       lMessage  = mNetInterface.GetPlayerName( sClientToCheck );
       lMessage += MR_LoadString( IDS_HAS_LEFT );
 
-      AddMessage( lMessage );
+      AddMessage( lMessage.c_str() );
 
       // If only one player left, add an other message to indicate it
       if( mNetInterface.GetClientCount() == 0 )
@@ -704,7 +585,7 @@ const char* MR_NetworkSession::GetPlayerName()const
 }
 
 
-BOOL MR_NetworkSession::WaitConnections( HWND pWindow, const char* pTrackName, BOOL pPromptForPort, unsigned pDefaultPort,  HWND* pModalessDlg, int pReturnMessage )
+BOOL MR_NetworkSession::WaitConnections( const char* pTrackName, BOOL pPromptForPort, unsigned pDefaultPort, int pReturnMessage )
 {
    mMasterMode = TRUE;
    mSended12SecClockUpdate = FALSE;

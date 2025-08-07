@@ -61,6 +61,22 @@ std::optional<std::string> GetTrack() {
 }
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+    int playerNumber = 0;
+
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+        if (arg.find("--player=") == 0) {
+            std::string playerStr = arg.substr(9); // Skip "--player="
+            try {
+                playerNumber = std::stoi(playerStr);
+                std::cout << "Player number set to: " << playerNumber << std::endl;
+            } catch (const std::exception& e) {
+                SDL_Log("Invalid player number: %s", playerStr.c_str());
+                return SDL_APP_FAILURE;
+            }
+        }
+    }
+
     MR_SoundServer::Init();
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
@@ -82,6 +98,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
                                 SDL_PIXELFORMAT_ARGB8888,
                                 SDL_TEXTUREACCESS_STREAMING,
                                 640, 400);
+    SDL_HideWindow(sdlWindow);                                                              // HIDDEN FOR NOW!
 #endif
 
     glWindow = SDL_CreateWindow("GLHoverRace",
