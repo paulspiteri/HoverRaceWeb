@@ -23,6 +23,8 @@ public:
     MR_UInt8   mData[ MR_MAX_NET_MESSAGE_LEN ];
 };
 
+#define MR_NET_HEADER_LEN  (sizeof( MR_NetMessageBuffer )-MR_MAX_NET_MESSAGE_LEN)
+
 class ENetInterface
 {
 public:
@@ -37,6 +39,9 @@ private:
     std::string  mClientName[ eMaxClient ];
 
 public:
+    ENetInterface();
+    ~ENetInterface();
+
     void  SetPlayerName( const char* pPlayerName );
     const char* GetPlayerName()const;
 

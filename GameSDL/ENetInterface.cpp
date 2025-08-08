@@ -1,6 +1,31 @@
 #include "ENetInterface.h"
 #include "../Util/nomfc_stdafx.h"
 
+ENetInterface::ENetInterface()
+{
+    ASSERT( MR_NET_HEADER_LEN == 3 );
+
+    mPlayer           = "Unknown Player!";
+    mId               = 0;
+    // mServerMode       = FALSE;
+    // mServerPort       = 0;
+    //
+    // mAllPreLoguedRecv = FALSE;
+    //
+    // for( int lCounter = 0; lCounter < eMaxClient; lCounter++ )
+    // {
+    //     mPreLoguedClient[ lCounter ]            = FALSE;
+    //     mConnected[ lCounter ]                  = FALSE;
+    //     mCanBePreLogued[ lCounter ]             = FALSE;
+    // }
+
+}
+
+ENetInterface::~ENetInterface()
+{
+    Disconnect();
+}
+
 void ENetInterface::SetPlayerName(const char* pPlayerName)
 {
     mPlayer = pPlayerName;

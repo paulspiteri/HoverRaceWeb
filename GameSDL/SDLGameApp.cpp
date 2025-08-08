@@ -192,21 +192,37 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
       MR_NetworkSession* lCurrentSession = new MR_NetworkSession();
       std::cout << "NetworkSession created " << std::endl;
 
+      const char* trackTitle;
       // Load the selected maze
       if( lSuccess )
       {
          MR_RecordFile* lTrackFile = new MR_RecordFile();
          lTrackFile->OpenForRead(trackFile);
          auto trackFileName = std::filesystem::path(trackFile).stem().string();
-         const char* trackTitle = trackFileName.c_str();
+         trackTitle = trackFileName.c_str();
          lSuccess = lCurrentSession->LoadNew(trackTitle, lTrackFile, lNbLap, lAllowWeapons, mVideoBuffer);
          if (lSuccess) 
          {
             std::cout << "Track file loaded" << std::endl;
          }
-        }
+      }
 
-      // Create the main character
+      if (lSuccess)
+      {
+         auto pServer = true; // todo - is instance 0
+         if( pServer )
+         {
+            std::string lNameBuffer = std::string(trackTitle) + " " + std::to_string(lNbLap) + " " + (lNbLap > 1 ? "laps" : "lap") + " " + (lAllowWeapons ? "with weapons" : "no weapons");
+            lCurrentSession->SetPlayerName( "TODO PLAYER instance" );
+
+         //   lSuccess = lCurrentSession->WaitConnections(lNameBuffer.c_str());
+         }
+         else
+         {
+          //  lSuccess = lCurrentSession->ConnectToServer( );
+         }
+      }
+
       if( lSuccess )
       {
          auto level = lCurrentSession->GetCurrentLevel();
