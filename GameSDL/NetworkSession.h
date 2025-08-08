@@ -132,7 +132,7 @@ class MR_NetworkSession: public MR_ClientSession
       int  GetRank( const MR_MainCharacter* pPlayer )const;
 
       void AddMessageKey( char pKey );
-      void GetCurrentMessage( char* pDest )const;
+      void GetCurrentMessage( char* pDest );
 
       const MR_MainCharacter* GetPlayer( int pPlayerIndex )const;
 

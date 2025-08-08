@@ -50,7 +50,7 @@ public:
 
 };
 
-// mimics the Windows mmsystem timeGetTime which is ms since system started
+// mimics the Windows mmsystem timeGetTime() which is ms since system started
 uint32_t timeGetTime() {
    static auto start = std::chrono::steady_clock::now();
    auto now = std::chrono::steady_clock::now();
@@ -591,20 +591,20 @@ BOOL MR_NetworkSession::WaitConnections( const char* pTrackName, BOOL pPromptFor
    mSended12SecClockUpdate = FALSE;
    mSended8SecClockUpdate = FALSE;
 
-   return mNetInterface.MasterConnect( pWindow, pTrackName, pPromptForPort, pDefaultPort, pModalessDlg, pReturnMessage );
+   return mNetInterface.MasterConnect( pTrackName, pPromptForPort, pDefaultPort, pReturnMessage );
 }
 
-BOOL MR_NetworkSession::PreConnectToServer( HWND pWindow, CString& pTrackName )
+BOOL MR_NetworkSession::PreConnectToServer( std::string& pTrackName )
 {  
    mMasterMode = FALSE;
-   return mNetInterface.SlavePreConnect( pWindow, pTrackName );
+   return mNetInterface.SlavePreConnect( pTrackName );
 }
 
-BOOL MR_NetworkSession::ConnectToServer( HWND pWindow, const char* pServerIP, unsigned pPort, const char* pGameName, HWND* pModalessDlg, int pReturnMessage )
+BOOL MR_NetworkSession::ConnectToServer( const char* pServerIP, unsigned pPort, const char* pGameName, int pReturnMessage )
 {  
    mMasterMode = FALSE;
 
-   return mNetInterface.SlaveConnect( pWindow, pServerIP, pPort, pGameName, pModalessDlg, pReturnMessage );
+   return mNetInterface.SlaveConnect( pServerIP, pPort, pGameName, pReturnMessage );
 }
 
 void MR_NetworkSession::SetSimulationTime( MR_SimulationTime pTime )
@@ -613,7 +613,7 @@ void MR_NetworkSession::SetSimulationTime( MR_SimulationTime pTime )
 
    if( mTimeToSendCharacterCreation != 0 )
    {
-      mTimeToSendCharacterCreation = min( pTime + 2000, mTimeToSendCharacterCreation );
+      mTimeToSendCharacterCreation = std::min( pTime + 2000, mTimeToSendCharacterCreation );
    }
    MR_ClientSession::SetSimulationTime( pTime );      
 }
@@ -684,7 +684,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
    
 
    // Determine clients proximity
-   int lPriorityLevel[ MR_NetworkInterface::eMaxClient ];
+   int lPriorityLevel[ ENetInterface::eMaxClient ];
 
    const MR_Level* lLevel = GetCurrentLevel();
    // int             lVisibleRoomCount;
@@ -693,7 +693,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
 
 
    // Init priority level
-   for( int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for( int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
    {
       if( mClientCharacter[ lCounter ] != NULL )
       {
@@ -719,7 +719,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
 
    // First broadcast to near clients
 
-   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
@@ -736,7 +736,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
 
 
    // Now to far clients
-   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] < 5 )
       {
@@ -752,7 +752,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
    }
    
    // Now to near clients( the second broadcast bring security)
-   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
@@ -781,7 +781,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
    
 
    // Determine clients proximity
-   int lPriorityLevel[ MR_NetworkInterface::eMaxClient ];
+   int lPriorityLevel[ ENetInterface::eMaxClient ];
 
    const MR_Level* lLevel = GetCurrentLevel();
    // int             lVisibleRoomCount;
@@ -790,7 +790,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
 
 
    // Init priority level
-   for( int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for( int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
    {
       if( mClientCharacter[ lCounter ] != NULL )
       {
@@ -816,7 +816,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
 
    // First broadcast to near clients
 
-   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
@@ -833,7 +833,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
 
 
    // Now to far clients
-   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] < 5 )
       {
@@ -849,7 +849,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
    }
    
    // Now to near clients( the second broadcast bring security)
-   for(int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
@@ -878,7 +878,7 @@ void MR_NetworkSession::BroadcastTime( )
 
    // Broadcat to everyone
 
-   for( int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+   for( int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
    {
       if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE, FALSE ) )
       {
@@ -945,7 +945,7 @@ void MR_NetworkSession::BroadcastMainElementState( const MR_ElementNetState& pSt
    {
       mLastSendElemStateFuncTime = lCurrentTime;
 
-      int lPriorityLevel[ MR_NetworkInterface::eMaxClient ];
+      int lPriorityLevel[ ENetInterface::eMaxClient ];
 
       const MR_Level* lLevel = GetCurrentLevel();
       int lVisibleRoomCount;
@@ -955,7 +955,7 @@ void MR_NetworkSession::BroadcastMainElementState( const MR_ElementNetState& pSt
       int lNbEligible = 0;
 
       // Init priority level
-      for( int lCounter = 0; lCounter < MR_NetworkInterface::eMaxClient; lCounter++ )
+      for( int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
       {
          if( mClientCharacter[ lCounter ] != NULL )
          {
@@ -1024,13 +1024,13 @@ void MR_NetworkSession::BroadcastMainElementState( const MR_ElementNetState& pSt
 
       TRACE( "lNbEligible:%d %d\n", lNbEligible, lMaxSend );
 
-      for( int lNbToSend = min( lNbEligible, lMaxSend );lNbToSend > 0; lNbToSend-- )
+      for( int lNbToSend = std::min( lNbEligible, lMaxSend );lNbToSend > 0; lNbToSend-- )
       {
          // Find the highest priority element
          int lBestPriority   = lPriorityLevel[0];
          int lSelectedClient = 0;
 
-         for( int lClient = 1; lClient<MR_NetworkInterface::eMaxClient;lClient++ )
+         for( int lClient = 1; lClient<ENetInterface::eMaxClient;lClient++ )
          {
             if( lPriorityLevel[lClient] > lBestPriority )
             {
@@ -1292,10 +1292,9 @@ void MR_NetworkSession::AddResultEntry( int pPlayerIndex, MR_SimulationTime pFin
 
 void MR_NetworkSession::AddMessageKey( char pKey )
 {
-   EnterCriticalSection( &mChatMutex );
-   
-   int lStrLen = strlen(mChatEditBuffer);
+   std::lock_guard lock(mChatMutex);
 
+   int lStrLen = strlen(mChatEditBuffer);
 
    if( (pKey == '\n')||(pKey=='\r') )
    {
@@ -1321,17 +1320,12 @@ void MR_NetworkSession::AddMessageKey( char pKey )
 
       }
    }
-
-   LeaveCriticalSection( &mChatMutex );
 }
 
-void MR_NetworkSession::GetCurrentMessage( char* pDest )const
+void MR_NetworkSession::GetCurrentMessage( char* pDest )
 {
-   EnterCriticalSection( &((MR_NetworkSession*)this)->mChatMutex );
-
+   std::lock_guard lock(mChatMutex);
    strcpy( pDest, mChatEditBuffer );
-
-   LeaveCriticalSection( &((MR_NetworkSession*)this)->mChatMutex );
 }
 
 
@@ -1348,5 +1342,5 @@ void MR_NetworkSession::AddChatMessage( int pPlayerIndex, const char* pMessage, 
 
    mMessageStack[0].mBuffer  = Ascii2Simple( mNetInterface.GetPlayerName( pPlayerIndex ) );
    mMessageStack[0].mBuffer += Ascii2Simple( '>' );
-   mMessageStack[0].mBuffer += CString( pMessage, pMessageLen );
+   mMessageStack[0].mBuffer += std::string( pMessage, pMessageLen );
 }

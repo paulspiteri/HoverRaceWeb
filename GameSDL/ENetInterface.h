@@ -1,11 +1,17 @@
 #ifndef ENETINTERFACE_H
 #define ENETINTERFACE_H
 
+#include <string>
+
 #include "../Util/MR_Types.h"
 
 #define MR_DEFAULT_NET_PORT  9530
 #define MR_MAX_NET_MESSAGE_LEN 255
 
+#define MR_NET_REQUIRED         1
+#define MR_NET_TRY              2
+#define MR_NOT_REQUIRED         0
+#define MR_NET_DATAGRAM        -1
 
 class MR_NetMessageBuffer
 {
@@ -27,6 +33,10 @@ public:
 
     void  SetPlayerName( const char* pPlayerName );
     const char* GetPlayerName()const;
+
+    bool MasterConnect( const char* pGameName, bool pPromptForPort = true, unsigned pDefaultPort = MR_DEFAULT_NET_PORT, int pReturnMessage = 0);
+    bool SlavePreConnect( std::string& pGameName );
+    bool SlaveConnect( const char* pServerIP=nullptr, unsigned pPort = MR_DEFAULT_NET_PORT, const char* pGameName = nullptr, int pReturnMessage = 0 );
 
     void Disconnect();
 

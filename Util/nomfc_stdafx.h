@@ -3,6 +3,7 @@
 #include <cassert>
 #include <stdint.h>
 #include <iostream>
+#include <format>
 
 using INT = int32_t;
 using WORD = uint16_t;
@@ -25,7 +26,11 @@ typedef int BOOL;
 #define Int32x32To64(a, b)  (((int64_t)((long)(a))) * ((int64_t)((long)(b))))
 #define Int64ShraMod32(a, b) (((int64_t)(a)) >> (b))
 
-inline void TRACE(const char* msg) 
+
+template<typename... Args>
+inline void TRACE(const char* format, Args... args)
 {
-    std::clog << msg << std::endl;
+    char buffer[1024];
+    std::snprintf(buffer, sizeof(buffer), format, args...);
+    std::clog << buffer << std::endl;
 }
