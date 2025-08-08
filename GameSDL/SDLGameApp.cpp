@@ -1,12 +1,13 @@
 #include "SDLGameApp.h"
 #include "../Util/DllObjectFactory.h"
-#include "../VideoServices/ColorPalette.h"
 #include "../MainCharacter/MainCharacter.h"
 #include "../Util/FuzzyLogic.h"
 #include "../Util/StrRes.h"
 #include "../ObjFac1/ObjFac1.h"
 #include <SDL3/SDL.h>
 #include <filesystem>
+
+#include "NetworkSession.h"
 
 // global registration variables
 static BOOL         gKeyFilled        = TRUE;   // disabled demo mode
@@ -188,8 +189,8 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
       mObserver1 = MR_Observer::New();
 
       // Create the new session
-      MR_ClientSession* lCurrentSession = new MR_ClientSession;
-      std::cout << "ClientSession created " << std::endl;
+      MR_NetworkSession* lCurrentSession = new MR_NetworkSession();
+      std::cout << "NetworkSession created " << std::endl;
 
       // Load the selected maze
       if( lSuccess )

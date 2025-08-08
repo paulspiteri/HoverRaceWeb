@@ -29,8 +29,14 @@ public:
     enum
     {
         eMaxClient = 8
-     };
+    };
 
+private:
+    std::string  mPlayer;
+    int          mId;
+    std::string  mClientName[ eMaxClient ];
+
+public:
     void  SetPlayerName( const char* pPlayerName );
     const char* GetPlayerName()const;
 
