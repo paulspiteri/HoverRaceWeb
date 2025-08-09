@@ -87,6 +87,11 @@ BOOL MR_SDLGameApp::InitGame()
    return lReturnValue;
 }
 
+void MR_SDLGameApp::SetNetworkMode(bool isHost)
+{
+   mIsHost = isHost;
+}
+
 void MR_SDLGameApp::Simulate()
 {
    if (mCurrentSession != nullptr) 
@@ -209,16 +214,16 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
 
       if (lSuccess)
       {
-         auto pServer = true; // todo - is instance 0
-         if( pServer )
+         if( mIsHost )
          {
             std::string lNameBuffer = std::string(trackTitle) + " " + std::to_string(lNbLap) + " " + (lNbLap > 1 ? "laps" : "lap") + " " + (lAllowWeapons ? "with weapons" : "no weapons");
-            lCurrentSession->SetPlayerName( "TODO PLAYER instance" );
+            lCurrentSession->SetPlayerName( "HOST Player" );
 
-         //   lSuccess = lCurrentSession->WaitConnections(lNameBuffer.c_str());
+            lSuccess = lCurrentSession->WaitConnections(lNameBuffer.c_str());
          }
          else
          {
+            lCurrentSession->SetPlayerName( "CLIENT Player" );
           //  lSuccess = lCurrentSession->ConnectToServer( );
          }
       }

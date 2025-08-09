@@ -38,7 +38,7 @@ const char* ENetInterface::GetPlayerName() const
 
 bool ENetInterface::MasterConnect(const char* pGameName, bool pPromptForPort, unsigned pDefaultPort, int pReturnMessage)
 {
-    return false;
+    return true;
 }
 
 bool ENetInterface::SlavePreConnect(std::string& pGameName)

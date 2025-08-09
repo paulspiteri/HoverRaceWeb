@@ -25,6 +25,7 @@ class MR_SDLGameApp
       double mGamma;
       double mContrast;
       double mBrightness;
+      bool mIsHost;
 
       void DrawBackground();
 
@@ -35,6 +36,7 @@ class MR_SDLGameApp
 
       void Clean();
       BOOL InitGame();
+      void SetNetworkMode(bool isHost);
       void LoadSelectedTrack(const char* trackFile);
       void SetVideoMode(int width, int height);
       void RefreshView(SDL_Texture* texture);

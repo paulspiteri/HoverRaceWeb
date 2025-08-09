@@ -135,7 +135,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     {
         return SDL_APP_FAILURE;
     }
-
+    game->SetNetworkMode(playerNumber == 0);
     game->LoadSelectedTrack(track.value().c_str());
     ImGui_ImplSDL3_InitForOther(glWindow);
     return SDL_APP_CONTINUE;
