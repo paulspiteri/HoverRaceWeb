@@ -9,7 +9,7 @@ add_executable(GameSDL
     NetworkSession.cpp
 )
 
-target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3-static sokol glm::glm imgui
+target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3-static sokol glm::glm imgui enet
 )
 
 if(EMSCRIPTEN)

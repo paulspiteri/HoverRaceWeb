@@ -224,6 +224,7 @@ int MR_NetworkSession::GetRank( const MR_MainCharacter* /*pPlayer*/ )const
 
 void MR_NetworkSession::Process( int pSpeedFactor )
 {
+   mNetInterface.ProcessNetworkEvents(); // Process ENet events
    ReadNet();
    MR_ClientSession::Process( pSpeedFactor );
    WriteNet();
@@ -1022,7 +1023,7 @@ void MR_NetworkSession::BroadcastMainElementState( const MR_ElementNetState& pSt
          }
       }
 
-      TRACE( "lNbEligible:%d %d\n", lNbEligible, lMaxSend );
+     // TRACE( "lNbEligible:%d %d\n", lNbEligible, lMaxSend );
 
       for( int lNbToSend = std::min( lNbEligible, lMaxSend );lNbToSend > 0; lNbToSend-- )
       {

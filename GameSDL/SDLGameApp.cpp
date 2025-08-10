@@ -224,7 +224,7 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
          else
          {
             lCurrentSession->SetPlayerName( "CLIENT Player" );
-          //  lSuccess = lCurrentSession->ConnectToServer( );
+            lSuccess = lCurrentSession->ConnectToServer("localhost" );
          }
       }
 

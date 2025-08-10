@@ -2,6 +2,7 @@
 #define ENETINTERFACE_H
 
 #include <string>
+#include <enet/enet.h>
 
 #include "../Util/MR_Types.h"
 
@@ -37,6 +38,9 @@ private:
     std::string  mPlayer;
     int          mId;
     std::string  mClientName[ eMaxClient ];
+    ENetHost*    mENet;
+    ENetPeer*    mConnectedPeer;
+    bool         mIsConnected;
 
 public:
     ENetInterface();
@@ -50,6 +54,7 @@ public:
     bool SlaveConnect( const char* pServerIP=nullptr, unsigned pPort = MR_DEFAULT_NET_PORT, const char* pGameName = nullptr, int pReturnMessage = 0 );
 
     void Disconnect();
+    void ProcessNetworkEvents(); // Process incoming connections and events
 
     int  GetClientCount()const;
     int  GetId()const;
