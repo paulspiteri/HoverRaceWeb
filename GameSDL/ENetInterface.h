@@ -54,7 +54,6 @@ public:
     bool SlaveConnect( const char* pServerIP=nullptr, unsigned pPort = MR_DEFAULT_NET_PORT, const char* pGameName = nullptr, int pReturnMessage = 0 );
 
     void Disconnect();
-    void ProcessNetworkEvents(); // Process incoming connections and events
 
     int  GetClientCount()const;
     int  GetId()const;
@@ -66,7 +65,7 @@ public:
     bool UDPSend( int pClient, MR_NetMessageBuffer* pMessage, bool pLongPort, bool pResendLast = false ); // return TRUE if queue not full
     bool BroadcastMessage( MR_NetMessageBuffer* pMessage, int pReqLevel );
     // BOOL BroadcastMessage( DWORD  pTimeStamp, int  pMessageType, int pMessageLen, const MR_UInt8* pMessage );
-    bool FetchMessage(     uint32_t& pTimeStamp, int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage, int& pClientId ); // pTimeStamp must be set to current time stamp before fetch
+    bool FetchMessage( int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage, int& pClientId ); // pTimeStamp must be set to current time stamp before fetch
 
     const char* GetPlayerName( int pIndex )const;
     bool        IsConnected( int pIndex )const;

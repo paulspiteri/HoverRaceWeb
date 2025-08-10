@@ -224,7 +224,6 @@ int MR_NetworkSession::GetRank( const MR_MainCharacter* /*pPlayer*/ )const
 
 void MR_NetworkSession::Process( int pSpeedFactor )
 {
-   mNetInterface.ProcessNetworkEvents(); // Process ENet events
    ReadNet();
    MR_ClientSession::Process( pSpeedFactor );
    WriteNet();
@@ -256,16 +255,12 @@ void MR_NetworkSession::PermElementStateHook( MR_FreeElement* pElement, int pRoo
 
 void MR_NetworkSession::ReadNet( )
 {
-   DWORD           lTimeStamp;
    int             lMessageType;
    int             lMessageLen;
    const MR_UInt8* lMessage;
    int             lClientId;
 
-
-   lTimeStamp = mSession.GetSimulationTime();
-
-   while( mNetInterface.FetchMessage( lTimeStamp, lMessageType, lMessageLen, lMessage, lClientId ) )
+   while( mNetInterface.FetchMessage( lMessageType, lMessageLen, lMessage, lClientId ) )
    {
       switch( lMessageType )
       {
@@ -453,7 +448,6 @@ void MR_NetworkSession::ReadNet( )
             break;
 
       }
-      lTimeStamp = mSession.GetSimulationTime();
    }
 }
 

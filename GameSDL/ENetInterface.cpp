@@ -130,46 +130,6 @@ bool ENetInterface::SlaveConnect(const char* pServerIP, unsigned pPort, const ch
     }
 }
 
-void ENetInterface::ProcessNetworkEvents()
-{
-    if (!mENet) {
-        return;
-    }
-    
-    ENetEvent event;
-    while (enet_host_service(mENet, &event, 0) > 0) {
-        switch (event.type) {
-            case ENET_EVENT_TYPE_CONNECT:
-                if (mConnectedPeer == nullptr) {
-                    mConnectedPeer = event.peer;
-                    mIsConnected = true;
-                    printf("ENet: Client connected\n");
-                } else {
-                    // Already have a connection, disconnect new peer
-                    enet_peer_disconnect_now(event.peer, 0);
-                    printf("ENet: Rejected connection - already connected\n");
-                }
-                break;
-                
-            case ENET_EVENT_TYPE_DISCONNECT:
-                if (event.peer == mConnectedPeer) {
-                    mConnectedPeer = nullptr;
-                    mIsConnected = false;
-                    printf("ENet: Client disconnected\n");
-                }
-                break;
-                
-            case ENET_EVENT_TYPE_RECEIVE:
-                // Handle received packets (for future implementation)
-                enet_packet_destroy(event.packet);
-                break;
-                
-            default:
-                break;
-        }
-    }
-}
-
 void ENetInterface::Disconnect()
 {
     if (mENet) {
@@ -221,9 +181,47 @@ bool ENetInterface::BroadcastMessage(MR_NetMessageBuffer* pMessage, int pReqLeve
     return false;
 }
 
-bool ENetInterface::FetchMessage(uint32_t& pTimeStamp, int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage,
+bool ENetInterface::FetchMessage(int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage,
     int& pClientId)
 {
+    if (!mENet) {
+        return false;
+    }
+    
+    ENetEvent event;
+    while (enet_host_service(mENet, &event, 0) > 0) {
+        switch (event.type) {
+            case ENET_EVENT_TYPE_CONNECT:
+                if (mConnectedPeer == nullptr) {
+                    mConnectedPeer = event.peer;
+                    mIsConnected = true;
+                    printf("ENet: Client connected\n");
+                } else {
+                    // Already have a connection, disconnect new peer
+                    enet_peer_disconnect_now(event.peer, 0);
+                    printf("ENet: Rejected connection - already connected\n");
+                }
+                break;
+                
+            case ENET_EVENT_TYPE_DISCONNECT:
+                if (event.peer == mConnectedPeer) {
+                    mConnectedPeer = nullptr;
+                    mIsConnected = false;
+                    printf("ENet: Client disconnected\n");
+                }
+                break;
+                
+            case ENET_EVENT_TYPE_RECEIVE:
+                // TODO: Handle received packets and return message data
+                // For now, just clean up the packet
+                enet_packet_destroy(event.packet);
+                break;
+                
+            default:
+                break;
+        }
+    }
+    
     return false;
 }
 
