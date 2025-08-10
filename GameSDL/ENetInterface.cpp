@@ -173,12 +173,45 @@ int ENetInterface::GetMinLag(int pClient) const
 
 bool ENetInterface::UDPSend(int pClient, MR_NetMessageBuffer* pMessage, bool pLongPort, bool pResendLast)
 {
-    return false;
+    // For single-peer implementation, ignore pClient parameter
+    if (!mENet || !mConnectedPeer || !mIsConnected) {
+        return false;
+    }
+
+    // Calculate total message size
+    int lToSend = MR_NET_HEADER_LEN + pMessage->mDataLen;
+    int pQueueId = pLongPort ? 0 : 1;
+    
+    // ENet handles sequencing internally, so we don't need custom datagram numbers
+    // Just clear the fields since they're not needed with ENet
+    pMessage->mDatagramQueue = pQueueId;
+    pMessage->mDatagramNumber = 0;
+
+    // Create ENet packet from the message buffer
+    ENetPacket* packet = enet_packet_create(pMessage, lToSend, 
+        pLongPort ? ENET_PACKET_FLAG_RELIABLE : ENET_PACKET_FLAG_UNSEQUENCED);
+    
+    if (!packet) {
+        return false;
+    }
+
+    int result = enet_peer_send(mConnectedPeer, pQueueId, packet);
+    
+    return (result == 0);
 }
 
 bool ENetInterface::BroadcastMessage(MR_NetMessageBuffer* pMessage, int pReqLevel)
 {
-    return false;
+    if( pReqLevel == MR_NET_DATAGRAM )
+    {
+        return UDPSend( 0, pMessage, false, false );
+    }
+    else
+    {
+        // todo
+       // return Send( pMessage, pReqLevel );
+        return true;
+    }
 }
 
 bool ENetInterface::FetchMessage(int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage,
