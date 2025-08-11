@@ -255,12 +255,13 @@ void MR_NetworkSession::PermElementStateHook( MR_FreeElement* pElement, int pRoo
 
 void MR_NetworkSession::ReadNet( )
 {
-   int             lMessageType;
-   int             lMessageLen;
-   const MR_UInt8* lMessage;
-   int             lClientId;
+   int                    lMessageType;
+   int                    lMessageLen;
+   const MR_UInt8*        lMessage;
+   int                    lClientId;
+   MR_NetMessageBuffer    lMessageBuffer; // Buffer for FetchMessage
 
-   while( mNetInterface.FetchMessage( lMessageType, lMessageLen, lMessage, lClientId ) )
+   while( mNetInterface.FetchMessage( lMessageType, lMessageLen, lMessage, lClientId, lMessageBuffer ) )
    {
       switch( lMessageType )
       {
@@ -329,6 +330,7 @@ void MR_NetworkSession::ReadNet( )
                if( lLastCollisionAge < (mNetInterface.GetAvgLag( lClientId )+40) )
                {
                   // Drop this message
+                  std::cout << "Drop message " << lLastCollisionAge << std::endl;
                }
                else
                {
@@ -336,7 +338,7 @@ void MR_NetworkSession::ReadNet( )
 
                   mClientCharacter[ lClientId ]->SetNetState( lMessageLen, lMessage );
 
-                  // Move element if needed
+                  // Move element if neededSendUDP
                   if( mClientCharacter[ lClientId ]->mRoom != lOldRoom )
                   {
                      MR_Level* lCurrentLevel = mSession.GetCurrentLevel();
@@ -720,7 +722,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
       {
          if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE, FALSE ) )
          {
-            TRACE( "SendUDPA:%d\n", lCounter );
+            //TRACE( "SendUDPA:%d\n", lCounter );
          }
          else
          {
@@ -1036,7 +1038,7 @@ void MR_NetworkSession::BroadcastMainElementState( const MR_ElementNetState& pSt
 
          if( mNetInterface.UDPSend( lSelectedClient, &lMessage, FALSE ) )
          {
-            TRACE( "SendUDP:%d %d\n", lSelectedClient, lBestPriority );
+            //TRACE( "SendUDP:%d %d\n", lSelectedClient, lBestPriority );
 
             lPriorityLevel[ lSelectedClient ] = 0;
             mLastSendElemStateTime[ lSelectedClient ] = lCurrentTime;

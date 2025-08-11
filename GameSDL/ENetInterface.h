@@ -41,6 +41,9 @@ private:
     ENetHost*    mENet;
     ENetPeer*    mConnectedPeer;
     bool         mIsConnected;
+    
+    // Helper method for waiting for connections
+    bool WaitForConnection(int timeoutSeconds);
 
 public:
     ENetInterface();
@@ -65,7 +68,7 @@ public:
     bool UDPSend( int pClient, MR_NetMessageBuffer* pMessage, bool pLongPort, bool pResendLast = false ); // return TRUE if queue not full
     bool BroadcastMessage( MR_NetMessageBuffer* pMessage, int pReqLevel );
     // BOOL BroadcastMessage( DWORD  pTimeStamp, int  pMessageType, int pMessageLen, const MR_UInt8* pMessage );
-    bool FetchMessage( int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage, int& pClientId ); // pTimeStamp must be set to current time stamp before fetch
+    bool FetchMessage( int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage, int& pClientId, MR_NetMessageBuffer& pBuffer ); // Caller provides buffer
 
     const char* GetPlayerName( int pIndex )const;
     bool        IsConnected( int pIndex )const;
