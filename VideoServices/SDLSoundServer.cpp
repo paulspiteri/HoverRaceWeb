@@ -110,7 +110,7 @@ class MR_ShortSound : public MR_SoundBuffer
         void Play()
         {
             if (mSoundBuffer[mCurrentCopy]) {
-                SDL_FlushAudioStream(mSoundBuffer[mCurrentCopy]);
+                SDL_ClearAudioStream(mSoundBuffer[mCurrentCopy]);
                 SDL_PutAudioStreamData(mSoundBuffer[mCurrentCopy], mSoundData, mSoundDataLen);
                 SDL_ResumeAudioStreamDevice(mSoundBuffer[mCurrentCopy]);
             }
