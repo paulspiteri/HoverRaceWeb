@@ -40,14 +40,6 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(imgui)
 
-FetchContent_Declare(
-        enet
-        GIT_REPOSITORY https://github.com/lsalzman/enet.git
-        GIT_TAG v1.3.18
-)
-FetchContent_MakeAvailable(enet)
-target_include_directories(enet INTERFACE ${enet_SOURCE_DIR}/include)
-
 add_library(imgui STATIC
         ${imgui_SOURCE_DIR}/imgui.cpp
         ${imgui_SOURCE_DIR}/imgui_demo.cpp

@@ -26,7 +26,7 @@
 #define NETWORK_SESSION_H
 
 #include "ClientSession.h"
-#include "ENetInterface.h"
+#include "WebPeerInterface.h"
 
 #include "../Util/nomfc_stdafx.h"
 
@@ -57,7 +57,7 @@ class MR_NetworkSession: public MR_ClientSession
 
 
       BOOL                  mMasterMode;
-      ENetInterface         mNetInterface;
+      WebPeerInterface      mNetInterface;
       BOOL                  mTimeToSendCharacterCreation; // 0 mean sended
       BOOL                  mSended12SecClockUpdate; // User by server to adjust client clock
       BOOL                  mSended8SecClockUpdate;
@@ -65,11 +65,11 @@ class MR_NetworkSession: public MR_ClientSession
       int                   mMinorID;
 
       int                   mSendedPlayerStats;
-      MR_FreeElementHandle  mClient[ ENetInterface::eMaxClient ];
-      MR_MainCharacter*     mClientCharacter[ ENetInterface::eMaxClient ];
+      MR_FreeElementHandle  mClient[ WebPeerInterface::eMaxClient ];
+      MR_MainCharacter*     mClientCharacter[ WebPeerInterface::eMaxClient ];
 
       int                   mLastSendElemStateFuncTime;
-      int                   mLastSendElemStateTime[ ENetInterface::eMaxClient ];
+      int                   mLastSendElemStateTime[ WebPeerInterface::eMaxClient ];
 
       PlayerResult*        mResultList;
       PlayerResult*        mHitList;

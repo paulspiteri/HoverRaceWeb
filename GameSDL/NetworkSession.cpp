@@ -63,7 +63,7 @@ MR_NetworkSession::MR_NetworkSession()
 {
    mMasterMode   = FALSE;
 
-   for( int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
+   for( int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
       mClientCharacter[ lCounter ] = NULL;
       mLastSendElemStateTime[ lCounter ] = timeGetTime();
@@ -193,7 +193,7 @@ const MR_MainCharacter* MR_NetworkSession::GetPlayer( int pPlayerIndex )const
    {
       lReturnValue = mMainCharacter1;
    }
-   else if( pPlayerIndex <= ENetInterface::eMaxClient )
+   else if( pPlayerIndex <= WebPeerInterface::eMaxClient )
    {
       lReturnValue = mClientCharacter[ pPlayerIndex-1 ];
    }
@@ -534,7 +534,7 @@ void MR_NetworkSession::WriteNet( )
    // Remove disconnected opponents
 
    sClientToCheck++;
-   if( sClientToCheck >= ENetInterface::eMaxClient )
+   if( sClientToCheck >= WebPeerInterface::eMaxClient )
    {
       sClientToCheck = 0;
    }
@@ -681,7 +681,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
    
 
    // Determine clients proximity
-   int lPriorityLevel[ ENetInterface::eMaxClient ];
+   int lPriorityLevel[ WebPeerInterface::eMaxClient ];
 
    const MR_Level* lLevel = GetCurrentLevel();
    // int             lVisibleRoomCount;
@@ -690,7 +690,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
 
 
    // Init priority level
-   for( int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
+   for( int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
       if( mClientCharacter[ lCounter ] != NULL )
       {
@@ -716,7 +716,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
 
    // First broadcast to near clients
 
-   for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
@@ -733,7 +733,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
 
 
    // Now to far clients
-   for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] < 5 )
       {
@@ -780,7 +780,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
    
 
    // Determine clients proximity
-   int lPriorityLevel[ ENetInterface::eMaxClient ];
+   int lPriorityLevel[ WebPeerInterface::eMaxClient ];
 
    const MR_Level* lLevel = GetCurrentLevel();
    // int             lVisibleRoomCount;
@@ -789,7 +789,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
 
 
    // Init priority level
-   for( int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
+   for( int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
       if( mClientCharacter[ lCounter ] != NULL )
       {
@@ -815,7 +815,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
 
    // First broadcast to near clients
 
-   for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
@@ -832,7 +832,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
 
 
    // Now to far clients
-   for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] < 5 )
       {
@@ -848,7 +848,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
    }
    
    // Now to near clients( the second broadcast bring security)
-   for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
+   for(int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
@@ -877,7 +877,7 @@ void MR_NetworkSession::BroadcastTime( )
 
    // Broadcat to everyone
 
-   for( int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
+   for( int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
       if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE, FALSE ) )
       {
@@ -944,7 +944,7 @@ void MR_NetworkSession::BroadcastMainElementState( const MR_ElementNetState& pSt
    {
       mLastSendElemStateFuncTime = lCurrentTime;
 
-      int lPriorityLevel[ ENetInterface::eMaxClient ];
+      int lPriorityLevel[ WebPeerInterface::eMaxClient ];
 
       const MR_Level* lLevel = GetCurrentLevel();
       int lVisibleRoomCount;
@@ -954,7 +954,7 @@ void MR_NetworkSession::BroadcastMainElementState( const MR_ElementNetState& pSt
       int lNbEligible = 0;
 
       // Init priority level
-      for( int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
+      for( int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
       {
          if( mClientCharacter[ lCounter ] != NULL )
          {
@@ -1029,7 +1029,7 @@ void MR_NetworkSession::BroadcastMainElementState( const MR_ElementNetState& pSt
          int lBestPriority   = lPriorityLevel[0];
          int lSelectedClient = 0;
 
-         for( int lClient = 1; lClient<ENetInterface::eMaxClient;lClient++ )
+         for( int lClient = 1; lClient<WebPeerInterface::eMaxClient;lClient++ )
          {
             if( lPriorityLevel[lClient] > lBestPriority )
             {
