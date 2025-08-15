@@ -26,7 +26,15 @@ if(EMSCRIPTEN)
   )
 
     # Add the HTML file as a dependency so CMake tracks changes to it
-    set_property(TARGET GameSDL PROPERTY LINK_DEPENDS "${CMAKE_SOURCE_DIR}/Emscripten/Hover.html")
+    set_property(TARGET GameSDL PROPERTY LINK_DEPENDS "${CMAKE_SOURCE_DIR}/Emscripten/Hover.html;${CMAKE_SOURCE_DIR}/Emscripten/hoverpeer.js")
+
+    add_custom_command(TARGET GameSDL POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${CMAKE_SOURCE_DIR}/Emscripten/hoverpeer.js"
+            "${CMAKE_BINARY_DIR}/out/hoverpeer.js"
+            COMMENT "Copying web assets to output directory"
+    )
+
 else()
     find_package(OpenGL REQUIRED)
     target_link_libraries(GameSDL PRIVATE OpenGL::GL)
