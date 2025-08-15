@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Peer React</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .peer-id { background-color: #e7f3ff; border: 1px solid #b3d9ff; }
+        .connection { background-color: #f0f8e7; border: 1px solid #c3e6c3; }
+        .error { background-color: #ffe7e7; border: 1px solid #ffb3b3; }
+        .status-log { max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        function PeerApp() {
+            const [peerId, setPeerId] = useState('Initializing...');
+            const [statusMessages, setStatusMessages] = useState([]);
+            const [connections, setConnections] = useState([]);
+            const peerRef = useRef(null);
+            const connectionsRef = useRef([]);
+
+            const addStatusMessage = (message, type = 'status') => {
+                const newMessage = {
+                    id: Date.now(),
+                    message,
+                    type,
+                    timestamp: new Date().toLocaleTimeString()
+                };
+                setStatusMessages(prev => [...prev, newMessage]);
+            };
+
+            const getQueryParam = (name) => {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(name);
+            };
+
+            const connectToPeers = (peerIds) => {
+                if (!peerIds || !peerRef.current) return;
+                
+                const peers = peerIds.split(';').filter(id => id.trim());
+                peers.forEach(peerId => {
+                    const conn = peerRef.current.connect(peerId.trim());
+                    connectionsRef.current.push(conn);
+                    
+                    conn.on('open', function() {
+                        addStatusMessage(`Connected to peer: ${peerId}`, 'connection');
+                        setConnections(prev => [...prev, { id: peerId, status: 'connected' }]);
+                    });
+                    
+                    conn.on('error', function(err) {
+                        addStatusMessage(`Failed to connect to ${peerId}: ${err}`, 'error');
+                    });
+
+                    conn.on('data', function(data) {
+                        addStatusMessage(`Received data from ${peerId}: ${data}`, 'connection');
+                    });
+                });
+            };
+
+            useEffect(() => {
+                const myPeerId = getQueryParam('id');
+                const peer = new Peer(myPeerId);
+                peerRef.current = peer;
+
+                peer.on('open', function(id) {
+                    setPeerId(`My peer ID: ${id}`);
+                    addStatusMessage(`Peer initialized with ID: ${id}`, 'peer-id');
+                    
+                    // Check for peers to connect to from query parameters
+                    const peersToConnect = getQueryParam('peers');
+                    if (peersToConnect) {
+                        addStatusMessage(`Attempting to connect to: ${peersToConnect}`);
+                        connectToPeers(peersToConnect);
+                    }
+                });
+                
+                peer.on('connection', function(conn) {
+                    connectionsRef.current.push(conn);
+                    addStatusMessage(`Incoming connection from: ${conn.peer}`, 'connection');
+                    setConnections(prev => [...prev, { id: conn.peer, status: 'connected' }]);
+                    
+                    conn.on('data', function(data) {
+                        addStatusMessage(`Received data from ${conn.peer}: ${data}`, 'connection');
+                    });
+                });
+                
+                peer.on('error', function(err) {
+                    addStatusMessage(`Peer error: ${err}`, 'error');
+                });
+
+                // Cleanup on unmount
+                return () => {
+                    if (peerRef.current) {
+                        peerRef.current.destroy();
+                    }
+                };
+            }, []);
+
+            return (
+                <div>
+                    <h1>WebRTC Peer Connection (React)</h1>
+                    <div className={`status peer-id`}>
+                        {peerId}
+                    </div>
+                    
+                    <h3>Active Connections:</h3>
+                    <div>
+                        {connections.length === 0 ? (
+                            <p>No active connections</p>
+                        ) : (
+                            connections.map((conn, index) => (
+                                <div key={index} className="status connection">
+                                    {conn.id} - {conn.status}
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    <h3>Status Log:</h3>
+                    <div className="status-log">
+                        {statusMessages.map((msg) => (
+                            <div key={msg.id} className={`status ${msg.type}`}>
+                                <strong>{msg.timestamp}</strong> - {msg.message}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<PeerApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
