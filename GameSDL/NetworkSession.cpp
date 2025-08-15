@@ -885,7 +885,7 @@ void MR_NetworkSession::BroadcastTime( )
       }
       else
       {
-         TRACE( "Buffer FullTime:%d\n", lCounter );
+       //  TRACE( "Buffer FullTime:%d\n", lCounter );
       }
    }
 

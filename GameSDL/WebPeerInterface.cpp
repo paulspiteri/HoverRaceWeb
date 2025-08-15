@@ -3,13 +3,34 @@
 #include <algorithm>
 #include <cstring>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+static bool SendPeerMessage(const char* data, int length) {
+    // Use EM_ASM to call JavaScript directly with binary data
+    int result = EM_ASM_INT({
+        // Create a new Uint8Array and copy the data
+        var dataArray = new Uint8Array($1);
+        for (var i = 0; i < $1; i++) {
+            dataArray[i] = HEAPU8[$0 + i];
+        }
+        
+        // Call our sendGameMessage function with the binary data
+        return sendGameMessage(dataArray) ? 1 : 0;
+    }, data, length);
+    
+    printf("SendPeerMessage: sent %d bytes, result=%d\n", length, result);
+    return result != 0;
+}
+#endif
+
 WebPeerInterface::WebPeerInterface()
 {
     ASSERT(MR_NET_HEADER_LEN == 3);
 
     mPlayer = "Unknown Player!";
     mId = 0;
-    mIsConnected = false;
+    mIsConnected = true;    //                      I SET TO TRUE BY DEFAULT
     // mServerMode       = FALSE;
     // mServerPort       = 0;
     //
@@ -54,6 +75,7 @@ bool WebPeerInterface::SlaveConnect(const char* pServerIP, unsigned pPort, const
 
 void WebPeerInterface::Disconnect()
 {
+    mIsConnected = false;
 }
 
 int WebPeerInterface::GetClientCount() const
@@ -92,31 +114,30 @@ bool WebPeerInterface::UDPSend(int pClient, MR_NetMessageBuffer* pMessage, bool 
 
     if (pClient != 0)
     {
-        return false; // Not supported yet
+        return false; // Only single peer (client 0) supported
     }
 
     // Calculate total message size
     int lToSend = MR_NET_HEADER_LEN + pMessage->mDataLen;
+    
+    // Set datagram info (for compatibility with original protocol)
     int pQueueId = pLongPort ? 0 : 1;
-
-    // ENet handles sequencing internally, so we don't need custom datagram numbers
-    // Just clear the fields since they're not needed with ENet
     pMessage->mDatagramQueue = pQueueId;
     pMessage->mDatagramNumber = 0;
 
-    // Create ENet packet from the message buffer
-    // ENetPacket* packet = enet_packet_create(pMessage, lToSend,
-    //                                         pLongPort ? ENET_PACKET_FLAG_RELIABLE : ENET_PACKET_FLAG_UNSEQUENCED);
-    //
-    // if (!packet)
-    // {
-    //     return false;
-    // }
-    //
-    // int result = enet_peer_send(mConnectedPeer, pQueueId, packet);
-
-    // return (result == 0);
-    return true;
+#ifdef __EMSCRIPTEN__
+    std::cout << "WebPeerInterface::UDPSend sending via PeerJS " << lToSend << " bytes" << std::endl;
+    // Send via PeerJS using our bridge function
+    bool result = SendPeerMessage(reinterpret_cast<const char*>(pMessage), lToSend);
+    if (!result) {
+        printf("WebPeerInterface::UDPSend failed to send %d bytes\n", lToSend);
+    }
+    return result;
+#else
+    // Non-Emscripten builds don't support peer messaging yet
+    printf("WebPeerInterface::UDPSend not implemented for non-Emscripten builds\n");
+    return false;
+#endif
 }
 
 bool WebPeerInterface::BroadcastMessage(MR_NetMessageBuffer* pMessage, int pReqLevel)
