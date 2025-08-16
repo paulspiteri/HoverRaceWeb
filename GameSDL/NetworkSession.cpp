@@ -306,16 +306,16 @@ void MR_NetworkSession::ReadNet( )
             mOpponendMajorID = (*(MR_Int32*)&(lMessage[0]));
             mOpponendMinorID = (*(MR_Int32*)&(lMessage[4]));
 
-            #ifndef _DEBUG
-
-            if(  ((*(MR_Int32*)&(lMessage[0])) == mMajorID)&&
-                 ((*(MR_Int32*)&(lMessage[4])) == mMinorID) )
-            {
-               AddMessage( MR_LoadString( IDS_DUAL_REG_KEY ) );
-               mNetInterface.Disconnect();
-
-            }
-            #endif
+            // #ifndef _DEBUG
+            //
+            // if(  ((*(MR_Int32*)&(lMessage[0])) == mMajorID)&&
+            //      ((*(MR_Int32*)&(lMessage[4])) == mMinorID) )
+            // {
+            //    AddMessage( MR_LoadString( IDS_DUAL_REG_KEY ) );
+            //    mNetInterface.Disconnect();
+            //
+            // }
+            // #endif
 
             break;
             

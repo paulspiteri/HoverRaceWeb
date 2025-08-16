@@ -2,6 +2,20 @@
 #include "../Util/nomfc_stdafx.h"
 #include <algorithm>
 #include <cstring>
+#include <queue>
+
+// Global message queue for peer messages
+struct ReceivedMessage {
+    MR_NetMessageBuffer buffer;
+    int clientId;
+    
+    ReceivedMessage(const MR_UInt8* data, int length, int client) : clientId(client) {
+        int copyLen = std::min(length, static_cast<int>(sizeof(buffer)));
+        memcpy(&buffer, data, copyLen);
+    }
+};
+
+static std::queue<ReceivedMessage> g_messageQueue;
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -19,9 +33,16 @@ static bool SendPeerMessage(const char* data, int length) {
         return sendGameMessage(dataArray) ? 1 : 0;
     }, data, length);
     
-    printf("SendPeerMessage: sent %d bytes, result=%d\n", length, result);
     return result != 0;
 }
+
+extern "C" void ReceivePeerMessage(const char* data, int length) {
+    if (length >= MR_NET_HEADER_LEN && length <= static_cast<int>(sizeof(MR_NetMessageBuffer))) {
+        ReceivedMessage msg(reinterpret_cast<const MR_UInt8*>(data), length, 0);
+        g_messageQueue.push(msg);
+    }
+}
+
 #endif
 
 WebPeerInterface::WebPeerInterface()
@@ -126,13 +147,8 @@ bool WebPeerInterface::UDPSend(int pClient, MR_NetMessageBuffer* pMessage, bool 
     pMessage->mDatagramNumber = 0;
 
 #ifdef __EMSCRIPTEN__
-    std::cout << "WebPeerInterface::UDPSend sending via PeerJS " << lToSend << " bytes" << std::endl;
     // Send via PeerJS using our bridge function
-    bool result = SendPeerMessage(reinterpret_cast<const char*>(pMessage), lToSend);
-    if (!result) {
-        printf("WebPeerInterface::UDPSend failed to send %d bytes\n", lToSend);
-    }
-    return result;
+    return SendPeerMessage(reinterpret_cast<const char*>(pMessage), lToSend);
 #else
     // Non-Emscripten builds don't support peer messaging yet
     printf("WebPeerInterface::UDPSend not implemented for non-Emscripten builds\n");
@@ -156,60 +172,24 @@ bool WebPeerInterface::BroadcastMessage(MR_NetMessageBuffer* pMessage, int pReqL
 
 bool WebPeerInterface::FetchMessage(int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage, int& pClientId, MR_NetMessageBuffer& pBuffer)
 {
-    // if (!mENet)
-    // {
-    //     return false;
-    // }
-    //
-    // ENetEvent event;
-    // while (enet_host_service(mENet, &event, 0) > 0)
-    // {
-    //     switch (event.type)
-    //     {
-    //     case ENET_EVENT_TYPE_CONNECT:
-    //         {
-    //             // Already have a connection, disconnect new peer
-    //             enet_peer_disconnect_now(event.peer, 0);
-    //             printf("ENet: Rejected connection - already connected\n");
-    //         }
-    //         break;
-    //
-    //     case ENET_EVENT_TYPE_DISCONNECT:
-    //         if (event.peer == mConnectedPeer)
-    //         {
-    //             mConnectedPeer = nullptr;
-    //             mIsConnected = false;
-    //             printf("ENet: Client disconnected\n");
-    //         }
-    //         break;
-    //
-    //     case ENET_EVENT_TYPE_RECEIVE:
-    //         {
-    //             if (event.packet->dataLength >= MR_NET_HEADER_LEN)
-    //             {
-    //                 // Copy packet data to caller-provided buffer so it survives packet destruction
-    //                 memcpy(&pBuffer, event.packet->data,
-    //                        std::min(event.packet->dataLength, sizeof(pBuffer)));
-    //
-    //                 // Set output parameters to point to caller's buffer
-    //                 pMessage = pBuffer.mData;
-    //                 pMessageLen = pBuffer.mDataLen;
-    //                 pMessageType = pBuffer.mMessageType;
-    //                 pClientId =0;// mId == 0 ? 1 : 0; // Server sees client as ID 1, client sees server as ID 0
-    //
-    //                 // Now safe to destroy the packet
-    //                 enet_packet_destroy(event.packet);
-    //                 return true;
-    //             }
-    //
-    //             // Clean up packet if invalid
-    //             enet_packet_destroy(event.packet);
-    //         }
-    //         break;
-    //     }
-    // }
+    if (g_messageQueue.empty()) {
+        return false;
+    }
 
-    return false;
+    // Get the next message from the queue
+    ReceivedMessage receivedMsg = g_messageQueue.front();
+    g_messageQueue.pop();
+
+    // Copy the message to the caller's buffer
+    pBuffer = receivedMsg.buffer;
+    
+    // Set output parameters
+    pMessage = pBuffer.mData;
+    pMessageLen = pBuffer.mDataLen;
+    pMessageType = pBuffer.mMessageType;
+    pClientId = receivedMsg.clientId;
+    
+    return true;
 }
 
 const char* WebPeerInterface::GetPlayerName(int pIndex) const

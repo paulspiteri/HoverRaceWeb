@@ -9,6 +9,36 @@ const peer = new Peer(myPeerId);
 // Store the active peer connection for sending messages
 let activePeerConnection = null;
 
+// Shared data handling function
+function handleReceivedData(data) {
+    // Convert data to Uint8Array for C++ processing
+    let binaryData = null;
+    
+    if (data instanceof Uint8Array) {
+        binaryData = data;
+    } else if (data instanceof ArrayBuffer) {
+        binaryData = new Uint8Array(data);
+    } else {
+        console.error(`[JS] Received unsupported data format:`, typeof data);
+        return;
+    }
+    
+    // Call C++ function to handle received message
+    if (typeof Module !== 'undefined' && Module._ReceivePeerMessage) {
+        // Allocate memory in Emscripten heap
+        const dataPtr = Module._malloc(binaryData.length);
+        Module.HEAPU8.set(binaryData, dataPtr);
+        
+        // Call C++ function
+        Module._ReceivePeerMessage(dataPtr, binaryData.length);
+        
+        // Free the allocated memory
+        Module._free(dataPtr);
+    } else {
+        console.error(`[JS] Module._ReceivePeerMessage not available`);
+    }
+}
+
 peer.on('open', function(id) {
     console.log(`Peer initialized with ID: ${id}`);
     const peersToConnect = getQueryParam('peers');
@@ -21,9 +51,7 @@ peer.on('connection', function(conn) {
     console.log(`Incoming connection from: ${conn.peer}`);
     activePeerConnection = conn;
 
-    conn.on('data', function(data) {
-        console.log(`Received data from ${conn.peer}: ${data}`);
-    });
+    conn.on('data', handleReceivedData);
 
     startGame();
 });
@@ -50,9 +78,7 @@ const connectToPeers = (peerIds) => {
             console.log(`Failed to connect to ${peerId}: ${err}`);
         });
 
-        conn.on('data', function(data) {
-            console.log(`Received data from ${peerId}: ${data}`);
-        });
+        conn.on('data', handleReceivedData);
     });
 };
 
@@ -67,7 +93,6 @@ function sendGameMessage(dataArray) {
         // dataArray is already a Uint8Array from Emscripten
         // Send the binary data to peer
         activePeerConnection.send(dataArray);
-        console.log(`Sent ${dataArray.length} bytes to peer`);
         return true;
     } catch (error) {
         console.error('Failed to send message to peer:', error);

@@ -14,7 +14,7 @@ target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util Video
 
 if(EMSCRIPTEN)
     set_target_properties(GameSDL PROPERTIES OUTPUT_NAME "index" SUFFIX ".html"
-    LINK_FLAGS "-s MIN_WEBGL_VERSION=2 -s USE_WEBGL2=1 -sASSERTIONS -s EXPORTED_FUNCTIONS=['_main','_ChangeWindowSize','_ChangeToTrack'] -s EXPORTED_RUNTIME_METHODS=['ccall']")
+    LINK_FLAGS "-s MIN_WEBGL_VERSION=2 -s USE_WEBGL2=1 -sASSERTIONS -s EXPORTED_FUNCTIONS=['_main','_ChangeWindowSize','_ChangeToTrack','_ReceivePeerMessage','_malloc','_free'] -s EXPORTED_RUNTIME_METHODS=['ccall','HEAPU8']")
     target_link_options(GameSDL PRIVATE
     "--shell-file=${CMAKE_SOURCE_DIR}/Emscripten/Hover.html"
     "--preload-file=${CMAKE_SOURCE_DIR}/Assets/ObjFac1.dat@ObjFac1.dat"
