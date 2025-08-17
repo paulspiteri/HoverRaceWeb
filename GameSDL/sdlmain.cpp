@@ -17,13 +17,14 @@ SDL_Window *glWindow = nullptr;
 SDL_GLContext glContext = nullptr;
 MR_SDLGameApp *game = nullptr;
 int lControlState = 0;
+int gPlayerId = 0;
 
 extern "C" {
     void ChangeToTrack(const char *trackFile) {
         printf("ChangeToTrack: %s\n", trackFile);
         if (game != nullptr) {
             game->Clean();
-            game->LoadSelectedTrack(trackFile);
+            game->LoadSelectedTrack(trackFile, gPlayerId);
             int width, height;
             SDL_GetWindowSize(glWindow, &width, &height);
             game->SetOpenGLResolution(width, height);
@@ -33,6 +34,11 @@ extern "C" {
     void ChangeWindowSize(const int width, const int height) {
         std::cout << "ChangeWindowSize " << width << "x" << height << std::endl;
         SDL_SetWindowSize(glWindow, width, height);
+    }
+
+    void SetPlayerId(int playerId) {
+        printf("SetPlayerId: %d\n", playerId);
+        gPlayerId = playerId;
     }
 }
 std::optional<std::string> GetTrack() {
@@ -136,7 +142,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
         return SDL_APP_FAILURE;
     }
     game->SetNetworkMode(playerNumber == 0);
-    game->LoadSelectedTrack(track.value().c_str());
+    ASSERT(gPlayerId >= 0);
+    game->LoadSelectedTrack(track.value().c_str(), gPlayerId);
     ImGui_ImplSDL3_InitForOther(glWindow);
     return SDL_APP_CONTINUE;
 

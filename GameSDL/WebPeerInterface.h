@@ -39,7 +39,7 @@ private:
     bool         mIsConnected;
     
 public:
-    WebPeerInterface();
+    WebPeerInterface(int playerId);
     ~WebPeerInterface();
 
     void  SetPlayerName( const char* pPlayerName );

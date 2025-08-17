@@ -111,7 +111,7 @@
   </head>
   <body>
     <div id="start-overlay">
-      <button onclick="startGame()">START GAME</button>
+      <button onclick="startGame(0)">START SINGLE PLAYER GAME</button>
     </div>
     <div class="emscripten" id="status">Downloading...</div>
     <div class="emscripten">
@@ -379,8 +379,9 @@
       window.addEventListener("orientationchange", updateCanvasSize);
       window.addEventListener("fullscreenchange", updateCanvasSize);
 
-      function startGame() {
+      function startGame(playerId) {
         document.getElementById('start-overlay').style.display = 'none';
+        Module._SetPlayerId(playerId);
         Module._main();
       }
     </script>

@@ -45,12 +45,12 @@ extern "C" void ReceivePeerMessage(const char* data, int length) {
 
 #endif
 
-WebPeerInterface::WebPeerInterface()
+WebPeerInterface::WebPeerInterface(int playerId)
 {
     ASSERT(MR_NET_HEADER_LEN == 3);
 
     mPlayer = "Unknown Player!";
-    mId = 0;
+    mId = playerId;
     mIsConnected = true;    //                      I SET TO TRUE BY DEFAULT
     // mServerMode       = FALSE;
     // mServerPort       = 0;

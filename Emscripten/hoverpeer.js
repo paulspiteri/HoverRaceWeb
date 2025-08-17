@@ -24,19 +24,15 @@ function handleReceivedData(data) {
     }
     
     // Call C++ function to handle received message
-    if (typeof Module !== 'undefined' && Module._ReceivePeerMessage) {
-        // Allocate memory in Emscripten heap
-        const dataPtr = Module._malloc(binaryData.length);
-        Module.HEAPU8.set(binaryData, dataPtr);
-        
-        // Call C++ function
-        Module._ReceivePeerMessage(dataPtr, binaryData.length);
-        
-        // Free the allocated memory
-        Module._free(dataPtr);
-    } else {
-        console.error(`[JS] Module._ReceivePeerMessage not available`);
-    }
+    // Allocate memory in Emscripten heap
+    const dataPtr = Module._malloc(binaryData.length);
+    Module.HEAPU8.set(binaryData, dataPtr);
+    
+    // Call C++ function
+    Module._ReceivePeerMessage(dataPtr, binaryData.length);
+    
+    // Free the allocated memory
+    Module._free(dataPtr);
 }
 
 peer.on('open', function(id) {
@@ -53,7 +49,7 @@ peer.on('connection', function(conn) {
 
     conn.on('data', handleReceivedData);
 
-    startGame();
+    startGame(0); // Host player ID
 });
 
 peer.on('error', function(err) {
@@ -71,7 +67,7 @@ const connectToPeers = (peerIds) => {
             console.log(`Connected to peer: ${peerId}`);
             activePeerConnection = conn;
             
-            startGame();  // only makes sense for 1 peer
+            startGame(1);  // Client player ID - only makes sense for 1 peer
         });
 
         conn.on('error', function(err) {

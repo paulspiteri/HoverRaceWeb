@@ -37,7 +37,7 @@ class MR_SDLGameApp
       void Clean();
       BOOL InitGame();
       void SetNetworkMode(bool isHost);
-      void LoadSelectedTrack(const char* trackFile);
+      void LoadSelectedTrack(const char* trackFile, int playerId);
       void SetVideoMode(int width, int height);
       void RefreshView(SDL_Texture* texture);
       void Simulate();

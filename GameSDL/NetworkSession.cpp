@@ -58,8 +58,8 @@ uint32_t timeGetTime() {
    return static_cast<uint32_t>(elapsed.count());
 }
 
-MR_NetworkSession::MR_NetworkSession()
-                  :MR_ClientSession()
+MR_NetworkSession::MR_NetworkSession(int playerId)
+                  :MR_ClientSession(), mNetInterface(playerId)
 {
    mMasterMode   = FALSE;
 

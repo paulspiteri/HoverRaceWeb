@@ -176,7 +176,7 @@ void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
    }
 }
 
-void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
+void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId)
 {
    BOOL lSuccess = TRUE;
 
@@ -194,7 +194,7 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
       mObserver1 = MR_Observer::New();
 
       // Create the new session
-      MR_NetworkSession* lCurrentSession = new MR_NetworkSession();
+      MR_NetworkSession* lCurrentSession = new MR_NetworkSession(playerId);
       std::cout << "NetworkSession created " << std::endl;
 
       const char* trackTitle;
@@ -210,22 +210,7 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
          {
             std::cout << "Track file loaded" << std::endl;
          }
-      }
-
-      if (lSuccess)
-      {
-         if( mIsHost )
-         {
-            std::string lNameBuffer = std::string(trackTitle) + " " + std::to_string(lNbLap) + " " + (lNbLap > 1 ? "laps" : "lap") + " " + (lAllowWeapons ? "with weapons" : "no weapons");
-            lCurrentSession->SetPlayerName( "HOST Player" );
-
-            lSuccess = lCurrentSession->WaitConnections(lNameBuffer.c_str());
-         }
-         else
-         {
-            lCurrentSession->SetPlayerName( "CLIENT Player" );
-            lSuccess = lCurrentSession->ConnectToServer("localhost" );
-         }
+         lCurrentSession->SetPlayerName(("Player " + std::to_string(playerId)).c_str());
       }
 
       if( lSuccess )
@@ -234,7 +219,7 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile)
          mGLLevelLoader->LoadLevel(level, lCurrentSession->GetBackImage());
          auto levelSize = mGLLevelLoader->GetLevelSize(level);
          mObserver1->SetMapSize(levelSize);
-         lCurrentSession->SetSimulationTime( -6000 );
+         lCurrentSession->SetSimulationTime( -10000 );
       }
 
       // Create the main character

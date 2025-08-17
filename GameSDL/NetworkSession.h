@@ -106,7 +106,7 @@ class MR_NetworkSession: public MR_ClientSession
 
    public:
       // Creation and destruction
-      MR_NetworkSession();
+      MR_NetworkSession(int playerId);
       ~MR_NetworkSession();
 
       // Simulation control
