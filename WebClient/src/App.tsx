@@ -8,24 +8,37 @@ function App() {
     'http://localhost:3001/api'
   );
 
-  return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <h1 className="text-4xl font-bold text-center">HoverRace Game Lobby</h1>
+  const handleJoinGame = (gameId: string) => {
+    if (connectionId) {
+      commands.joinGame(gameId, connectionId);
+    }
+  };
 
-        <div>
-          <ConnectionStatus connectionId={connectionId} />
-          <div>
-            <Button
-              onClick={() => commands.createGame(connectionId!)}
-              disabled={!connectionId}
-            >
-              Create New Game
-            </Button>
+  return (
+    <div className="min-h-screen bg-background flex">
+      {/* Main content area */}ca
+      <div className="flex-1 p-8">
+        <div className="max-w-4xl space-y-8">
+          <h1 className="text-4xl font-bold text-center">
+            HoverRace Game Lobby
+          </h1>
+
+          <div className="space-y-6">
+            <ConnectionStatus connectionId={connectionId} />
+            <div>
+              <Button
+                onClick={() => commands.createGame(connectionId!)}
+                disabled={!connectionId}
+              >
+                Create New Game
+              </Button>
+            </div>
           </div>
         </div>
-
-        <GameList games={games} />
+      </div>
+      {/* Right sidebar for game list */}
+      <div className="w-96 p-8 border-l bg-card/30">
+        <GameList games={games} onJoinGame={handleJoinGame} />
       </div>
     </div>
   );
