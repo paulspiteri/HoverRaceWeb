@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
-import { gameManager } from './gameManager';
+import { gameManager } from './gameManager.ts';
 import type {
   CreateGameRequest,
   JoinGameRequest,
@@ -29,6 +29,9 @@ app.get('/api/games/stream', (req, res) => {
 
   // Generate unique connection ID for this client
   const connectionId = uuidv4();
+  console.log(
+    `📡 SSE connection established   🔑 Generated connectionId: ${connectionId}`
+  );
 
   // Send connection ID and current games immediately (public data only)
   const games = gameManager.getAllGames();
@@ -44,6 +47,7 @@ app.get('/api/games/stream', (req, res) => {
 
   req.on('close', () => {
     const disconnectedConnectionId = sseClients.get(res);
+    console.log(`🔌 SSE connection closed: ${disconnectedConnectionId}`);
     sseClients.delete(res);
 
     // If this connection created any games, delete them
@@ -51,6 +55,9 @@ app.get('/api/games/stream', (req, res) => {
       const games = gameManager.getAllGames();
       games.forEach((game) => {
         if (game.creatorConnectionId === disconnectedConnectionId) {
+          console.log(
+            `🗑️ Auto-deleting game ${game.id} (creator disconnected)`
+          );
           gameManager.deleteGame(game.id);
         }
       });
@@ -60,78 +67,109 @@ app.get('/api/games/stream', (req, res) => {
 
 // REST endpoint to create a game
 app.post('/api/games', (req, res) => {
+  console.log('🎮 POST /api/games - Create game request');
   try {
     const gameData: CreateGameRequest = req.body;
+    console.log(`📝 Game data:`, gameData);
 
-    if (!gameData.name || !gameData.maxPlayers || !gameData.creatorConnectionId) {
+    if (
+      !gameData.name ||
+      !gameData.maxPlayers ||
+      !gameData.creatorConnectionId
+    ) {
+      console.log('❌ Missing required fields');
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
     const game = gameManager.createGame(gameData);
+    console.log(`✅ Game created: ${game.id} - "${game.name}"`);
     res.status(201).json(game);
-  } catch {
+  } catch (error) {
+    console.log('💥 Error creating game:', error);
     res.status(500).json({ error: 'Failed to create game' });
   }
 });
 
 // REST endpoint to join a game
 app.post('/api/games/:id/join', (req, res) => {
+  console.log('👥 POST /api/games/:id/join - Join game request');
   try {
     const { id } = req.params;
     const { connectionId }: JoinGameRequest = req.body;
+    console.log(`🎯 Joining game ${id} with connectionId: ${connectionId}`);
 
     if (!connectionId) {
+      console.log('❌ Missing connectionId');
       return res.status(400).json({ error: 'Missing connectionId' });
     }
 
     // Validate connectionId exists in active SSE connections
-    const isValidConnectionId = Array.from(sseClients.values()).includes(connectionId);
+    const isValidConnectionId = Array.from(sseClients.values()).includes(
+      connectionId
+    );
     if (!isValidConnectionId) {
-      return res.status(400).json({ error: 'Invalid or inactive connectionId' });
+      console.log('❌ Invalid or inactive connectionId');
+      return res
+        .status(400)
+        .json({ error: 'Invalid or inactive connectionId' });
     }
 
     const joined = gameManager.joinGame(id, connectionId);
 
     if (joined) {
+      console.log(`✅ Successfully joined game ${id}`);
       res.status(200).json({ message: 'Joined game successfully' });
     } else {
+      console.log(`❌ Failed to join game ${id}`);
       res.status(400).json({ error: 'Cannot join game' });
     }
-  } catch {
+  } catch (error) {
+    console.log('💥 Error joining game:', error);
     res.status(500).json({ error: 'Failed to join game' });
   }
 });
 
 // REST endpoint to leave a game
 app.post('/api/games/:id/leave', (req, res) => {
+  console.log('🚪 POST /api/games/:id/leave - Leave game request');
   try {
     const { id } = req.params;
     const { connectionId }: JoinGameRequest = req.body;
+    console.log(`🎯 Leaving game ${id} with connectionId: ${connectionId}`);
 
     if (!connectionId) {
+      console.log('❌ Missing connectionId');
       return res.status(400).json({ error: 'Missing connectionId' });
     }
 
     const left = gameManager.leaveGame(id, connectionId);
 
     if (left) {
+      console.log(`✅ Successfully left game ${id}`);
       res.status(200).json({ message: 'Left game successfully' });
     } else {
+      console.log(`❌ Failed to leave game ${id}`);
       res.status(400).json({ error: 'Cannot leave game' });
     }
-  } catch {
+  } catch (error) {
+    console.log('💥 Error leaving game:', error);
     res.status(500).json({ error: 'Failed to leave game' });
   }
 });
 
 // REST endpoint to delete a game
 app.delete('/api/games/:id', (req, res) => {
+  console.log('🗑️ DELETE /api/games/:id - Delete game request');
   const { id } = req.params;
+  console.log(`🎯 Deleting game ${id}`);
+
   const deleted = gameManager.deleteGame(id);
 
   if (deleted) {
+    console.log(`✅ Successfully deleted game ${id}`);
     res.status(204).send();
   } else {
+    console.log(`❌ Game ${id} not found`);
     res.status(404).json({ error: 'Game not found' });
   }
 });
@@ -178,6 +216,7 @@ function broadcastPrivateUpdate(game: Game, data: unknown) {
 
 // Listen for game events and broadcast
 gameManager.on('gameCreated', (game: Game) => {
+  console.log(`📡 Broadcasting gameCreated for game ${game.id}`);
   // Send public data to all clients
   broadcastPublicUpdate({ type: 'gameCreated', game: toPublicGameData(game) });
   // Send full data to participants only
@@ -185,11 +224,13 @@ gameManager.on('gameCreated', (game: Game) => {
 });
 
 gameManager.on('gameDeleted', (gameId: string) => {
+  console.log(`📡 Broadcasting gameDeleted for game ${gameId}`);
   // Game deletion is public information
   broadcastPublicUpdate({ type: 'gameDeleted', gameId });
 });
 
 gameManager.on('gameUpdated', (game: Game) => {
+  console.log(`📡 Broadcasting gameUpdated for game ${game.id}`);
   // Send public data to all clients
   broadcastPublicUpdate({ type: 'gameUpdated', game: toPublicGameData(game) });
   // Send full data to participants only
