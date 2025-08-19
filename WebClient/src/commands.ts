@@ -1,6 +1,10 @@
 import type { CreateGameRequest } from '@/types.ts';
+import type { ActiveGame } from '@/App.tsx';
 
-export const createCommands = (baseUrl: string, gameTokens: Map<string, string>) => {
+export const createCommands = (
+  baseUrl: string,
+  setActiveGame: (activeGame: ActiveGame | undefined) => void
+) => {
   const createGame = async (connectionId: string) => {
     try {
       const response = await fetch(`${baseUrl}/games`, {
@@ -21,10 +25,10 @@ export const createCommands = (baseUrl: string, gameTokens: Map<string, string>)
 
       const result = await response.json();
       console.log('Game created:', result);
-      
+
       // Store the creator token
       if (result.creatorToken && result.game) {
-        gameTokens.set(result.game.id, result.creatorToken);
+        setActiveGame({ gameId: result.game.id, token: result.creatorToken });
       }
     } catch (error) {
       console.error('Error creating game:', error);
@@ -49,10 +53,10 @@ export const createCommands = (baseUrl: string, gameTokens: Map<string, string>)
 
       const result = await response.json();
       console.log('Successfully joined game:', result);
-      
+
       // Store the game token
       if (result.gameToken) {
-        gameTokens.set(gameId, result.gameToken);
+        setActiveGame({ gameId, token: result.gameToken });
       }
     } catch (error) {
       console.error('Error joining game:', error);
@@ -77,9 +81,8 @@ export const createCommands = (baseUrl: string, gameTokens: Map<string, string>)
 
       const result = await response.json();
       console.log('Successfully left game:', result);
-      
-      // Remove the game token since we left
-      gameTokens.delete(gameId);
+
+      setActiveGame(undefined);
     } catch (error) {
       console.error('Error leaving game:', error);
     }

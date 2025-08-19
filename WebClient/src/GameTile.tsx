@@ -6,6 +6,7 @@ interface GameTileProps {
   game: Game;
   isJoined: boolean;
   isCreator: boolean;
+  disabled?: boolean;
   onJoinGame?: (gameId: string) => void;
   onLeaveGame?: (gameId: string) => void;
 }
@@ -14,6 +15,7 @@ export const GameTile: React.FC<GameTileProps> = ({
   game,
   isJoined,
   isCreator,
+  disabled,
   onJoinGame,
   onLeaveGame,
 }) => {
@@ -44,7 +46,7 @@ export const GameTile: React.FC<GameTileProps> = ({
               onJoinGame?.(game.id);
             }
           }}
-          disabled={!isJoined && isGameFull}
+          disabled={(!isJoined && isGameFull) || disabled}
           className="w-full"
         >
           {isCreator

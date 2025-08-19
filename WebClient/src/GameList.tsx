@@ -5,6 +5,7 @@ import type { Game } from './types';
 interface GameListProps {
   games: Game[];
   connectionId?: string;
+  disabled?: boolean;
   onJoinGame?: (gameId: string) => void;
   onLeaveGame?: (gameId: string) => void;
 }
@@ -12,6 +13,7 @@ interface GameListProps {
 export const GameList: React.FC<GameListProps> = ({
   games,
   connectionId,
+  disabled,
   onJoinGame,
   onLeaveGame,
 }) => {
@@ -31,6 +33,7 @@ export const GameList: React.FC<GameListProps> = ({
                 game={game}
                 isJoined={'players' in game}
                 isCreator={connectionId === game.creatorConnectionId}
+                disabled={disabled}
                 onJoinGame={onJoinGame}
                 onLeaveGame={onLeaveGame}
               />

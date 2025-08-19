@@ -2,10 +2,20 @@ import { ConnectionStatus } from '@/ConnectionStatus.tsx';
 import { GameList } from '@/GameList.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import { useGameData } from '@/useGameData.ts';
+import { useState } from 'react';
+import { ActiveGame } from '@/ActiveGame.tsx';
+
+export interface ActiveGame {
+  gameId: string;
+  token: string;
+}
 
 function App() {
-  const { connectionId, games, gameTokens, commands } = useGameData(
-    'http://localhost:3001/api'
+  const [activeGame, setActiveGame] = useState<ActiveGame>();
+
+  const { connectionId, games, commands } = useGameData(
+    'http://localhost:3001/api',
+    setActiveGame
   );
 
   const handleJoinGame = (gameId: string) => {
@@ -15,10 +25,7 @@ function App() {
   };
 
   const handleLeaveGame = (gameId: string) => {
-    const gameToken = gameTokens.get(gameId);
-    if (gameToken) {
-      commands.leaveGame(gameId, gameToken);
-    }
+    commands.leaveGame(gameId, activeGame!.token);
   };
 
   return (
@@ -35,19 +42,21 @@ function App() {
             <div>
               <Button
                 onClick={() => commands.createGame(connectionId!)}
-                disabled={!connectionId}
+                disabled={!connectionId || activeGame !== undefined}
               >
                 Create New Game
               </Button>
             </div>
           </div>
         </div>
+        {activeGame && <ActiveGame />}
       </div>
       {/* Right sidebar for game list */}
       <div className="w-96 p-8 border-l bg-card/30">
         <GameList
           games={games}
           connectionId={connectionId}
+          disabled={activeGame !== undefined}
           onJoinGame={handleJoinGame}
           onLeaveGame={handleLeaveGame}
         />
