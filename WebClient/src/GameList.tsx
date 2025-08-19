@@ -6,12 +6,14 @@ interface GameListProps {
   games: Game[];
   connectionId?: string;
   onJoinGame?: (gameId: string) => void;
+  onLeaveGame?: (gameId: string) => void;
 }
 
 export const GameList: React.FC<GameListProps> = ({
   games,
   connectionId,
   onJoinGame,
+  onLeaveGame,
 }) => {
   return (
     <div>
@@ -30,6 +32,7 @@ export const GameList: React.FC<GameListProps> = ({
                 isJoined={'players' in game}
                 isCreator={connectionId === game.creatorConnectionId}
                 onJoinGame={onJoinGame}
+                onLeaveGame={onLeaveGame}
               />
             ))}
           </div>

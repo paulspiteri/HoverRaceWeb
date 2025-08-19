@@ -7,6 +7,7 @@ interface GameTileProps {
   isJoined: boolean;
   isCreator: boolean;
   onJoinGame?: (gameId: string) => void;
+  onLeaveGame?: (gameId: string) => void;
 }
 
 export const GameTile: React.FC<GameTileProps> = ({
@@ -14,6 +15,7 @@ export const GameTile: React.FC<GameTileProps> = ({
   isJoined,
   isCreator,
   onJoinGame,
+  onLeaveGame,
 }) => {
   const playerCount =
     'players' in game ? game.players.length : game.playerCount;
@@ -35,14 +37,20 @@ export const GameTile: React.FC<GameTileProps> = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => onJoinGame?.(game.id)}
-          disabled={isJoined || isCreator || isGameFull}
+          onClick={() => {
+            if (isJoined) {
+              onLeaveGame?.(game.id);
+            } else {
+              onJoinGame?.(game.id);
+            }
+          }}
+          disabled={!isJoined && isGameFull}
           className="w-full"
         >
           {isCreator
-            ? 'Your Game'
+            ? 'Cancel Game'
             : isJoined
-              ? 'Already Joined'
+              ? 'Leave Game'
               : isGameFull
                 ? 'Game Full'
                 : 'Join Game'}

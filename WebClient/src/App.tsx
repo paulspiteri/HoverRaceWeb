@@ -4,13 +4,20 @@ import { Button } from '@/components/ui/button.tsx';
 import { useGameData } from '@/useGameData.ts';
 
 function App() {
-  const { connectionId, games, commands } = useGameData(
+  const { connectionId, games, gameTokens, commands } = useGameData(
     'http://localhost:3001/api'
   );
 
   const handleJoinGame = (gameId: string) => {
     if (connectionId) {
       commands.joinGame(gameId, connectionId);
+    }
+  };
+
+  const handleLeaveGame = (gameId: string) => {
+    const gameToken = gameTokens.get(gameId);
+    if (gameToken) {
+      commands.leaveGame(gameId, gameToken);
     }
   };
 
@@ -42,6 +49,7 @@ function App() {
           games={games}
           connectionId={connectionId}
           onJoinGame={handleJoinGame}
+          onLeaveGame={handleLeaveGame}
         />
       </div>
     </div>

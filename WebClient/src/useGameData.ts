@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import type { Game, ServerMessage } from '@/types.ts';
 import { createCommands } from '@/commands.ts';
 
 export const useGameData = (baseUrl: string) => {
   const [connectionId, setConnectionId] = useState<string>();
   const [games, setGames] = useState<Game[]>([]);
+  const gameTokens = useRef<Map<string, string>>(new Map());
 
   useEffect(() => {
     const url = `${baseUrl}/games/stream`;
@@ -31,6 +32,8 @@ export const useGameData = (baseUrl: string) => {
 
           case 'gameDeleted':
             setGames((prev) => prev.filter((game) => game.id !== data.gameId));
+            // Remove token for deleted game
+            gameTokens.current.delete(data.gameId);
             console.log('Game deleted:', data.gameId);
             break;
 
@@ -71,11 +74,12 @@ export const useGameData = (baseUrl: string) => {
     };
   }, [baseUrl]);
 
-  const commands = useMemo(() => createCommands(baseUrl), [baseUrl]);
+  const commands = useMemo(() => createCommands(baseUrl, gameTokens.current), [baseUrl]);
 
   return {
     connectionId,
     games,
+    gameTokens: gameTokens.current,
     commands,
   };
 };
