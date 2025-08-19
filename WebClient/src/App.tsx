@@ -16,7 +16,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Main content area */}ca
+      {/* Main content area */}
       <div className="flex-1 p-8">
         <div className="max-w-4xl space-y-8">
           <h1 className="text-4xl font-bold text-center">
@@ -38,7 +38,11 @@ function App() {
       </div>
       {/* Right sidebar for game list */}
       <div className="w-96 p-8 border-l bg-card/30">
-        <GameList games={games} onJoinGame={handleJoinGame} />
+        <GameList
+          games={games}
+          connectionId={connectionId}
+          onJoinGame={handleJoinGame}
+        />
       </div>
     </div>
   );

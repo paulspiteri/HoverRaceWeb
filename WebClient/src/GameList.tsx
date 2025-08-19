@@ -1,13 +1,18 @@
-import type { PublicGameData } from './types';
 import * as React from 'react';
 import { GameTile } from './GameTile';
+import type { Game } from './types';
 
 interface GameListProps {
-  games: PublicGameData[];
+  games: Game[];
+  connectionId?: string;
   onJoinGame?: (gameId: string) => void;
 }
 
-export const GameList: React.FC<GameListProps> = ({ games, onJoinGame }) => {
+export const GameList: React.FC<GameListProps> = ({
+  games,
+  connectionId,
+  onJoinGame,
+}) => {
   return (
     <div>
       <div>
@@ -19,9 +24,11 @@ export const GameList: React.FC<GameListProps> = ({ games, onJoinGame }) => {
         ) : (
           <div className="grid gap-4">
             {games.map((game) => (
-              <GameTile 
-                key={game.id} 
-                game={game} 
+              <GameTile
+                key={game.id}
+                game={game}
+                isJoined={'players' in game}
+                isCreator={connectionId === game.creatorConnectionId}
                 onJoinGame={onJoinGame}
               />
             ))}

@@ -2,7 +2,7 @@ export type Player = {
   connectionId: string;
 };
 
-export type Game = {
+export type ServerGame = {
   id: string;
   name: string;
   players: Player[];
@@ -21,7 +21,7 @@ export type JoinGameRequest = {
   connectionId: string;
 };
 
-export type PublicGameData = {
+export type AvailableGame = {
   id: string;
   name: string;
   playerCount: number;
@@ -29,3 +29,37 @@ export type PublicGameData = {
   createdAt: Date;
   creatorConnectionId: string;
 };
+
+export type JoinedGame = ServerGame;
+
+export type ConnectionIdMessage = {
+  type: 'connectionId';
+  connectionId: string;
+};
+
+export type GameListMessage = {
+  type: 'gameList';
+  games: AvailableGame[];
+};
+
+export type GameUpdatedMessage = {
+  type: 'gameUpdated';
+  game: AvailableGame;
+};
+
+export type GameUpdatedFullMessage = {
+  type: 'gameUpdatedFull';
+  game: ServerGame;
+};
+
+export type GameDeletedMessage = {
+  type: 'gameDeleted';
+  gameId: string;
+};
+
+export type ServerMessage = 
+  | ConnectionIdMessage
+  | GameListMessage
+  | GameUpdatedMessage
+  | GameUpdatedFullMessage
+  | GameDeletedMessage;

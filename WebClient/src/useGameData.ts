@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { PublicGameData } from '@/types.ts';
+import type { Game, ServerMessage } from '@/types.ts';
 import { createCommands } from '@/commands.ts';
 
 export const useGameData = (baseUrl: string) => {
   const [connectionId, setConnectionId] = useState<string>();
-  const [games, setGames] = useState<PublicGameData[]>([]);
+  const [games, setGames] = useState<Game[]>([]);
 
   useEffect(() => {
     const url = `${baseUrl}/games/stream`;
@@ -16,7 +16,7 @@ export const useGameData = (baseUrl: string) => {
 
     eventSource.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(event.data) as ServerMessage;
         console.log('Received SSE message:', data);
 
         switch (data.type) {
@@ -28,22 +28,33 @@ export const useGameData = (baseUrl: string) => {
             setGames(data.games);
             console.log('Games list updated:', data.games);
             break;
-          case 'gameCreated':
-            setGames((prev) => [...prev, data.game]);
-            console.log('Game created:', data.game);
-            break;
+
           case 'gameDeleted':
             setGames((prev) => prev.filter((game) => game.id !== data.gameId));
             console.log('Game deleted:', data.gameId);
             break;
+
           case 'gameUpdated':
-            setGames((prev) =>
-              prev.map((game) => (game.id === data.game.id ? data.game : game))
-            );
+          case 'gameUpdatedFull':
+            setGames((prev) => {
+              const existingIndex = prev.findIndex(
+                (g) => g.id === data.game.id
+              );
+              if (existingIndex !== -1) {
+                // Update existing game at same position
+                const newGames = [...prev];
+                newGames[existingIndex] = data.game;
+                return newGames;
+              } else {
+                // New game - add to head of array
+                return [data.game, ...prev];
+              }
+            });
             console.log('Game updated:', data.game);
             break;
+
           default:
-            console.log('Unknown message type:', data.type);
+            console.log('Unknown message type:', (data as ServerMessage).type);
         }
       } catch (error) {
         console.error('Error parsing SSE message:', error);

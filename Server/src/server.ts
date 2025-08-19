@@ -5,8 +5,14 @@ import { gameManager } from './gameManager.ts';
 import type {
   CreateGameRequest,
   JoinGameRequest,
-  PublicGameData,
-  Game,
+  AvailableGame,
+  ServerGame,
+  ConnectionIdMessage,
+  GameListMessage,
+  GameUpdatedMessage,
+  GameUpdatedFullMessage,
+  GameDeletedMessage,
+  ServerMessage,
 } from './types';
 
 const app = express();
@@ -36,12 +42,11 @@ app.get('/api/games/stream', (req, res) => {
   // Send connection ID and current games immediately (public data only)
   const games = gameManager.getAllGames();
   const publicGames = games.map(toPublicGameData);
-  res.write(
-    `data: ${JSON.stringify({ type: 'connectionId', connectionId })}\n\n`
-  );
-  res.write(
-    `data: ${JSON.stringify({ type: 'gameList', games: publicGames })}\n\n`
-  );
+  const connectionIdMessage: ConnectionIdMessage = { type: 'connectionId', connectionId };
+  const gameListMessage: GameListMessage = { type: 'gameList', games: publicGames };
+  
+  res.write(`data: ${JSON.stringify(connectionIdMessage)}\n\n`);
+  res.write(`data: ${JSON.stringify(gameListMessage)}\n\n`);
 
   sseClients.set(res, connectionId);
 
@@ -175,7 +180,7 @@ app.delete('/api/games/:id', (req, res) => {
 });
 
 // Convert Game to PublicGameData
-function toPublicGameData(game: Game): PublicGameData {
+function toPublicGameData(game: ServerGame): AvailableGame {
   return {
     id: game.id,
     name: game.name,
@@ -186,20 +191,27 @@ function toPublicGameData(game: Game): PublicGameData {
   };
 }
 
-// Broadcast public game updates to all SSE clients
-function broadcastPublicUpdate(data: unknown) {
+// Broadcast public game updates to non-participant SSE clients only
+function broadcastPublicUpdate(data: ServerMessage, excludeConnectionIds?: string[]) {
   const message = `data: ${JSON.stringify(data)}\n\n`;
-  sseClients.forEach((creatorId, client) => {
-    try {
-      client.write(message);
-    } catch {
-      sseClients.delete(client);
+  let sentCount = 0;
+  sseClients.forEach((connectionId, client) => {
+    if (!excludeConnectionIds || !excludeConnectionIds.includes(connectionId)) {
+      try {
+        client.write(message);
+        sentCount++;
+      } catch {
+        sseClients.delete(client);
+      }
     }
   });
+  console.log(
+    `📤 Public broadcast sent to ${sentCount} non-participant clients`
+  );
 }
 
 // Broadcast private game updates only to participants
-function broadcastPrivateUpdate(game: Game, data: unknown) {
+function broadcastPrivateUpdate(game: ServerGame, data: ServerMessage) {
   const message = `data: ${JSON.stringify(data)}\n\n`;
   const participantConnectionIds = game.players.map((p) => p.connectionId);
 
@@ -214,27 +226,35 @@ function broadcastPrivateUpdate(game: Game, data: unknown) {
   });
 }
 
-// Listen for game events and broadcast
-gameManager.on('gameCreated', (game: Game) => {
-  console.log(`📡 Broadcasting gameCreated for game ${game.id}`);
-  // Send public data to all clients
-  broadcastPublicUpdate({ type: 'gameCreated', game: toPublicGameData(game) });
+// Shared function to broadcast game updates
+function broadcastGameUpdate(game: ServerGame) {
+  const participantConnectionIds = game.players.map((p) => p.connectionId);
+
+  // Send public data to non-participants
+  const gameUpdatedMessage: GameUpdatedMessage = { type: 'gameUpdated', game: toPublicGameData(game) };
+  broadcastPublicUpdate(gameUpdatedMessage, participantConnectionIds);
+  
   // Send full data to participants only
-  broadcastPrivateUpdate(game, { type: 'gameCreatedFull', game });
+  const gameUpdatedFullMessage: GameUpdatedFullMessage = { type: 'gameUpdatedFull', game };
+  broadcastPrivateUpdate(game, gameUpdatedFullMessage);
+}
+
+// Listen for game events and broadcast
+gameManager.on('gameCreated', (game: ServerGame) => {
+  console.log(`📡 Broadcasting gameUpdated for game ${game.id} (created)`);
+  broadcastGameUpdate(game);
 });
 
 gameManager.on('gameDeleted', (gameId: string) => {
   console.log(`📡 Broadcasting gameDeleted for game ${gameId}`);
   // Game deletion is public information
-  broadcastPublicUpdate({ type: 'gameDeleted', gameId });
+  const gameDeletedMessage: GameDeletedMessage = { type: 'gameDeleted', gameId };
+  broadcastPublicUpdate(gameDeletedMessage);
 });
 
-gameManager.on('gameUpdated', (game: Game) => {
+gameManager.on('gameUpdated', (game: ServerGame) => {
   console.log(`📡 Broadcasting gameUpdated for game ${game.id}`);
-  // Send public data to all clients
-  broadcastPublicUpdate({ type: 'gameUpdated', game: toPublicGameData(game) });
-  // Send full data to participants only
-  broadcastPrivateUpdate(game, { type: 'gameUpdatedFull', game });
+  broadcastGameUpdate(game);
 });
 
 app.listen(port, () => {
