@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button.tsx';
 import { useGameData } from '@/useGameData.ts';
 import { useState } from 'react';
 import { ActiveGame } from '@/ActiveGame.tsx';
+import type { JoinedGame } from './types';
 
 export interface ActiveGame {
   gameId: string;
@@ -18,38 +19,64 @@ function App() {
     setActiveGame
   );
 
+  const currentGame =
+    activeGame &&
+    (games.find((g) => g.id === activeGame.gameId && 'players' in g) as
+      | JoinedGame
+      | undefined);
+
   const handleJoinGame = (gameId: string) => {
     if (connectionId) {
       commands.joinGame(gameId, connectionId);
     }
   };
 
-  const handleLeaveGame = (gameId: string) => {
-    commands.leaveGame(gameId, activeGame!.token);
+  const handleLeaveGame = () => {
+    if (activeGame) {
+      commands.leaveGame(activeGame.gameId, activeGame.token);
+    }
+  };
+
+  const handleStartGame = () => {
+    console.log('Start game clicked');
   };
 
   return (
     <div className="min-h-screen bg-background flex">
       {/* Main content area */}
-      <div className="flex-1 p-8">
-        <div className="max-w-4xl space-y-8">
-          <h1 className="text-4xl font-bold text-center">
-            HoverRace Game Lobby
-          </h1>
-
-          <div className="space-y-6">
-            <ConnectionStatus connectionId={connectionId} />
-            <div>
-              <Button
-                onClick={() => commands.createGame(connectionId!)}
-                disabled={!connectionId || activeGame !== undefined}
-              >
-                Create New Game
-              </Button>
-            </div>
+      <div className="flex-1 p-8 flex flex-col items-center">
+        <div className="max-w-4xl w-full space-y-8">
+          {/* Enhanced Header */}
+          <div className="text-center">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              HoverRace
+            </h1>
           </div>
+
+          {!activeGame && (
+            <div className="space-y-6">
+              <ConnectionStatus connectionId={connectionId} />
+              <div className="flex justify-center">
+                <Button
+                  onClick={() => commands.createGame(connectionId!)}
+                  disabled={!connectionId}
+                  size="lg"
+                  className="px-8"
+                >
+                  Create New Game
+                </Button>
+              </div>
+            </div>
+          )}
+          {activeGame && currentGame && (
+            <ActiveGame
+              game={currentGame}
+              onClose={handleLeaveGame}
+              onStartGame={handleStartGame}
+              isCreator={connectionId === currentGame.creatorConnectionId}
+            />
+          )}
         </div>
-        {activeGame && <ActiveGame />}
       </div>
       {/* Right sidebar for game list */}
       <div className="w-96 p-8 border-l bg-card/30">
