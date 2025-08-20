@@ -6,7 +6,7 @@ export class GameManager extends EventEmitter {
     private games: Map<string, ServerGame> = new Map();
     private nextId = 1;
 
-    createGame(gameData: CreateGameRequest): { game: ServerGame; creatorToken: string } {
+    createGame(gameData: CreateGameRequest): { game: ServerGame; creatorstart ofToken: string } {
         const creatorToken = uuidv4();
         const game: ServerGame = {
             id: this.generateId(),

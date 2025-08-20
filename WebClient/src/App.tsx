@@ -5,6 +5,7 @@ import { useGameData } from '@/useGameData.ts';
 import { useState } from 'react';
 import { ActiveGame } from '@/ActiveGame.tsx';
 import type { JoinedGame } from './types';
+import { usePeers } from '@/usePeers.ts';
 
 export interface ActiveGame {
   gameId: string;
@@ -14,7 +15,7 @@ export interface ActiveGame {
 function App() {
   const [activeGame, setActiveGame] = useState<ActiveGame>();
 
-  const { connectionId, games, commands } = useGameData(
+  const { connectionId, games, commands, eventSource } = useGameData(
     'http://localhost:3001/api',
     setActiveGame
   );
@@ -24,6 +25,8 @@ function App() {
     (games.find((g) => g.id === activeGame.gameId && 'players' in g) as
       | JoinedGame
       | undefined);
+
+  usePeers(connectionId, currentGame, eventSource);
 
   const handleJoinGame = (gameId: string) => {
     if (connectionId) {

@@ -34,6 +34,12 @@ export type DeleteGameRequest = {
     creatorToken: string;
 };
 
+export type SignalRequest = {
+    targetConnectionId: string;
+    gameToken: string;
+    signalData: string;
+};
+
 export type AvailableGame = {
     id: string;
     name: string;
@@ -53,28 +59,34 @@ export type JoinedGame = {
 };
 
 export type ConnectionIdMessage = {
-    type: 'connectionId';
+    type: "connectionId";
     connectionId: string;
 };
 
 export type GameListMessage = {
-    type: 'gameList';
+    type: "gameList";
     games: AvailableGame[];
 };
 
 export type GameUpdatedMessage = {
-    type: 'gameUpdated';
+    type: "gameUpdated";
     game: AvailableGame;
 };
 
 export type GameUpdatedFullMessage = {
-    type: 'gameUpdatedFull';
+    type: "gameUpdatedFull";
     game: JoinedGame;
 };
 
 export type GameDeletedMessage = {
-    type: 'gameDeleted';
+    type: "gameDeleted";
     gameId: string;
+};
+
+export type SignalMessage = {
+    type: "signal";
+    fromConnectionId: string;
+    signalData: string;
 };
 
 export type ServerMessage =
@@ -82,4 +94,5 @@ export type ServerMessage =
     | GameListMessage
     | GameUpdatedMessage
     | GameUpdatedFullMessage
-    | GameDeletedMessage;
+    | GameDeletedMessage
+    | SignalMessage;

@@ -7,6 +7,7 @@ import type {
     JoinGameRequest,
     LeaveGameRequest,
     DeleteGameRequest,
+    SignalRequest,
     AvailableGame,
     ServerGame,
     JoinedGame,
@@ -16,6 +17,7 @@ import type {
     GameUpdatedMessage,
     GameUpdatedFullMessage,
     GameDeletedMessage,
+    SignalMessage,
     ServerMessage,
 } from "./types";
 
@@ -207,6 +209,76 @@ app.delete("/api/games/:id", (req, res) => {
     } catch (error) {
         console.log("💥 Error deleting game:", error);
         res.status(500).json({ error: "Failed to delete game" });
+    }
+});
+
+// REST endpoint to send WebRTC signaling data to specific peer
+app.post("/api/games/:id/signal", (req, res) => {
+    console.log("📡 POST /api/games/:id/signal - Send signal request");
+    try {
+        const { id } = req.params;
+        const { targetConnectionId, gameToken, signalData }: SignalRequest = req.body;
+        console.log(`🎯 Sending signal in game ${id} to ${targetConnectionId}`);
+
+        if (!targetConnectionId || !gameToken || !signalData) {
+            console.log("❌ Missing required fields");
+            return res.status(400).json({ error: "Missing required fields: targetConnectionId, gameToken, signalData" });
+        }
+
+        const game = gameManager.getGame(id);
+        if (!game) {
+            console.log(`❌ Game ${id} not found`);
+            return res.status(404).json({ error: "Game not found" });
+        }
+
+        // Find sender by gameToken
+        const sender = game.players.find(p => p.gameToken === gameToken);
+        if (!sender) {
+            console.log("❌ Invalid gameToken or sender not in game");
+            return res.status(403).json({ error: "Invalid gameToken or not a member of this game" });
+        }
+
+        // Verify target is also in the same game
+        const target = game.players.find(p => p.connectionId === targetConnectionId);
+        if (!target) {
+            console.log(`❌ Target ${targetConnectionId} not in game ${id}`);
+            return res.status(400).json({ error: "Target player not in this game" });
+        }
+
+        // Find target's SSE connection
+        let targetClient: express.Response | undefined;
+        for (const [client, connectionId] of sseClients.entries()) {
+            if (connectionId === targetConnectionId) {
+                targetClient = client;
+                break;
+            }
+        }
+
+        if (!targetClient) {
+            console.log(`❌ Target ${targetConnectionId} not connected via SSE`);
+            return res.status(400).json({ error: "Target player not connected" });
+        }
+
+        // Send signal only to target
+        const signalMessage: SignalMessage = {
+            type: "signal",
+            fromConnectionId: sender.connectionId,
+            signalData
+        };
+
+        try {
+            targetClient.write(`data: ${JSON.stringify(signalMessage)}\n\n`);
+            console.log(`✅ Signal sent from ${sender.connectionId} to ${targetConnectionId}`);
+            res.status(200).json({ message: "Signal sent successfully" });
+        } catch (writeError) {
+            console.log(`❌ Failed to send signal to ${targetConnectionId}:`, writeError);
+            // Remove dead connection
+            sseClients.delete(targetClient);
+            res.status(500).json({ error: "Failed to deliver signal" });
+        }
+    } catch (error) {
+        console.log("💥 Error sending signal:", error);
+        res.status(500).json({ error: "Failed to send signal" });
     }
 });
 
