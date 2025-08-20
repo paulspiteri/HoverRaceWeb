@@ -1,4 +1,4 @@
-import type { CreateGameRequest } from '@/types.ts';
+import type { CreateGameRequest, SignalRequest } from '@/types.ts';
 import type { ActiveGame } from '@/App.tsx';
 
 export const createCommands = (
@@ -88,9 +88,40 @@ export const createCommands = (
     }
   };
 
+  const sendSignal = async (
+    gameId: string,
+    targetConnectionId: string,
+    gameToken: string,
+    signalData: string
+  ) => {
+    try {
+      const response = await fetch(`${baseUrl}/games/${gameId}/signal`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetConnectionId,
+          gameToken,
+          signalData,
+        } satisfies SignalRequest),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send signal');
+      }
+
+      const result = await response.json();
+      console.log('Signal sent successfully:', result);
+    } catch (error) {
+      console.error('Error sending signal:', error);
+    }
+  };
+
   return {
     createGame,
     joinGame,
     leaveGame,
+    sendSignal,
   };
 };

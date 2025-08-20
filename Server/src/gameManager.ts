@@ -6,12 +6,20 @@ export class GameManager extends EventEmitter {
     private games: Map<string, ServerGame> = new Map();
     private nextId = 1;
 
-    createGame(gameData: CreateGameRequest): { game: ServerGame; creatorstart ofToken: string } {
+    createGame(gameData: CreateGameRequest): {
+        game: ServerGame;
+        creatorToken: string;
+    } {
         const creatorToken = uuidv4();
         const game: ServerGame = {
             id: this.generateId(),
             name: gameData.name,
-            players: [{ connectionId: gameData.creatorConnectionId, gameToken: creatorToken }],
+            players: [
+                {
+                    connectionId: gameData.creatorConnectionId,
+                    gameToken: creatorToken,
+                },
+            ],
             maxPlayers: gameData.maxPlayers,
             createdAt: new Date(),
             creatorConnectionId: gameData.creatorConnectionId,
@@ -37,10 +45,12 @@ export class GameManager extends EventEmitter {
         if (!game) return false;
 
         // Find the creator by checking if they have the token
-        const creator = game.players.find(p => 
-            p.connectionId === game.creatorConnectionId && p.gameToken === gameToken
+        const creator = game.players.find(
+            (p) =>
+                p.connectionId === game.creatorConnectionId &&
+                p.gameToken === gameToken
         );
-        
+
         if (!creator) return false;
 
         this.games.delete(gameId);

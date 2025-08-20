@@ -26,7 +26,7 @@ function App() {
       | JoinedGame
       | undefined);
 
-  usePeers(connectionId, currentGame, eventSource);
+  usePeers(connectionId, currentGame, eventSource, commands.sendSignal, activeGame?.token);
 
   const handleJoinGame = (gameId: string) => {
     if (connectionId) {

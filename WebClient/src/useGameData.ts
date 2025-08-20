@@ -56,6 +56,9 @@ export const useGameData = (
             console.log('Game updated:', data.game);
             break;
 
+          case 'signal':
+            break;
+
           default:
             console.log('Unknown message type:', (data as ServerMessage).type);
         }
