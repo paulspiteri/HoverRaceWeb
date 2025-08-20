@@ -26,7 +26,7 @@ function App() {
       | JoinedGame
       | undefined);
 
-  usePeers(connectionId, currentGame, eventSource, commands.sendSignal, activeGame?.token);
+  const { peers } = usePeers(connectionId, currentGame, eventSource, commands.sendSignal, activeGame?.token);
 
   const handleJoinGame = (gameId: string) => {
     if (connectionId) {
@@ -77,6 +77,8 @@ function App() {
               onClose={handleLeaveGame}
               onStartGame={handleStartGame}
               isCreator={connectionId === currentGame.creatorConnectionId}
+              peers={peers}
+              currentConnectionId={connectionId}
             />
           )}
         </div>

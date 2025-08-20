@@ -2,13 +2,16 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { JoinedGame } from './types';
+import type { GamePeer } from '@/usePeers';
 
 interface PlayerListProps {
   players: JoinedGame['players'];
   creatorConnectionId: string;
+  peers: (GamePeer | undefined)[] | undefined;
+  currentConnectionId: string | undefined;
 }
 
-const PlayerList: React.FC<PlayerListProps> = ({ players, creatorConnectionId }) => {
+const PlayerList: React.FC<PlayerListProps> = ({ players, creatorConnectionId, peers, currentConnectionId }) => {
   return (
     <div>
       <h3 className="text-lg font-semibold mb-4">Players</h3>
@@ -39,8 +42,29 @@ const PlayerList: React.FC<PlayerListProps> = ({ players, creatorConnectionId })
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-sm text-muted-foreground">Online</span>
+              {(() => {
+                if (player.connectionId === currentConnectionId) {
+                  return (
+                    <>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm text-muted-foreground">You</span>
+                    </>
+                  );
+                }
+                
+                const peer = peers?.find(p => p?.connectionId === player.connectionId);
+                const status = peer?.status || 'disconnected';
+                const statusColor = status === 'connected' ? 'bg-green-500' : 
+                                  status === 'connecting' ? 'bg-yellow-500' : 'bg-red-500';
+                const statusText = status === 'connected' ? 'Connected' : 
+                                 status === 'connecting' ? 'Connecting' : 'Disconnected';
+                return (
+                  <>
+                    <div className={`w-2 h-2 ${statusColor} rounded-full`}></div>
+                    <span className="text-sm text-muted-foreground">{statusText}</span>
+                  </>
+                );
+              })()}
             </div>
           </div>
         ))}
@@ -54,13 +78,17 @@ interface ActiveGameProps {
   onClose: () => void;
   onStartGame: () => void;
   isCreator: boolean;
+  peers: (GamePeer | undefined)[] | undefined;
+  currentConnectionId: string | undefined;
 }
 
 export const ActiveGame: React.FC<ActiveGameProps> = ({ 
   game, 
   onClose, 
   onStartGame, 
-  isCreator 
+  isCreator,
+  peers,
+  currentConnectionId
 }) => {
   return (
     <Card className="mt-8">
@@ -73,7 +101,9 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
       <CardContent className="space-y-6">
         <PlayerList 
           players={game.players} 
-          creatorConnectionId={game.creatorConnectionId} 
+          creatorConnectionId={game.creatorConnectionId}
+          peers={peers}
+          currentConnectionId={currentConnectionId}
         />
 
         {/* Action Buttons */}
