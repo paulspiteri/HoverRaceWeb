@@ -11,15 +11,16 @@ export class GameManager extends EventEmitter {
         creatorToken: string;
     } {
         const creatorToken = uuidv4();
+        const players = new Array(gameData.maxPlayers).fill(undefined);
+        players[0] = {
+            connectionId: gameData.creatorConnectionId,
+            gameToken: creatorToken,
+        };
+        
         const game: ServerGame = {
             id: this.generateId(),
             name: gameData.name,
-            players: [
-                {
-                    connectionId: gameData.creatorConnectionId,
-                    gameToken: creatorToken,
-                },
-            ],
+            players,
             maxPlayers: gameData.maxPlayers,
             createdAt: new Date(),
             creatorConnectionId: gameData.creatorConnectionId,
@@ -47,8 +48,8 @@ export class GameManager extends EventEmitter {
         // Find the creator by checking if they have the token
         const creator = game.players.find(
             (p) =>
-                p.connectionId === game.creatorConnectionId &&
-                p.gameToken === gameToken
+                p?.connectionId === game.creatorConnectionId &&
+                p?.gameToken === gameToken
         );
 
         if (!creator) return false;
@@ -66,19 +67,20 @@ export class GameManager extends EventEmitter {
         return Array.from(this.games.values());
     }
 
-    joinGame(gameId: string, connectionId: string): string | null {
+    joinGame(gameId: string, connectionId: string): string | undefined {
         const game = this.games.get(gameId);
-        if (!game) return null;
+        if (!game) return undefined;
 
-        if (game.creatorConnectionId === connectionId) return null;
+        if (game.creatorConnectionId === connectionId) return undefined;
 
-        if (game.players.length >= game.maxPlayers) return null;
+        if (game.players.some((p) => p?.connectionId === connectionId))
+            return undefined;
 
-        if (game.players.some((p) => p.connectionId === connectionId))
-            return null;
+        const emptySlotIndex = game.players.findIndex((p) => p === undefined);
+        if (emptySlotIndex === -1) return undefined;
 
         const gameToken = uuidv4();
-        game.players.push({ connectionId, gameToken });
+        game.players[emptySlotIndex] = { connectionId, gameToken };
         this.emit("gameUpdated", game);
         return gameToken;
     }
@@ -88,19 +90,19 @@ export class GameManager extends EventEmitter {
         if (!game) return false;
 
         const playerIndex = game.players.findIndex(
-            (p) => p.gameToken === gameToken
+            (p) => p?.gameToken === gameToken
         );
         if (playerIndex === -1) return false;
 
         const player = game.players[playerIndex];
 
         // If this is the creator leaving, delete the entire game
-        if (game.creatorConnectionId === player.connectionId) {
+        if (game.creatorConnectionId === player!.connectionId) {
             this.deleteGame(gameId);
             return true;
         }
 
-        game.players.splice(playerIndex, 1);
+        game.players[playerIndex] = undefined;
         this.emit("gameUpdated", game);
         return true;
     }

@@ -11,7 +11,6 @@ import type {
     AvailableGame,
     ServerGame,
     JoinedGame,
-    ClientPlayer,
     ConnectionIdMessage,
     GameListMessage,
     GameUpdatedMessage,
@@ -217,12 +216,17 @@ app.post("/api/games/:id/signal", (req, res) => {
     console.log("📡 POST /api/games/:id/signal - Send signal request");
     try {
         const { id } = req.params;
-        const { targetConnectionId, gameToken, signalData }: SignalRequest = req.body;
+        const { targetConnectionId, gameToken, signalData }: SignalRequest =
+            req.body;
         console.log(`🎯 Sending signal in game ${id} to ${targetConnectionId}`);
 
         if (!targetConnectionId || !gameToken || !signalData) {
             console.log("❌ Missing required fields");
-            return res.status(400).json({ error: "Missing required fields: targetConnectionId, gameToken, signalData" });
+            return res
+                .status(400)
+                .json({
+                    error: "Missing required fields: targetConnectionId, gameToken, signalData",
+                });
         }
 
         const game = gameManager.getGame(id);
@@ -232,17 +236,25 @@ app.post("/api/games/:id/signal", (req, res) => {
         }
 
         // Find sender by gameToken
-        const sender = game.players.find(p => p.gameToken === gameToken);
+        const sender = game.players.find((p) => p?.gameToken === gameToken);
         if (!sender) {
             console.log("❌ Invalid gameToken or sender not in game");
-            return res.status(403).json({ error: "Invalid gameToken or not a member of this game" });
+            return res
+                .status(403)
+                .json({
+                    error: "Invalid gameToken or not a member of this game",
+                });
         }
 
         // Verify target is also in the same game
-        const target = game.players.find(p => p.connectionId === targetConnectionId);
+        const target = game.players.find(
+            (p) => p?.connectionId === targetConnectionId
+        );
         if (!target) {
             console.log(`❌ Target ${targetConnectionId} not in game ${id}`);
-            return res.status(400).json({ error: "Target player not in this game" });
+            return res
+                .status(400)
+                .json({ error: "Target player not in this game" });
         }
 
         // Find target's SSE connection
@@ -255,23 +267,32 @@ app.post("/api/games/:id/signal", (req, res) => {
         }
 
         if (!targetClient) {
-            console.log(`❌ Target ${targetConnectionId} not connected via SSE`);
-            return res.status(400).json({ error: "Target player not connected" });
+            console.log(
+                `❌ Target ${targetConnectionId} not connected via SSE`
+            );
+            return res
+                .status(400)
+                .json({ error: "Target player not connected" });
         }
 
         // Send signal only to target
         const signalMessage: SignalMessage = {
             type: "signal",
             fromConnectionId: sender.connectionId,
-            signalData
+            signalData,
         };
 
         try {
             targetClient.write(`data: ${JSON.stringify(signalMessage)}\n\n`);
-            console.log(`✅ Signal sent from ${sender.connectionId} to ${targetConnectionId}`);
+            console.log(
+                `✅ Signal sent from ${sender.connectionId} to ${targetConnectionId}`
+            );
             res.status(200).json({ message: "Signal sent successfully" });
         } catch (writeError) {
-            console.log(`❌ Failed to send signal to ${targetConnectionId}:`, writeError);
+            console.log(
+                `❌ Failed to send signal to ${targetConnectionId}:`,
+                writeError
+            );
             // Remove dead connection
             sseClients.delete(targetClient);
             res.status(500).json({ error: "Failed to deliver signal" });
@@ -287,7 +308,7 @@ function toPublicGameData(game: ServerGame): AvailableGame {
     return {
         id: game.id,
         name: game.name,
-        playerCount: game.players.length,
+        playerCount: game.players.filter((p) => p !== undefined).length,
         maxPlayers: game.maxPlayers,
         createdAt: game.createdAt,
         creatorConnectionId: game.creatorConnectionId,
@@ -299,8 +320,8 @@ function toJoinedGame(game: ServerGame): JoinedGame {
     return {
         id: game.id,
         name: game.name,
-        players: game.players.map(
-            (p): ClientPlayer => ({ connectionId: p.connectionId })
+        players: game.players.map((p) =>
+            p ? { connectionId: p.connectionId } : undefined
         ),
         maxPlayers: game.maxPlayers,
         createdAt: game.createdAt,
@@ -336,7 +357,9 @@ function broadcastPublicUpdate(
 // Broadcast private game updates only to participants
 function broadcastPrivateUpdate(game: ServerGame, data: ServerMessage) {
     const message = `data: ${JSON.stringify(data)}\n\n`;
-    const participantConnectionIds = game.players.map((p) => p.connectionId);
+    const participantConnectionIds = game.players
+        .filter((p) => p !== undefined)
+        .map((p) => p!.connectionId);
 
     sseClients.forEach((connectionId, client) => {
         if (participantConnectionIds.includes(connectionId)) {
@@ -351,7 +374,9 @@ function broadcastPrivateUpdate(game: ServerGame, data: ServerMessage) {
 
 // Shared function to broadcast game updates
 function broadcastGameUpdate(game: ServerGame) {
-    const participantConnectionIds = game.players.map((p) => p.connectionId);
+    const participantConnectionIds = game.players
+        .filter((p) => p !== undefined)
+        .map((p) => p!.connectionId);
 
     // Send public data to non-participants
     const gameUpdatedMessage: GameUpdatedMessage = {

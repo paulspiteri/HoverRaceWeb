@@ -10,7 +10,7 @@ export type ClientPlayer = {
 export type ServerGame = {
     id: string;
     name: string;
-    players: Player[];
+    players: (Player | undefined)[];
     maxPlayers: number;
     createdAt: Date;
     creatorConnectionId: string;
@@ -52,7 +52,7 @@ export type AvailableGame = {
 export type JoinedGame = {
     id: string;
     name: string;
-    players: ClientPlayer[];
+    players: (ClientPlayer | undefined)[];
     maxPlayers: number;
     createdAt: Date;
     creatorConnectionId: string;

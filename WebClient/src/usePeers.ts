@@ -56,7 +56,7 @@ export const usePeers = (
     if (game) {
       console.log(`🎮 Setting up peers for game ${game.id}`);
       const myPlayerIndex = game.players.findIndex(
-        (x) => x.connectionId === connectionId
+        (x) => x?.connectionId === connectionId
       );
       if (myPlayerIndex === -1) {
         throw new Error('Current connection not found in game players');
