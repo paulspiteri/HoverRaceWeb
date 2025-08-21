@@ -8,16 +8,19 @@ export const useGameData = (
   setActiveGame: (activeGame: ActiveGame | undefined) => void
 ) => {
   const url = `${baseUrl}/games/stream`;
-  const [eventSource] = useState<EventSource>(() => new EventSource(url));
+  const [eventSource, setEventSource] = useState<EventSource>();
   const [connectionId, setConnectionId] = useState<string>();
   const [games, setGames] = useState<Game[]>([]);
 
   useEffect(() => {
-    eventSource.onopen = () => {
+    const es = new EventSource(url);
+    setEventSource(es);
+
+    es.onopen = () => {
       console.log('SSE connection opened to games stream');
     };
 
-    eventSource.onmessage = (event) => {
+    es.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data) as ServerMessage;
         console.log('Received SSE message:', data);
@@ -67,10 +70,16 @@ export const useGameData = (
       }
     };
 
-    eventSource.onerror = (error) => {
+    es.onerror = (error) => {
       console.error('SSE connection error:', error);
     };
-  }, [eventSource]);
+
+    return () => {
+      console.log('Closing SSE connection');
+      es.close();
+      setEventSource(undefined);
+    };
+  }, [url]);
 
   const commands = useMemo(
     () => createCommands(baseUrl, setActiveGame),

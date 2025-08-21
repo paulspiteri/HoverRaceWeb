@@ -1,31 +1,42 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import type { JoinedGame } from './types';
-import type { GamePeer } from '@/usePeers';
+import { useMemo } from 'react';
 
 interface PlayerListProps {
   players: JoinedGame['players'];
   creatorConnectionId: string;
-  peers: (GamePeer | undefined)[] | undefined;
+  peerStatuses:
+    | ('connecting' | 'connected' | 'disconnected' | undefined)[]
+    | undefined;
   currentConnectionId: string | undefined;
 }
 
-const PlayerList: React.FC<PlayerListProps> = ({ players, creatorConnectionId, peers, currentConnectionId }) => {
+const PlayerList: React.FC<PlayerListProps> = ({
+  players,
+  creatorConnectionId,
+  peerStatuses,
+  currentConnectionId,
+}) => {
   return (
     <div>
       <h3 className="text-lg font-semibold mb-4">Players</h3>
       <div className="space-y-3">
         {players.map((player, index) => (
-          <div 
-            key={player.connectionId} 
+          <div
+            key={player.connectionId}
             className="flex items-center justify-between p-3 border rounded-lg"
           >
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium">
-                  {index + 1}
-                </span>
+                <span className="text-sm font-medium">{index + 1}</span>
               </div>
               <div>
                 <p className="font-medium">
@@ -51,17 +62,28 @@ const PlayerList: React.FC<PlayerListProps> = ({ players, creatorConnectionId, p
                     </>
                   );
                 }
-                
-                const peer = peers?.find(p => p?.connectionId === player.connectionId);
-                const status = peer?.status || 'disconnected';
-                const statusColor = status === 'connected' ? 'bg-green-500' : 
-                                  status === 'connecting' ? 'bg-yellow-500' : 'bg-red-500';
-                const statusText = status === 'connected' ? 'Connected' : 
-                                 status === 'connecting' ? 'Connecting' : 'Disconnected';
+
+                const status = peerStatuses?.[index] || 'disconnected';
+                const statusColor =
+                  status === 'connected'
+                    ? 'bg-green-500'
+                    : status === 'connecting'
+                      ? 'bg-yellow-500'
+                      : 'bg-red-500';
+                const statusText =
+                  status === 'connected'
+                    ? 'Connected'
+                    : status === 'connecting'
+                      ? 'Connecting'
+                      : 'Disconnected';
                 return (
                   <>
-                    <div className={`w-2 h-2 ${statusColor} rounded-full`}></div>
-                    <span className="text-sm text-muted-foreground">{statusText}</span>
+                    <div
+                      className={`w-2 h-2 ${statusColor} rounded-full`}
+                    ></div>
+                    <span className="text-sm text-muted-foreground">
+                      {statusText}
+                    </span>
                   </>
                 );
               })()}
@@ -78,18 +100,35 @@ interface ActiveGameProps {
   onClose: () => void;
   onStartGame: () => void;
   isCreator: boolean;
-  peers: (GamePeer | undefined)[] | undefined;
+  peerStatuses:
+    | ('connecting' | 'connected' | 'disconnected' | undefined)[]
+    | undefined;
   currentConnectionId: string | undefined;
 }
 
-export const ActiveGame: React.FC<ActiveGameProps> = ({ 
-  game, 
-  onClose, 
-  onStartGame, 
+export const ActiveGame: React.FC<ActiveGameProps> = ({
+  game,
+  onClose,
+  onStartGame,
   isCreator,
-  peers,
-  currentConnectionId
+  peerStatuses,
+  currentConnectionId,
 }) => {
+  // Check if all peers are connected (excluding self)
+  const allPeersConnected = useMemo(() => {
+    if (!peerStatuses) return false;
+
+    // Check if all other players have connected peers
+    for (let i = 0; i < game.players.length; i++) {
+      const player = game.players[i];
+      if (player.connectionId === currentConnectionId) continue; // Skip self
+
+      const status = peerStatuses[i];
+      if (status !== 'connected') return false;
+    }
+
+    return game.players.length > 1; // Need at least 2 players total
+  }, [game.players, peerStatuses, currentConnectionId]);
   return (
     <Card className="mt-8">
       <CardHeader>
@@ -99,26 +138,23 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <PlayerList 
-          players={game.players} 
+        <PlayerList
+          players={game.players}
           creatorConnectionId={game.creatorConnectionId}
-          peers={peers}
+          peerStatuses={peerStatuses}
           currentConnectionId={currentConnectionId}
         />
 
         {/* Action Buttons */}
         <div className="flex justify-between pt-4">
-          <Button 
-            variant="outline" 
-            onClick={onClose}
-          >
+          <Button variant="outline" onClick={onClose}>
             {isCreator ? 'Cancel Game' : 'Leave Game'}
           </Button>
-          
+
           {isCreator && (
-            <Button 
+            <Button
               onClick={onStartGame}
-              disabled={game.players.length < 2}
+              disabled={game.players.length < 2 || !allPeersConnected}
             >
               Start Game
             </Button>

@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { JoinedGame, ServerMessage, SignalMessage } from '@/types.ts';
 import SimplePeer from 'simple-peer';
 
 export interface GamePeer {
   peer: SimplePeer.Instance;
   connectionId: string;
-  status: 'connecting' | 'connected' | 'disconnected';
 }
 
 export const usePeers = (
   connectionId: string | undefined,
   game: JoinedGame | undefined,
-  eventSource: EventSource,
+  eventSource: EventSource | undefined,
   sendSignal: (
     gameId: string,
     targetConnectionId: string,
@@ -20,24 +19,23 @@ export const usePeers = (
   ) => Promise<void>,
   gameToken: string | undefined
 ) => {
-  const [peers, setPeers] = useState<(GamePeer | undefined)[] | undefined>(undefined);
+  const peers = useRef<(GamePeer | undefined)[] | undefined>(undefined);
+  const [peerStatuses, setPeerStatuses] =
+    useState<('connecting' | 'connected' | 'disconnected' | undefined)[]>();
 
-  const onSignalReceived = useCallback(
-    (signal: SignalMessage) => {
-      console.log(`📡 Received signal from ${signal.fromConnectionId}`);
-      const gamePeer = peers?.find(
-        (x) => x && x.connectionId === signal.fromConnectionId
+  const onSignalReceived = useCallback((signal: SignalMessage) => {
+    console.log(`📡 Received signal from ${signal.fromConnectionId}`);
+    const gamePeer = peers.current?.find(
+      (x) => x && x.connectionId === signal.fromConnectionId
+    );
+    if (gamePeer) {
+      gamePeer.peer.signal(signal.signalData);
+    } else {
+      console.warn(
+        `❌ No peer found for signal from ${signal.fromConnectionId}`
       );
-      if (gamePeer) {
-        gamePeer.peer.signal(signal.signalData);
-      } else {
-        console.warn(
-          `❌ No peer found for signal from ${signal.fromConnectionId}`
-        );
-      }
-    },
-    [peers]
-  );
+    }
+  }, []);
 
   useEffect(() => {
     const onMessage = (event: MessageEvent) => {
@@ -50,8 +48,8 @@ export const usePeers = (
         console.error('Error parsing SSE message in usePeers:', error);
       }
     };
-    eventSource.addEventListener('message', onMessage);
-    return () => eventSource.removeEventListener('message', onMessage);
+    eventSource?.addEventListener('message', onMessage);
+    return () => eventSource?.removeEventListener('message', onMessage);
   }, [eventSource, onSignalReceived]);
 
   useEffect(() => {
@@ -65,106 +63,122 @@ export const usePeers = (
       }
       console.log(`👤 My player index: ${myPlayerIndex}`);
 
-      setPeers((prevPeers) => {
-        const currentPeers =
-          prevPeers || new Array<GamePeer | undefined>(game.maxPlayers);
+      if (!peers.current) {
+        peers.current = new Array<GamePeer | undefined>(game.maxPlayers);
+      }
 
-        for (let i = 0; i < game.maxPlayers; i++) {
-          if (i === myPlayerIndex) {
-            continue;
-          }
-          if (
-            currentPeers[i] &&
-            currentPeers[i]!.connectionId !== game.players[i]?.connectionId
-          ) {
-            console.log(`🔄 Player ${i} changed, destroying old peer`);
-            currentPeers[i]!.peer.destroy();
-            currentPeers[i] = undefined;
-          }
+      setPeerStatuses((prev) => {
+        if (!prev || prev.length !== game.maxPlayers) {
+          return new Array(game.maxPlayers).fill(undefined);
+        }
+        return prev;
+      });
 
-          if (!currentPeers[i] && game.players[i]) {
-            const isInitiator = myPlayerIndex > i;
-            const connectionId = game.players[i].connectionId;
-            console.log(
-              `🤝 Creating peer for player ${i} (${connectionId}) - initiator: ${isInitiator}`
-            );
+      for (let i = 0; i < game.maxPlayers; i++) {
+        if (i === myPlayerIndex) {
+          continue;
+        }
+        const currentPeer = peers.current[i];
+        const gamePlayer = game.players[i];
 
-            const newPeer: GamePeer = {
-              connectionId,
-              peer: new SimplePeer({ initiator: isInitiator, trickle: false }),
-              status: 'connecting',
-            };
-            currentPeers[i] = newPeer;
-
-            newPeer.peer.on('signal', (data: SimplePeer.SignalData) => {
-              console.log(`📤 Sending signal to ${connectionId}`);
-              if (game && gameToken) {
-                sendSignal(
-                  game.id,
-                  connectionId,
-                  gameToken,
-                  JSON.stringify(data)
-                );
-              }
-            });
-
-            newPeer.peer.on('connect', () => {
-              console.log(`🔗 Connected to peer ${connectionId}`);
-              setPeers((prev) => {
-                if (!prev) return prev;
-                const updated = [...prev];
-                if (updated[i]) {
-                  updated[i]!.status = 'connected';
-                }
-                return updated;
-              });
-            });
-
-            newPeer.peer.on('close', () => {
-              console.log(`🔌 Peer disconnected: ${connectionId}`);
-              setPeers((prev) => {
-                if (!prev) return prev;
-                const updated = [...prev];
-                if (updated[i]) {
-                  updated[i]!.status = 'disconnected';
-                }
-                return updated;
-              });
-            });
-
-            newPeer.peer.on('error', (err: Error) => {
-              console.error(`❌ Peer error with ${connectionId}:`, err);
-              setPeers((prev) => {
-                if (!prev) return prev;
-                const updated = [...prev];
-                if (updated[i]) {
-                  updated[i]!.status = 'disconnected';
-                }
-                return updated;
-              });
-            });
-          }
+        // Only destroy peer if player actually changed
+        if (
+          currentPeer &&
+          (!gamePlayer || currentPeer.connectionId !== gamePlayer.connectionId)
+        ) {
+          console.log(`🔄 Player ${i} changed, destroying old peer`);
+          currentPeer.peer.destroy();
+          peers.current[i] = undefined;
+          setPeerStatuses((prev) => {
+            const updated = [...(prev || [])];
+            updated[i] = undefined;
+            return updated;
+          });
         }
 
-        return currentPeers;
-      });
-    } else {
-      setPeers((prevPeers) => {
-        if (prevPeers) {
-          console.log(`🧹 Cleaning up all peers (no active game)`);
-          for (const gamePeer of prevPeers) {
-            if (gamePeer) {
-              console.log(`🗑️ Destroying peer ${gamePeer.connectionId}`);
-              gamePeer.peer.destroy();
+        // Only create peer if slot is empty and player exists and it's not us
+        if (
+          !peers.current[i] &&
+          gamePlayer &&
+          gamePlayer.connectionId !== connectionId
+        ) {
+          const isInitiator = myPlayerIndex > i;
+          const playerConnectionId = gamePlayer.connectionId;
+          console.log(
+            `🤝 Creating peer for player ${i} (${playerConnectionId}) - initiator: ${isInitiator}`
+          );
+
+          const newPeer: GamePeer = {
+            connectionId: playerConnectionId,
+            peer: new SimplePeer({ initiator: isInitiator, trickle: false }),
+          };
+          peers.current[i] = newPeer;
+
+          setPeerStatuses((prev) => {
+            const updated = [...(prev || [])];
+            updated[i] = 'connecting';
+            return updated;
+          });
+
+          newPeer.peer.on('signal', (data: SimplePeer.SignalData) => {
+            console.log(`📤 Sending signal to ${playerConnectionId}`);
+            if (game && gameToken) {
+              sendSignal(
+                game.id,
+                playerConnectionId,
+                gameToken,
+                JSON.stringify(data)
+              );
             }
+          });
+
+          const updatePeerStatus = (status: 'connected' | 'disconnected') => {
+            setPeerStatuses((prev) => {
+              const updated = [...(prev || [])];
+              // Find the current index of this peer (don't rely on closure)
+              const currentIndex = peers.current?.findIndex(
+                (p) => p?.connectionId === playerConnectionId
+              );
+              if (currentIndex !== undefined && currentIndex >= 0) {
+                updated[currentIndex] = status;
+              }
+              return updated;
+            });
+          };
+
+          newPeer.peer.on('connect', () => {
+            console.log(`🔗 Connected to peer ${playerConnectionId}`);
+            updatePeerStatus('connected');
+          });
+
+          newPeer.peer.on('close', () => {
+            console.log(`🔌 Peer disconnected: ${playerConnectionId}`);
+            updatePeerStatus('disconnected');
+          });
+
+          newPeer.peer.on('error', (err: Error) => {
+            console.error(`❌ Peer error with ${playerConnectionId}:`, err);
+            updatePeerStatus('disconnected');
+          });
+        }
+      }
+    } else {
+      if (peers.current) {
+        console.log(`🧹 Cleaning up all peers (no active game)`);
+        for (const gamePeer of peers.current) {
+          if (gamePeer) {
+            console.log(`🗑️ Destroying peer ${gamePeer.connectionId}`);
+            gamePeer.peer.destroy();
           }
         }
-        return undefined;
-      });
+        peers.current = undefined;
+        setPeerStatuses(undefined);
+      }
     }
   }, [game, connectionId, sendSignal, gameToken]);
 
   return {
-    peers,
+    peers: peers.current,
+    peerStatuses,
   };
 };
