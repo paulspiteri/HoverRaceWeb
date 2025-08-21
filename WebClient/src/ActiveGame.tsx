@@ -10,27 +10,35 @@ import {
 import type { JoinedGame } from './types';
 import { useMemo } from 'react';
 import { PlayerList } from './PlayerList';
-
+import { PlayerNameInput } from './PlayerNameInput';
 
 interface ActiveGameProps {
   game: JoinedGame;
   onClose: () => void;
   onStartGame: () => void;
-  isCreator: boolean;
   peerStatuses:
     | ('connecting' | 'connected' | 'disconnected' | undefined)[]
     | undefined;
   currentConnectionId: string | undefined;
+  onUpdatePlayer: (name: string) => Promise<void>;
 }
 
 export const ActiveGame: React.FC<ActiveGameProps> = ({
   game,
   onClose,
   onStartGame,
-  isCreator,
   peerStatuses,
   currentConnectionId,
+  onUpdatePlayer,
 }) => {
+  // Get current player info and determine if creator (index 0)
+  const currentPlayerIndex = game.players.findIndex(
+    (p) => p?.connectionId === currentConnectionId
+  );
+  const currentPlayer = currentPlayerIndex >= 0 ? game.players[currentPlayerIndex] : undefined;
+  const currentPlayerName = currentPlayer?.name || '';
+  const isCreator = currentPlayerIndex === 0;
+
   // Check if all peers are connected (excluding self)
   const allPeersConnected = useMemo(() => {
     if (!peerStatuses) return false;
@@ -54,6 +62,11 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <PlayerNameInput
+          currentPlayerName={currentPlayerName}
+          onUpdatePlayer={onUpdatePlayer}
+        />
+
         <PlayerList
           players={game.players}
           creatorConnectionId={game.creatorConnectionId}

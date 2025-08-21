@@ -56,7 +56,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                 </div>
                 <div>
                   <p className="font-medium">
-                    Player {index + 1}
+                    {player.name || `Player ${index + 1}`}
                     {player.connectionId === creatorConnectionId && (
                       <span className="ml-2 px-2 py-1 text-xs bg-primary/20 rounded">
                         Host

@@ -1,11 +1,11 @@
-import type { CreateGameRequest, SignalRequest } from '@/types.ts';
+import type { CreateGameRequest, SignalRequest, JoinGameRequest, UpdatePlayerRequest } from '@/types.ts';
 import type { ActiveGame } from '@/App.tsx';
 
 export const createCommands = (
   baseUrl: string,
   setActiveGame: (activeGame: ActiveGame | undefined) => void
 ) => {
-  const createGame = async (connectionId: string) => {
+  const createGame = async (connectionId: string, creatorName?: string) => {
     try {
       const response = await fetch(`${baseUrl}/games`, {
         method: 'POST',
@@ -16,6 +16,7 @@ export const createCommands = (
           name: `Game ${Date.now()}`,
           maxPlayers: 8,
           creatorConnectionId: connectionId,
+          creatorName,
         } satisfies CreateGameRequest),
       });
 
@@ -35,7 +36,7 @@ export const createCommands = (
     }
   };
 
-  const joinGame = async (gameId: string, connectionId: string) => {
+  const joinGame = async (gameId: string, connectionId: string, name?: string) => {
     try {
       const response = await fetch(`${baseUrl}/games/${gameId}/join`, {
         method: 'POST',
@@ -44,7 +45,8 @@ export const createCommands = (
         },
         body: JSON.stringify({
           connectionId: connectionId,
-        }),
+          name,
+        } satisfies JoinGameRequest),
       });
 
       if (!response.ok) {
@@ -118,10 +120,35 @@ export const createCommands = (
     }
   };
 
+  const updatePlayer = async (gameId: string, gameToken: string, name: string) => {
+    try {
+      const response = await fetch(`${baseUrl}/games/${gameId}/player`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gameToken,
+          name,
+        } satisfies UpdatePlayerRequest),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update player');
+      }
+
+      const result = await response.json();
+      console.log('Player updated successfully:', result);
+    } catch (error) {
+      console.error('Error updating player:', error);
+    }
+  };
+
   return {
     createGame,
     joinGame,
     leaveGame,
     sendSignal,
+    updatePlayer,
   };
 };

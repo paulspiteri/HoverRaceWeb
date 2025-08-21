@@ -19,6 +19,7 @@ export type CreateGameRequest = {
     name: string;
     maxPlayers: number;
     creatorConnectionId: string;
+    creatorName?: string;
 };
 
 export type JoinGameRequest = {

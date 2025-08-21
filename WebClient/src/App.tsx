@@ -36,7 +36,8 @@ function App() {
 
   const handleJoinGame = (gameId: string) => {
     if (connectionId) {
-      commands.joinGame(gameId, connectionId);
+      const savedName = localStorage.getItem('hoverrace-player-name');
+      commands.joinGame(gameId, connectionId, savedName || undefined);
     }
   };
 
@@ -48,6 +49,12 @@ function App() {
 
   const handleStartGame = () => {
     console.log('Start game clicked');
+  };
+
+  const handleUpdatePlayer = async (name: string) => {
+    if (activeGame) {
+      await commands.updatePlayer(activeGame.gameId, activeGame.token, name);
+    }
   };
 
   return (
@@ -67,7 +74,12 @@ function App() {
               <ConnectionStatus connectionId={connectionId} />
               <div className="flex justify-center">
                 <Button
-                  onClick={() => commands.createGame(connectionId!)}
+                  onClick={() => {
+                    const savedName = localStorage.getItem(
+                      'hoverrace-player-name'
+                    );
+                    commands.createGame(connectionId!, savedName || undefined);
+                  }}
                   disabled={!connectionId}
                   size="lg"
                   className="px-8"
@@ -82,9 +94,9 @@ function App() {
               game={currentGame}
               onClose={handleLeaveGame}
               onStartGame={handleStartGame}
-              isCreator={connectionId === currentGame.creatorConnectionId}
               peerStatuses={peerStatuses}
               currentConnectionId={connectionId}
+              onUpdatePlayer={handleUpdatePlayer}
             />
           )}
         </div>

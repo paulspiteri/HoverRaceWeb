@@ -15,6 +15,7 @@ export class GameManager extends EventEmitter {
         players[0] = {
             connectionId: gameData.creatorConnectionId,
             gameToken: creatorToken,
+            name: gameData.creatorName,
         };
         
         const game: ServerGame = {
