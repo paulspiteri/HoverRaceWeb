@@ -67,7 +67,7 @@ export class GameManager extends EventEmitter {
         return Array.from(this.games.values());
     }
 
-    joinGame(gameId: string, connectionId: string): string | undefined {
+    joinGame(gameId: string, connectionId: string, name?: string): string | undefined {
         const game = this.games.get(gameId);
         if (!game) return undefined;
 
@@ -80,7 +80,7 @@ export class GameManager extends EventEmitter {
         if (emptySlotIndex === -1) return undefined;
 
         const gameToken = uuidv4();
-        game.players[emptySlotIndex] = { connectionId, gameToken };
+        game.players[emptySlotIndex] = { connectionId, gameToken, name };
         this.emit("gameUpdated", game);
         return gameToken;
     }
@@ -103,6 +103,18 @@ export class GameManager extends EventEmitter {
         }
 
         game.players[playerIndex] = undefined;
+        this.emit("gameUpdated", game);
+        return true;
+    }
+
+    updatePlayer(gameId: string, gameToken: string, name: string): boolean {
+        const game = this.games.get(gameId);
+        if (!game) return false;
+
+        const player = game.players.find((p) => p?.gameToken === gameToken);
+        if (!player) return false;
+
+        player.name = name;
         this.emit("gameUpdated", game);
         return true;
     }

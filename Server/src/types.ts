@@ -1,11 +1,10 @@
 export type Player = {
     connectionId: string;
     gameToken?: string; // Only present for joined players, not creators
+    name?: string;
 };
 
-export type ClientPlayer = {
-    connectionId: string;
-};
+export type ClientPlayer = Omit<Player, 'gameToken'>;
 
 export type ServerGame = {
     id: string;
@@ -24,6 +23,7 @@ export type CreateGameRequest = {
 
 export type JoinGameRequest = {
     connectionId: string;
+    name?: string;
 };
 
 export type LeaveGameRequest = {
@@ -38,6 +38,11 @@ export type SignalRequest = {
     targetConnectionId: string;
     gameToken: string;
     signalData: string;
+};
+
+export type UpdatePlayerRequest = {
+    gameToken: string;
+    name: string;
 };
 
 export type AvailableGame = {

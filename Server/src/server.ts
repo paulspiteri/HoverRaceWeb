@@ -8,6 +8,7 @@ import type {
     LeaveGameRequest,
     DeleteGameRequest,
     SignalRequest,
+    UpdatePlayerRequest,
     AvailableGame,
     ServerGame,
     JoinedGame,
@@ -114,8 +115,8 @@ app.post("/api/games/:id/join", (req, res) => {
     console.log("👥 POST /api/games/:id/join - Join game request");
     try {
         const { id } = req.params;
-        const { connectionId }: JoinGameRequest = req.body;
-        console.log(`🎯 Joining game ${id} with connectionId: ${connectionId}`);
+        const { connectionId, name }: JoinGameRequest = req.body;
+        console.log(`🎯 Joining game ${id} with connectionId: ${connectionId}, name: ${name}`);
 
         if (!connectionId) {
             console.log("❌ Missing connectionId");
@@ -133,7 +134,7 @@ app.post("/api/games/:id/join", (req, res) => {
                 .json({ error: "Invalid or inactive connectionId" });
         }
 
-        const gameToken = gameManager.joinGame(id, connectionId);
+        const gameToken = gameManager.joinGame(id, connectionId, name);
 
         if (gameToken) {
             console.log(`✅ Successfully joined game ${id}`);
@@ -303,6 +304,34 @@ app.post("/api/games/:id/signal", (req, res) => {
     }
 });
 
+// REST endpoint to update player information
+app.put("/api/games/:id/player", (req, res) => {
+    console.log("✏️ PUT /api/games/:id/player - Update player request");
+    try {
+        const { id } = req.params;
+        const { gameToken, name }: UpdatePlayerRequest = req.body;
+        console.log(`🎯 Updating player in game ${id} with name: ${name}`);
+
+        if (!gameToken || !name) {
+            console.log("❌ Missing required fields");
+            return res.status(400).json({ error: "Missing required fields: gameToken, name" });
+        }
+
+        const updated = gameManager.updatePlayer(id, gameToken, name);
+
+        if (updated) {
+            console.log(`✅ Successfully updated player in game ${id}`);
+            res.status(200).json({ message: "Player updated successfully" });
+        } else {
+            console.log(`❌ Failed to update player in game ${id} - invalid token or game not found`);
+            res.status(400).json({ error: "Invalid gameToken or game not found" });
+        }
+    } catch (error) {
+        console.log("💥 Error updating player:", error);
+        res.status(500).json({ error: "Failed to update player" });
+    }
+});
+
 // Convert Game to PublicGameData
 function toPublicGameData(game: ServerGame): AvailableGame {
     return {
@@ -321,7 +350,7 @@ function toJoinedGame(game: ServerGame): JoinedGame {
         id: game.id,
         name: game.name,
         players: game.players.map((p) =>
-            p ? { connectionId: p.connectionId } : undefined
+            p ? { connectionId: p.connectionId, name: p.name } : undefined
         ),
         maxPlayers: game.maxPlayers,
         createdAt: game.createdAt,
