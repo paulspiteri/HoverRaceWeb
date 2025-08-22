@@ -77,10 +77,12 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
         <PlayerNameInput currentPlayerName={currentPlayerName} onUpdatePlayer={onUpdatePlayer} />
 
         <PlayerList
-          players={game.players}
+          gamePlayers={game.players}
           creatorConnectionId={game.creatorConnectionId}
           peerStatuses={peerStatuses}
           currentConnectionId={currentConnectionId}
+          peersActualStatuses={peersActualStatuses}
+          isHost={isCreator}
         />
 
         {/* Action Buttons */}
