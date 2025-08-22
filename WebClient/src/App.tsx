@@ -26,7 +26,7 @@ function App() {
       | JoinedGame
       | undefined);
 
-  const { peerStatuses } = usePeers(
+  const { peerStatuses, peersActualStatuses } = usePeers(
     connectionId,
     currentGame,
     eventSource,
@@ -97,6 +97,7 @@ function App() {
               peerStatuses={peerStatuses}
               currentConnectionId={connectionId}
               onUpdatePlayer={handleUpdatePlayer}
+              peersActualStatuses={peersActualStatuses}
             />
           )}
         </div>
