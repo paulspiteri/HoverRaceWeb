@@ -52,9 +52,8 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
           const gamePlayer = game.players[j];
           if (!gamePlayer || j === i) continue; // Skip empty slots and self
 
-          const peerReport = peerStatus.peers[j];
-          if (!peerReport || !peerReport.isConnected || peerReport.connectionId !== gamePlayer.connectionId)
-            return false;
+          const peerReport = peerStatus.peers[gamePlayer.connectionId];
+          if (!peerReport || !peerReport.isConnected) return false;
         }
       }
     }

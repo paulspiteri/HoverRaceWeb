@@ -32,13 +32,14 @@ export const usePeers = (
 
     const statusMessage: PeerConnectionStatusMessage = {
       type: 'peerConnectionStatus',
-      peers: game.players.map((player, index) => {
-        if (!player) return undefined;
-        return {
-          connectionId: player.connectionId,
-          isConnected: peerStatuses[index] === 'connected',
-        };
-      }),
+      peers: game.players.reduce((acc, player, index) => {
+        if (player) {
+          acc[player.connectionId] = {
+            isConnected: peerStatuses[index] === 'connected',
+          };
+        }
+        return acc;
+      }, {} as Record<string, { isConnected: boolean }>),
     };
 
     try {

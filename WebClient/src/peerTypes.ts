@@ -1,4 +1,6 @@
+type ConnectionId = string;
+
 export interface PeerConnectionStatusMessage {
   type: 'peerConnectionStatus';
-  peers: ({ connectionId: string; isConnected: boolean } | undefined)[];
+  peers: Record<ConnectionId, { isConnected: boolean }>;
 }

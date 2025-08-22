@@ -55,8 +55,8 @@ const MeshStatus: React.FC<MeshStatusProps> = ({ index, gamePlayers, peerStatus 
     
     return gamePlayers.every((gamePlayer, j) => {
       if (!gamePlayer || j === index) return true; // Skip empty slots and self
-      const peerReport = peerStatus.peers[j];
-      return peerReport && peerReport.isConnected && peerReport.connectionId === gamePlayer.connectionId;
+      const peerReport = peerStatus.peers[gamePlayer.connectionId];
+      return peerReport && peerReport.isConnected;
     });
   }, [gamePlayers, index, peerStatus]);
 
