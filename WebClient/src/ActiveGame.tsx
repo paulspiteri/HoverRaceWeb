@@ -94,9 +94,9 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
           {isCreator && (
             <Button
               onClick={onStartGame}
-              disabled={game.players.filter((p) => p !== undefined).length < 2 || !allPeersConnected}
+              disabled={game.players.filter((p) => p !== undefined).length < 2 || !allPeersConnected || game.status === 'playing'}
             >
-              Start Game
+              {game.status === 'playing' ? 'Game Started' : 'Start Game'}
             </Button>
           )}
         </Group>

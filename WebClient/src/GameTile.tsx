@@ -13,6 +13,7 @@ interface GameTileProps {
 export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled, onJoinGame, onLeaveGame }) => {
   const playerCount = 'players' in game ? game.players.length : game.playerCount;
   const isGameFull = playerCount >= game.maxPlayers;
+  const isGameStarted = game.status === 'playing';
   return (
     <Box
       p="md"
@@ -52,10 +53,17 @@ export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled, on
               onJoinGame?.(game.id);
             }
           }}
-          disabled={(!isJoined && isGameFull) || disabled}
+          disabled={(!isJoined && (isGameFull || isGameStarted)) || disabled}
           fullWidth
         >
-          {isJoined ? 'Leave Game' : isGameFull ? 'Game Full' : 'Join Game'}
+          {isJoined 
+            ? 'Leave Game' 
+            : isGameStarted 
+              ? 'Game Started'
+              : isGameFull 
+                ? 'Game Full' 
+                : 'Join Game'
+          }
         </Button>
       </Stack>
     </Box>

@@ -1,4 +1,4 @@
-import type { CreateGameRequest, SignalRequest, JoinGameRequest, UpdatePlayerRequest } from '@/types.ts';
+import type { CreateGameRequest, SignalRequest, JoinGameRequest, UpdatePlayerRequest, StartGameRequest } from '@/types.ts';
 import type { ActiveGame } from '@/App.tsx';
 
 export const createCommands = (
@@ -144,11 +144,35 @@ export const createCommands = (
     }
   };
 
+  const startGame = async (gameId: string, creatorToken: string) => {
+    try {
+      const response = await fetch(`${baseUrl}/games/${gameId}/start`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          creatorToken,
+        } satisfies StartGameRequest),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start game');
+      }
+
+      const result = await response.json();
+      console.log('Game started successfully:', result);
+    } catch (error) {
+      console.error('Error starting game:', error);
+    }
+  };
+
   return {
     createGame,
     joinGame,
     leaveGame,
     sendSignal,
     updatePlayer,
+    startGame,
   };
 };

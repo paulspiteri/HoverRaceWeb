@@ -41,8 +41,10 @@ function App() {
     }
   };
 
-  const handleStartGame = () => {
-    console.log('Start game clicked');
+  const handleStartGame = async () => {
+    if (activeGame) {
+      await commands.startGame(activeGame.gameId, activeGame.token);
+    }
   };
 
   const handleUpdatePlayer = async (name: string) => {
