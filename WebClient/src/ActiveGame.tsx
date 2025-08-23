@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { Button, Card, Text, Title, Stack, Group } from '@mantine/core';
 import type { JoinedGame } from './types';
 import { useMemo } from 'react';
 import { PlayerList } from './PlayerList';
@@ -65,14 +65,15 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
     });
   }, [game.players, peerStatuses, currentConnectionId, isCreator, peersActualStatuses]);
   return (
-    <Card className="mt-8">
-      <CardHeader>
-        <CardTitle>{game.name}</CardTitle>
-        <CardDescription>
+    <Card withBorder shadow="sm" radius="md" mt="xl">
+      <Card.Section withBorder inheritPadding py="xs">
+        <Title order={2}>{game.name}</Title>
+        <Text size="sm" c="dimmed">
           Game Lobby • {game.players.filter((p) => p !== undefined).length}/{game.maxPlayers} Players
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+        </Text>
+      </Card.Section>
+
+      <Stack gap="lg" mt="md">
         <PlayerNameInput currentPlayerName={currentPlayerName} onUpdatePlayer={onUpdatePlayer} />
 
         <PlayerList
@@ -85,7 +86,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
         />
 
         {/* Action Buttons */}
-        <div className="flex justify-between pt-4">
+        <Group justify="space-between" pt="md">
           <Button variant="outline" onClick={onClose}>
             {isCreator ? 'Cancel Game' : 'Leave Game'}
           </Button>
@@ -98,8 +99,8 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
               Start Game
             </Button>
           )}
-        </div>
-      </CardContent>
+        </Group>
+      </Stack>
     </Card>
   );
 };

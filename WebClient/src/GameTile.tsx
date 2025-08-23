@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, Box, Text, Title, Stack } from '@mantine/core';
 import type { Game } from '@/types.ts';
 
 interface GameTileProps {
@@ -14,16 +14,33 @@ export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled, on
   const playerCount = 'players' in game ? game.players.length : game.playerCount;
   const isGameFull = playerCount >= game.maxPlayers;
   return (
-    <div className="border-2 hover:border-primary/20 transition-colors">
-      <div className="p-4 space-y-4">
-        <div>
-          <h3 className="font-semibold text-lg">{game.name}</h3>
-          <p className="text-sm text-muted-foreground">
+    <Box
+      p="md"
+      style={{ 
+        border: '2px solid var(--mantine-color-gray-3)', 
+        borderRadius: 8,
+        transition: 'border-color 0.2s ease',
+        cursor: 'pointer'
+      }}
+      __vars={{
+        '--box-border-color': 'var(--mantine-color-gray-3)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'var(--mantine-color-blue-3)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'var(--mantine-color-gray-3)';
+      }}
+    >
+      <Stack gap="md">
+        <Box>
+          <Title order={4} size="lg" fw={600}>{game.name}</Title>
+          <Text size="sm" c="dimmed">
             Players: {playerCount}/{game.maxPlayers}
-          </p>
-          <p className="text-xs text-muted-foreground">Created: {new Date(game.createdAt).toLocaleString()}</p>
-          <p className="text-xs text-muted-foreground">Game ID: {game.id}</p>
-        </div>
+          </Text>
+          <Text size="xs" c="dimmed">Created: {new Date(game.createdAt).toLocaleString()}</Text>
+          <Text size="xs" c="dimmed">Game ID: {game.id}</Text>
+        </Box>
 
         <Button
           variant="outline"
@@ -36,11 +53,11 @@ export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled, on
             }
           }}
           disabled={(!isJoined && isGameFull) || disabled}
-          className="w-full"
+          fullWidth
         >
           {isJoined ? 'Leave Game' : isGameFull ? 'Game Full' : 'Join Game'}
         </Button>
-      </div>
-    </div>
+      </Stack>
+    </Box>
   );
 };

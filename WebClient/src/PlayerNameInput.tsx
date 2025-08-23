@@ -1,7 +1,5 @@
 import * as React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button, TextInput, Group, Box } from '@mantine/core';
 import { useState, useEffect } from 'react';
 
 interface PlayerNameInputProps {
@@ -50,15 +48,13 @@ export const PlayerNameInput: React.FC<PlayerNameInputProps> = ({
   };
 
   return (
-    <div className="space-y-2">
-      <Label htmlFor="player-name">Your Name</Label>
-      <div className="flex gap-2">
-        <Input
-          id="player-name"
-          type="text"
+    <Box>
+      <Group gap="xs">
+        <TextInput
+          label="Your Name"
           placeholder="Enter your name..."
           value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
+          onChange={(e) => setPlayerName(e.currentTarget.value)}
           onBlur={handleUpdateName}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
@@ -67,8 +63,9 @@ export const PlayerNameInput: React.FC<PlayerNameInputProps> = ({
             }
           }}
           disabled={isUpdatingName || disabled}
+          style={{ flex: 1 }}
         />
-        <Button
+        <Button 
           onClick={handleUpdateName}
           disabled={
             !playerName.trim() ||
@@ -78,10 +75,11 @@ export const PlayerNameInput: React.FC<PlayerNameInputProps> = ({
           }
           variant="outline"
           size="sm"
+          mt="xl"
         >
           {isUpdatingName ? 'Updating...' : 'Update'}
         </Button>
-      </div>
-    </div>
+      </Group>
+    </Box>
   );
 };

@@ -1,6 +1,6 @@
 import { ConnectionStatus } from '@/ConnectionStatus.tsx';
 import { GameList } from '@/GameList.tsx';
-import { Button } from '@/components/ui/button.tsx';
+import { Button, Container, Stack, Title, Group, Flex, Box } from '@mantine/core';
 import { useGameData } from '@/useGameData.ts';
 import { useState } from 'react';
 import { ActiveGame } from '@/ActiveGame.tsx';
@@ -15,16 +15,10 @@ export interface ActiveGame {
 function App() {
   const [activeGame, setActiveGame] = useState<ActiveGame>();
 
-  const { connectionId, games, commands, eventSource } = useGameData(
-    'http://localhost:3001/api',
-    setActiveGame
-  );
+  const { connectionId, games, commands, eventSource } = useGameData('http://localhost:3001/api', setActiveGame);
 
   const currentGame =
-    activeGame &&
-    (games.find((g) => g.id === activeGame.gameId && 'players' in g) as
-      | JoinedGame
-      | undefined);
+    activeGame && (games.find((g) => g.id === activeGame.gameId && 'players' in g) as JoinedGame | undefined);
 
   const { peerStatuses, peersActualStatuses } = usePeers(
     connectionId,
@@ -58,61 +52,72 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Main content area */}
-      <div className="flex-1 p-8 flex flex-col items-center">
-        <div className="max-w-4xl w-full space-y-8">
-          {/* Enhanced Header */}
-          <div className="text-center">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              HoverRace
-            </h1>
-          </div>
+    <Container fluid h="100vh">
+      <Flex h="100%">
+        {/* Main content area */}
+        <Box flex={1} p="xl">
+          <Flex direction="column" align="center" h="100%">
+            <Container size="xl" w="100%">
+          <Stack gap="xl">
+            {/* Enhanced Header */}
+            <Group justify="center">
+              <Title
+                order={1}
+                size="h1"
+                style={{
+                  background: 'linear-gradient(45deg, #1976d2, #9c27b0)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                }}
+              >
+                HoverRace
+              </Title>
+            </Group>
 
-          {!activeGame && (
-            <div className="space-y-6">
-              <ConnectionStatus connectionId={connectionId} />
-              <div className="flex justify-center">
-                <Button
-                  onClick={() => {
-                    const savedName = localStorage.getItem(
-                      'hoverrace-player-name'
-                    );
-                    commands.createGame(connectionId!, savedName || undefined);
-                  }}
-                  disabled={!connectionId}
-                  size="lg"
-                  className="px-8"
-                >
-                  Create New Game
-                </Button>
-              </div>
-            </div>
-          )}
-          {activeGame && currentGame && (
-            <ActiveGame
-              game={currentGame}
-              onClose={handleLeaveGame}
-              onStartGame={handleStartGame}
-              peerStatuses={peerStatuses}
-              currentConnectionId={connectionId}
-              onUpdatePlayer={handleUpdatePlayer}
-              peersActualStatuses={peersActualStatuses}
-            />
-          )}
-        </div>
-      </div>
-      {/* Right sidebar for game list */}
-      <div className="w-96 p-8 border-l bg-card/30">
+            {!activeGame && (
+              <Stack gap="lg">
+                <ConnectionStatus connectionId={connectionId} />
+                <Group justify="center">
+                  <Button
+                    onClick={() => {
+                      const savedName = localStorage.getItem('hoverrace-player-name');
+                      commands.createGame(connectionId!, savedName || undefined);
+                    }}
+                    disabled={!connectionId}
+                    size="lg"
+                    px="xl"
+                  >
+                    Create New Game
+                  </Button>
+                </Group>
+              </Stack>
+            )}
+            {activeGame && currentGame && (
+              <ActiveGame
+                game={currentGame}
+                onClose={handleLeaveGame}
+                onStartGame={handleStartGame}
+                peerStatuses={peerStatuses}
+                currentConnectionId={connectionId}
+                onUpdatePlayer={handleUpdatePlayer}
+                peersActualStatuses={peersActualStatuses}
+              />
+            )}
+          </Stack>
+            </Container>
+          </Flex>
+        </Box>
+        {/* Right sidebar for game list */}
+        <Box w={384} p="xl" style={{ borderLeft: '1px solid var(--mantine-color-gray-3)' }}>
         <GameList
           games={games}
-          connectionId={connectionId}
           disabled={activeGame !== undefined}
           onJoinGame={handleJoinGame}
           onLeaveGame={handleLeaveGame}
         />
-      </div>
-    </div>
+        </Box>
+      </Flex>
+    </Container>
   );
 }
 

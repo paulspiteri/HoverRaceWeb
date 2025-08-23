@@ -1,46 +1,35 @@
 import * as React from 'react';
 import { GameTile } from './GameTile';
 import type { Game } from './types';
+import { Title, Stack, Text, Box } from '@mantine/core';
 
 interface GameListProps {
   games: Game[];
-  connectionId?: string;
   disabled?: boolean;
   onJoinGame?: (gameId: string) => void;
   onLeaveGame?: (gameId: string) => void;
 }
 
-export const GameList: React.FC<GameListProps> = ({
-  games,
-  connectionId,
-  disabled,
-  onJoinGame,
-  onLeaveGame,
-}) => {
+export const GameList: React.FC<GameListProps> = ({ games, disabled, onJoinGame, onLeaveGame }) => {
   return (
-    <div>
-      <div>
-        <div>Available Games ({games.length})</div>
-      </div>
-      <div>
+    <Box>
+      <Title order={3} mb="md">Available Games ({games.length})</Title>
+      <Stack gap="md">
         {games.length === 0 ? (
-          <p className="text-muted-foreground">No games available</p>
+          <Text c="dimmed" ta="center" py="xl">No games available</Text>
         ) : (
-          <div className="grid gap-4">
-            {games.map((game) => (
-              <GameTile
-                key={game.id}
-                game={game}
-                isJoined={'players' in game}
-                isCreator={connectionId === game.creatorConnectionId}
-                disabled={disabled}
-                onJoinGame={onJoinGame}
-                onLeaveGame={onLeaveGame}
-              />
-            ))}
-          </div>
+          games.map((game) => (
+            <GameTile
+              key={game.id}
+              game={game}
+              isJoined={'players' in game}
+              disabled={disabled}
+              onJoinGame={onJoinGame}
+              onLeaveGame={onLeaveGame}
+            />
+          ))
         )}
-      </div>
-    </div>
+      </Stack>
+    </Box>
   );
 };

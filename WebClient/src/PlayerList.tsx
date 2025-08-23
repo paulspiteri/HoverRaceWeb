@@ -2,6 +2,7 @@ import * as React from 'react';
 import type { JoinedGame } from './types';
 import type { PeerConnectionStatusMessage } from '@/peerTypes.ts';
 import { useMemo } from 'react';
+import { Title, Stack, Group, Text, Badge, Box, Avatar } from '@mantine/core';
 
 interface PlayerListProps {
   gamePlayers: JoinedGame['players'];
@@ -22,23 +23,22 @@ interface ConnectionStatusProps {
 const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ player, index, peerStatuses, currentConnectionId }) => {
   if (player.connectionId === currentConnectionId) {
     return (
-      <>
-        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-        <span className="text-sm text-muted-foreground">You</span>
-      </>
+      <Group gap="xs">
+        <Box w={8} h={8} bg="blue" style={{ borderRadius: '50%' }} />
+        <Text size="sm" c="dimmed">You</Text>
+      </Group>
     );
   }
 
   const status = peerStatuses?.[index] || 'disconnected';
-  const statusColor =
-    status === 'connected' ? 'bg-green-500' : status === 'connecting' ? 'bg-yellow-500' : 'bg-red-500';
+  const statusColor = status === 'connected' ? 'green' : status === 'connecting' ? 'yellow' : 'red';
   const statusText = status === 'connected' ? 'Connected' : status === 'connecting' ? 'Connecting' : 'Disconnected';
 
   return (
-    <>
-      <div className={`w-2 h-2 ${statusColor} rounded-full`}></div>
-      <span className="text-sm text-muted-foreground">{statusText}</span>
-    </>
+    <Group gap="xs">
+      <Box w={8} h={8} bg={statusColor} style={{ borderRadius: '50%' }} />
+      <Text size="sm" c="dimmed">{statusText}</Text>
+    </Group>
   );
 };
 
@@ -61,10 +61,10 @@ const MeshStatus: React.FC<MeshStatusProps> = ({ index, gamePlayers, peerStatus 
   }, [gamePlayers, index, peerStatus]);
 
   const statusColor = !peerStatus 
-    ? 'bg-gray-400' 
+    ? 'gray' 
     : isFullyConnected 
-      ? 'bg-green-500' 
-      : 'bg-red-500';
+      ? 'green' 
+      : 'red';
       
   const statusText = !peerStatus 
     ? 'No Report' 
@@ -73,10 +73,10 @@ const MeshStatus: React.FC<MeshStatusProps> = ({ index, gamePlayers, peerStatus 
       : 'Mesh Not Ready';
 
   return (
-    <>
-      <div className={`w-2 h-2 ${statusColor} rounded-full`}></div>
-      <span className="text-xs text-muted-foreground">{statusText}</span>
-    </>
+    <Group gap="xs">
+      <Box w={8} h={8} bg={statusColor} style={{ borderRadius: '50%' }} />
+      <Text size="sm" c="dimmed">{statusText}</Text>
+    </Group>
   );
 };
 
@@ -89,69 +89,74 @@ export const PlayerList: React.FC<PlayerListProps> = ({
   isHost = false,
 }) => {
   return (
-    <div>
-      <h3 className="text-lg font-semibold mb-4">Players</h3>
-      <div className="space-y-3">
+    <Box>
+      <Title order={3} size="lg" mb="md">Players</Title>
+      <Stack gap="sm">
         {gamePlayers.map((player, index) => {
           if (!player) {
             return (
-              <div
+              <Box
                 key={`empty-${index}`}
-                className="flex items-center justify-between p-3 border rounded-lg opacity-50"
+                p="md"
+                style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: 8, opacity: 0.5 }}
               >
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium">{index + 1}</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground">Empty Slot</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                  <span className="text-sm text-muted-foreground">Empty</span>
-                </div>
-              </div>
+                <Group justify="space-between">
+                  <Group gap="md">
+                    <Avatar size="sm" bg="gray.1" c="gray.6">
+                      {index + 1}
+                    </Avatar>
+                    <Text fw={500} c="dimmed">Empty Slot</Text>
+                  </Group>
+                  <Group gap="xs">
+                    <Box w={8} h={8} bg="gray" style={{ borderRadius: '50%' }} />
+                    <Text size="sm" c="dimmed">Empty</Text>
+                  </Group>
+                </Group>
+              </Box>
             );
           }
 
           return (
-            <div key={player.connectionId} className="flex items-center justify-between p-3 border rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-medium">{index + 1}</span>
-                </div>
-                <div>
-                  <p className="font-medium">
-                    {player.name || `Player ${index + 1}`}
-                    {player.connectionId === creatorConnectionId && (
-                      <span className="ml-2 px-2 py-1 text-xs bg-primary/20 rounded">Host</span>
-                    )}
-                  </p>
-                  <p className="text-sm text-muted-foreground">ID: {player.connectionId}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
+            <Box
+              key={player.connectionId}
+              p="md"
+              style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: 8 }}
+            >
+              <Group justify="space-between">
+                <Group gap="md">
+                  <Avatar size="sm">
+                    {index + 1}
+                  </Avatar>
+                  <Box>
+                    <Group gap="xs">
+                      <Text fw={500}>
+                        {player.name || `Player ${index + 1}`}
+                      </Text>
+                      {player.connectionId === creatorConnectionId && (
+                        <Badge size="xs" variant="light">Host</Badge>
+                      )}
+                    </Group>
+                    <Text size="sm" c="dimmed">ID: {player.connectionId}</Text>
+                  </Box>
+                </Group>
+                <Stack gap="xs" align="flex-end">
                   <ConnectionStatus
                     player={player}
                     index={index}
                     peerStatuses={peerStatuses}
                     currentConnectionId={currentConnectionId}
                   />
-                </div>
 
-                {/* Overall connection status (host only) */}
-                {isHost && player.connectionId !== currentConnectionId && (
-                  <div className="flex items-center space-x-2">
+                  {/* Overall connection status (host only) */}
+                  {isHost && player.connectionId !== currentConnectionId && (
                     <MeshStatus index={index} gamePlayers={gamePlayers} peerStatus={peersActualStatuses?.[index]} />
-                  </div>
-                )}
-              </div>
-            </div>
+                  )}
+                </Stack>
+              </Group>
+            </Box>
           );
         })}
-      </div>
-    </div>
+      </Stack>
+    </Box>
   );
 };
