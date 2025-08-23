@@ -13,6 +13,7 @@ export type ServerGame = {
     maxPlayers: number;
     createdAt: Date;
     creatorConnectionId: string;
+    status: 'waiting' | 'playing';
 };
 
 export type CreateGameRequest = {
@@ -46,6 +47,10 @@ export type UpdatePlayerRequest = {
     name: string;
 };
 
+export type StartGameRequest = {
+    creatorToken: string;
+};
+
 export type AvailableGame = {
     id: string;
     name: string;
@@ -53,15 +58,11 @@ export type AvailableGame = {
     maxPlayers: number;
     createdAt: Date;
     creatorConnectionId: string;
+    status: 'waiting' | 'playing';
 };
 
-export type JoinedGame = {
-    id: string;
-    name: string;
+export type JoinedGame = AvailableGame & {
     players: (ClientPlayer | undefined)[];
-    maxPlayers: number;
-    createdAt: Date;
-    creatorConnectionId: string;
 };
 
 export type ConnectionIdMessage = {

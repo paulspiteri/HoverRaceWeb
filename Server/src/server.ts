@@ -9,6 +9,7 @@ import type {
     DeleteGameRequest,
     SignalRequest,
     UpdatePlayerRequest,
+    StartGameRequest,
     AvailableGame,
     ServerGame,
     JoinedGame,
@@ -116,7 +117,9 @@ app.post("/api/games/:id/join", (req, res) => {
     try {
         const { id } = req.params;
         const { connectionId, name }: JoinGameRequest = req.body;
-        console.log(`🎯 Joining game ${id} with connectionId: ${connectionId}, name: ${name}`);
+        console.log(
+            `🎯 Joining game ${id} with connectionId: ${connectionId}, name: ${name}`
+        );
 
         if (!connectionId) {
             console.log("❌ Missing connectionId");
@@ -223,11 +226,9 @@ app.post("/api/games/:id/signal", (req, res) => {
 
         if (!targetConnectionId || !gameToken || !signalData) {
             console.log("❌ Missing required fields");
-            return res
-                .status(400)
-                .json({
-                    error: "Missing required fields: targetConnectionId, gameToken, signalData",
-                });
+            return res.status(400).json({
+                error: "Missing required fields: targetConnectionId, gameToken, signalData",
+            });
         }
 
         const game = gameManager.getGame(id);
@@ -240,11 +241,9 @@ app.post("/api/games/:id/signal", (req, res) => {
         const sender = game.players.find((p) => p?.gameToken === gameToken);
         if (!sender) {
             console.log("❌ Invalid gameToken or sender not in game");
-            return res
-                .status(403)
-                .json({
-                    error: "Invalid gameToken or not a member of this game",
-                });
+            return res.status(403).json({
+                error: "Invalid gameToken or not a member of this game",
+            });
         }
 
         // Verify target is also in the same game
@@ -314,7 +313,9 @@ app.put("/api/games/:id/player", (req, res) => {
 
         if (!gameToken || !name) {
             console.log("❌ Missing required fields");
-            return res.status(400).json({ error: "Missing required fields: gameToken, name" });
+            return res
+                .status(400)
+                .json({ error: "Missing required fields: gameToken, name" });
         }
 
         const updated = gameManager.updatePlayer(id, gameToken, name);
@@ -323,12 +324,46 @@ app.put("/api/games/:id/player", (req, res) => {
             console.log(`✅ Successfully updated player in game ${id}`);
             res.status(200).json({ message: "Player updated successfully" });
         } else {
-            console.log(`❌ Failed to update player in game ${id} - invalid token or game not found`);
-            res.status(400).json({ error: "Invalid gameToken or game not found" });
+            console.log(
+                `❌ Failed to update player in game ${id} - invalid token or game not found`
+            );
+            res.status(400).json({
+                error: "Invalid gameToken or game not found",
+            });
         }
     } catch (error) {
         console.log("💥 Error updating player:", error);
         res.status(500).json({ error: "Failed to update player" });
+    }
+});
+
+// REST endpoint to start a game
+app.post("/api/games/:id/start", (req, res) => {
+    console.log("🚀 POST /api/games/:id/start - Start game request");
+    try {
+        const { id } = req.params;
+        const { creatorToken }: StartGameRequest = req.body;
+        console.log(`🎯 Starting game ${id} with creator token`);
+
+        if (!creatorToken) {
+            console.log("❌ Missing creatorToken");
+            return res.status(400).json({ error: "Missing creatorToken" });
+        }
+
+        const started = gameManager.startGame(id, creatorToken);
+
+        if (started) {
+            console.log(`✅ Successfully started game ${id}`);
+            res.status(200).json({ message: "Game started successfully" });
+        } else {
+            console.log(`❌ Failed to start game ${id} - invalid token, game not found, or already started`);
+            res.status(400).json({
+                error: "Invalid creatorToken, game not found, or game already started",
+            });
+        }
+    } catch (error) {
+        console.log("💥 Error starting game:", error);
+        res.status(500).json({ error: "Failed to start game" });
     }
 });
 
@@ -341,6 +376,7 @@ function toPublicGameData(game: ServerGame): AvailableGame {
         maxPlayers: game.maxPlayers,
         createdAt: game.createdAt,
         creatorConnectionId: game.creatorConnectionId,
+        status: game.status,
     };
 }
 
@@ -349,12 +385,14 @@ function toJoinedGame(game: ServerGame): JoinedGame {
     return {
         id: game.id,
         name: game.name,
+        playerCount: game.players.filter((p) => p !== undefined).length,
         players: game.players.map((p) =>
             p ? { connectionId: p.connectionId, name: p.name } : undefined
         ),
         maxPlayers: game.maxPlayers,
         createdAt: game.createdAt,
         creatorConnectionId: game.creatorConnectionId,
+        status: game.status,
     };
 }
 

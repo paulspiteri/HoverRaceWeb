@@ -25,6 +25,7 @@ export class GameManager extends EventEmitter {
             maxPlayers: gameData.maxPlayers,
             createdAt: new Date(),
             creatorConnectionId: gameData.creatorConnectionId,
+            status: 'waiting',
         };
 
         this.games.set(game.id, game);
@@ -74,6 +75,8 @@ export class GameManager extends EventEmitter {
 
         if (game.creatorConnectionId === connectionId) return undefined;
 
+        if (game.status !== 'waiting') return undefined;
+
         if (game.players.some((p) => p?.connectionId === connectionId))
             return undefined;
 
@@ -97,10 +100,13 @@ export class GameManager extends EventEmitter {
 
         const player = game.players[playerIndex];
 
-        // If this is the creator leaving, delete the entire game
+        // If this is the creator leaving, only delete the game if it hasn't started yet
         if (game.creatorConnectionId === player!.connectionId) {
-            this.deleteGame(gameId);
-            return true;
+            if (game.status === 'waiting') {
+                this.deleteGame(gameId);
+                return true;
+            }
+            // If game has started, treat creator like any other player
         }
 
         game.players[playerIndex] = undefined;
@@ -116,6 +122,27 @@ export class GameManager extends EventEmitter {
         if (!player) return false;
 
         player.name = name;
+        this.emit("gameUpdated", game);
+        return true;
+    }
+
+    startGame(gameId: string, creatorToken: string): boolean {
+        const game = this.games.get(gameId);
+        if (!game) return false;
+
+        // Find the creator by checking if they have the token
+        const creator = game.players.find(
+            (p) =>
+                p?.connectionId === game.creatorConnectionId &&
+                p?.gameToken === creatorToken
+        );
+
+        if (!creator) return false;
+
+        // Can only start games that are waiting
+        if (game.status !== 'waiting') return false;
+
+        game.status = 'playing';
         this.emit("gameUpdated", game);
         return true;
     }
