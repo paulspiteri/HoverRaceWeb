@@ -1,12 +1,53 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HoverRace Web</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+        <title>HoverRace Web</title>
+        <link rel="stylesheet" href="index.css" />
+        <script src="https://unpkg.com/nipplejs@0.10.2/dist/nipplejs.js"></script>
+    </head>
+    <body>
+        <div class="root">
+            <div id="react-root"></div>
+
+            <div class="game-container" id="fullscreen-container">
+                <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+
+                <div id="joystick-zone"></div>
+                <div id="weapon-joystick-zone">
+                    <div
+                        style="
+                            position: absolute;
+                            top: -25px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            color: black;
+                            font-size: 12px;
+                            pointer-events: none;
+                        "
+                    >
+                        ↑ Weapon
+                    </div>
+                    <div
+                        style="
+                            position: absolute;
+                            bottom: -25px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            color: black;
+                            font-size: 12px;
+                            pointer-events: none;
+                        "
+                    >
+                        ↓ Fire
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="module" src="/src/main.tsx"></script>
+
+        <script src="emscripten.js"></script>
+        <script src=index.js async></script>
+    </body>
 </html>
