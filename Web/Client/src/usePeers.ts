@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { JoinedGame, ServerMessage, SignalMessage } from "@/types.ts";
-import type { PeerConnectionStatusMessage } from "@/peerTypes.ts";
+import type { PeerConnectionStatusMessage, PeerMessage } from "@/peerTypes.ts";
+import { MESSAGE_TYPES, createEnvelope, parseEnvelope, createJsonEnvelope } from "@/peerMessage.ts";
 import SimplePeer from "simple-peer";
 
 export interface GamePeer {
@@ -20,6 +21,7 @@ export const usePeers = (
     eventSource: EventSource | undefined,
     sendSignal: (gameId: string, targetConnectionId: string, gameToken: string, signalData: string) => Promise<void>,
     gameToken: string | undefined,
+    onGameData: (playerIndex: number, data: unknown) => void,
 ) => {
     const peers = useRef<(GamePeer | undefined)[] | undefined>(undefined);
     const [peerStatuses, setPeerStatuses] = useState<("connecting" | "connected" | "disconnected" | undefined)[]>();
@@ -53,13 +55,16 @@ export const usePeers = (
 
         try {
             if (hostPeer.peer.connected) {
-                hostPeer.peer.send(JSON.stringify(statusMessage));
-                console.log("📊 Sent status update to host:", statusMessage);
+                const envelope = createJsonEnvelope(statusMessage);
+                hostPeer.peer.send(envelope);
+                console.log("📊 Sent status update to host (JSON envelope):", statusMessage);
             }
         } catch (error) {
             console.error("❌ Failed to send status update to host:", error);
         }
     }, [game, peerStatuses]);
+
+    useEffect(() => sendStatusUpdateToHost(), [peerStatuses, sendStatusUpdateToHost]);
 
     const onSignalReceived = useCallback((signal: SignalMessage) => {
         console.log(`📡 Received signal from ${signal.fromConnectionId}`);
@@ -179,27 +184,55 @@ export const usePeers = (
                         updatePeerStatus("disconnected");
                     });
 
-                    // Only add data event handler if we are the host
-                    if (connectionId === game.creatorConnectionId) {
-                        newPeer.peer.on("data", (data: ArrayBuffer) => {
-                            try {
-                                const message = JSON.parse(new TextDecoder().decode(data));
-                                console.log(`📩 Received data from ${playerConnectionId}:`, message);
+                    newPeer.peer.on("data", (data: ArrayBuffer) => {
+                        try {
+                            const uint8Data = new Uint8Array(data);
+                            if (uint8Data.length >= 4) {
+                                try {
+                                    const { messageType, data: payload } = parseEnvelope(uint8Data);
 
-                                // Check if it's a PeerConnectionStatusMessage using type field
-                                if (message.type === "peerConnectionStatus") {
-                                    console.log(`📊 Received status update from ${playerConnectionId}:`, message);
-                                    setPeersActualStatuses((prev) => {
-                                        const updated = prev ? [...prev] : new Array(game.maxPlayers).fill(undefined);
-                                        updated[i] = message as PeerConnectionStatusMessage;
-                                        return updated;
-                                    });
+                                    if (messageType === MESSAGE_TYPES.BINARY) {
+                                        console.log(
+                                            `📩 Received binary data from ${playerConnectionId} (${payload.length} bytes)`,
+                                        );
+                                        onGameData(i, payload);
+                                    } else if (messageType === MESSAGE_TYPES.JSON) {
+                                        const message = JSON.parse(new TextDecoder().decode(payload)) as PeerMessage;
+                                        console.log(`📩 Received JSON message from ${playerConnectionId}:`, message);
+
+                                        if (message.type === "peerConnectionStatus") {
+                                            console.log(
+                                                `📊 Received status update from ${playerConnectionId}:`,
+                                                message,
+                                            );
+                                            setPeersActualStatuses((prev) => {
+                                                const updated = prev
+                                                    ? [...prev]
+                                                    : new Array(game.maxPlayers).fill(undefined);
+                                                updated[i] = message as PeerConnectionStatusMessage;
+                                                return updated;
+                                            });
+                                        } else {
+                                            console.error(
+                                                `❌ Unknown JSON message type received from ${playerConnectionId}:`,
+                                                (message as PeerMessage).type,
+                                            );
+                                        }
+                                    } else {
+                                        console.error(
+                                            `❌ Unknown envelope type ${messageType} from ${playerConnectionId}`,
+                                        );
+                                    }
+                                } catch (error) {
+                                    console.error(`❌ Failed to parse data from ${playerConnectionId}:`, error);
                                 }
-                            } catch (error) {
-                                console.error(`❌ Failed to parse data from ${playerConnectionId}:`, error);
+                            } else {
+                                console.error(`❌ Unexpected short message from ${playerConnectionId}`);
                             }
-                        });
-                    }
+                        } catch (error) {
+                            console.error(`❌ Failed to parse data from ${playerConnectionId}:`, error);
+                        }
+                    });
                 }
             }
         } else {
@@ -215,12 +248,41 @@ export const usePeers = (
                 setPeerStatuses(undefined);
             }
         }
-    }, [game, connectionId, sendSignal, gameToken]);
+    }, [game, connectionId, sendSignal, gameToken, onGameData]);
 
-    useEffect(() => sendStatusUpdateToHost(), [peerStatuses, sendStatusUpdateToHost]);
+    const sendData = useCallback((playerIndex: number, data: Uint8Array): boolean => {
+        if (!peers.current) {
+            console.warn(`❌ Cannot send data: peers not initialized`);
+            return false;
+        }
+
+        const peer = peers.current[playerIndex];
+        if (!peer) {
+            console.warn(`❌ Cannot send data: no peer at index ${playerIndex}`);
+            return false;
+        }
+
+        if (!peer.peer.connected) {
+            console.warn(`❌ Cannot send data to player ${playerIndex}: peer not connected (${peer.connectionId})`);
+            return false;
+        }
+
+        try {
+            const envelope = createEnvelope(MESSAGE_TYPES.BINARY, data);
+            peer.peer.send(envelope);
+            console.log(
+                `📤 Sent binary data to player ${playerIndex} (${data.length} bytes, ${envelope.length} total)`,
+            );
+            return true;
+        } catch (error) {
+            console.error(`❌ Failed to send data to player ${playerIndex} (${peer.connectionId}):`, error);
+            return false;
+        }
+    }, []);
 
     return {
         peerStatuses,
         peersActualStatuses,
+        sendData,
     };
 };

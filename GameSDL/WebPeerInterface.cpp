@@ -20,23 +20,22 @@ static std::queue<ReceivedMessage> g_messageQueue;
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 
-static bool SendPeerMessage(const char* data, int length) {
+static bool SendPeerMessage(int clientId, const char* data, int length) {
     // Use EM_ASM to call JavaScript directly with binary data
     int result = EM_ASM_INT({
         // Create a new Uint8Array and copy the data
         var dataArray = new Uint8Array($1);
-        for (var i = 0; i < $1; i++) {
-            dataArray[i] = HEAPU8[$0 + i];
+        for (var i = 0; i < $2; i++) {
+            dataArray[i] = HEAPU8[$1 + i];
         }
         
-        // Call our sendGameMessage function with the binary data
-        return sendGameMessage(dataArray) ? 1 : 0;
-    }, data, length);
+        return sendGameMessage($0, dataArray) ? 1 : 0;
+    }, clientId, data, length);
     
     return result != 0;
 }
 
-extern "C" void ReceivePeerMessage(const char* data, int length) {
+extern "C" void ReceivePeerMessage(int playerId, const char* data, int length) {
     if (length >= MR_NET_HEADER_LEN && length <= static_cast<int>(sizeof(MR_NetMessageBuffer))) {
         ReceivedMessage msg(reinterpret_cast<const MR_UInt8*>(data), length, 0);
         g_messageQueue.push(msg);
@@ -147,11 +146,8 @@ bool WebPeerInterface::UDPSend(int pClient, MR_NetMessageBuffer* pMessage, bool 
     pMessage->mDatagramNumber = 0;
 
 #ifdef __EMSCRIPTEN__
-    // Send via PeerJS using our bridge function
-    return SendPeerMessage(reinterpret_cast<const char*>(pMessage), lToSend);
+    return SendPeerMessage(pClient, reinterpret_cast<const char*>(pMessage), lToSend);
 #else
-    // Non-Emscripten builds don't support peer messaging yet
-    printf("WebPeerInterface::UDPSend not implemented for non-Emscripten builds\n");
     return false;
 #endif
 }

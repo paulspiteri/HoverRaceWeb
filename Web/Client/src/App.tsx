@@ -2,7 +2,7 @@ import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { GameList } from "@/GameList.tsx";
 import { Button, Container, Stack, Title, Group, Flex, Box } from "@mantine/core";
 import { useGameData } from "@/useGameData.ts";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ActiveGame } from "@/ActiveGame.tsx";
 import type { JoinedGame } from "./types";
 import { usePeers } from "@/usePeers.ts";
@@ -20,13 +20,29 @@ function App() {
     const currentGame =
         activeGame && (games.find((g) => g.id === activeGame.gameId && "players" in g) as JoinedGame | undefined);
 
-    const { peerStatuses, peersActualStatuses } = usePeers(
+    const onGameData = useCallback((playerId: number, data: unknown) => {
+        let binaryData = null;
+        if (data instanceof Uint8Array) {
+            binaryData = data;
+        } else if (data instanceof ArrayBuffer) {
+            binaryData = new Uint8Array(data);
+        } else {
+            console.error(`[JS] Received unsupported data format:`, typeof data);
+            return;
+        }
+        receiveGameData(playerId, binaryData);
+    }, []);
+
+    const { peerStatuses, peersActualStatuses, sendData } = usePeers(
         connectionId,
         currentGame,
         eventSource,
         commands.sendSignal,
         activeGame?.token,
+        onGameData,
     );
+
+    useEffect(() => void (global.sendGameMessage = sendData), [sendData]);
 
     const handleJoinGame = (gameId: string) => {
         if (connectionId) {

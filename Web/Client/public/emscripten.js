@@ -205,20 +205,14 @@ function startGame(playerId) {
     Module._main();
 }
 
-// Function called from C++ to send game messages to peer
-function sendGameMessage(dataArray) {
-    // if (!activePeerConnection) {
-    //     console.error("No active peer connection for sending message");
-    //     return false;
-    // }
-    //
-    // try {
-    //     // dataArray is already a Uint8Array from Emscripten
-    //     // Send the binary data to peer
-    //     activePeerConnection.send(dataArray);
-    //     return true;
-    // } catch (error) {
-    //     console.error("Failed to send message to peer:", error);
-    //     return false;
-    // }
+function receiveGameData(playerId, data) {
+    // Allocate memory in Emscripten heap
+    const dataPtr = Module._malloc(binaryData.length);
+    Module.HEAPU8.set(binaryData, dataPtr);
+
+    // Call C++ function
+    Module._ReceivePeerMessage(dataPtr, binaryData.length);
+
+    // Free the allocated memory
+    Module._free(dataPtr);
 }
