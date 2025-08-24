@@ -62,14 +62,13 @@ function App() {
     }, [currentGame?.status]);
 
     return (
-        <Container fluid h="100vh">
+        <Container fluid h="100vh" style={{ overflow: "hidden" }} p={0}>
             <Flex h="100%">
                 {/* Main content area */}
                 <Box flex={1} p="xl">
                     <Flex direction="column" align="center" h="100%">
-                        <Container size="xl" w="100%">
-                            <Stack gap="xl">
-                                {/* Enhanced Header */}
+                        <Container size="xl" w="100%" h="100%">
+                            <Stack gap="xl" h="100%">
                                 <Group justify="center">
                                     <Title
                                         order={1}
@@ -118,14 +117,22 @@ function App() {
                     </Flex>
                 </Box>
                 {/* Right sidebar for game list */}
-                <Box w={384} p="xl" style={{ borderLeft: "1px solid var(--mantine-color-gray-3)" }}>
+                <Flex
+                    w={384}
+                    p="xl"
+                    direction="column"
+                    style={{
+                        borderLeft: "1px solid var(--mantine-color-gray-3)",
+                        overflow: "hidden",
+                    }}
+                >
                     <GameList
                         games={games}
                         disabled={activeGame !== undefined}
                         onJoinGame={handleJoinGame}
                         onLeaveGame={handleLeaveGame}
                     />
-                </Box>
+                </Flex>
             </Flex>
         </Container>
     );

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { GameTile } from './GameTile';
 import type { Game } from './types';
-import { Title, Stack, Text, Box } from '@mantine/core';
+import { Title, Stack, Text, Box, Flex } from '@mantine/core';
 
 interface GameListProps {
   games: Game[];
@@ -12,9 +12,10 @@ interface GameListProps {
 
 export const GameList: React.FC<GameListProps> = ({ games, disabled, onJoinGame, onLeaveGame }) => {
   return (
-    <Box>
+    <Flex h="100%" direction="column" style={{ minHeight: 0 }}>
       <Title order={3} mb="md">Available Games ({games.length})</Title>
-      <Stack gap="md">
+      <Box flex={1} style={{ overflowY: 'auto' }}>
+        <Stack gap="md">
         {games.length === 0 ? (
           <Text c="dimmed" ta="center" py="xl">No games available</Text>
         ) : (
@@ -29,7 +30,8 @@ export const GameList: React.FC<GameListProps> = ({ games, disabled, onJoinGame,
             />
           ))
         )}
-      </Stack>
-    </Box>
+        </Stack>
+      </Box>
+    </Flex>
   );
 };

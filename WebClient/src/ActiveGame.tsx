@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { Button, Card, Text, Title, Stack, Group } from '@mantine/core';
+import { Button, Card, Text, Title, Stack, Group, Box } from '@mantine/core';
 import type { JoinedGame } from './types';
 import { useMemo } from 'react';
 import { PlayerList } from './PlayerList';
@@ -65,7 +65,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
     });
   }, [game.players, peerStatuses, currentConnectionId, isCreator, peersActualStatuses]);
   return (
-    <Card withBorder shadow="sm" radius="md" mt="xl">
+    <Card withBorder shadow="sm" radius="md" mt="xl" mb="xl" style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
       <Card.Section withBorder inheritPadding py="xs">
         <Title order={2}>{game.name}</Title>
         <Text size="sm" c="dimmed">
@@ -73,17 +73,19 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
         </Text>
       </Card.Section>
 
-      <Stack gap="lg" mt="md">
+      <Stack gap="lg" mt="md" h="100%" style={{ minHeight: 0 }}>
         <PlayerNameInput currentPlayerName={currentPlayerName} onUpdatePlayer={onUpdatePlayer} />
 
-        <PlayerList
-          gamePlayers={game.players}
-          creatorConnectionId={game.creatorConnectionId}
-          peerStatuses={peerStatuses}
-          currentConnectionId={currentConnectionId}
-          peersActualStatuses={peersActualStatuses}
-          isHost={isCreator}
-        />
+        <Box flex={1} style={{ minHeight: 0 }}>
+          <PlayerList
+            gamePlayers={game.players}
+            creatorConnectionId={game.creatorConnectionId}
+            peerStatuses={peerStatuses}
+            currentConnectionId={currentConnectionId}
+            peersActualStatuses={peersActualStatuses}
+            isHost={isCreator}
+          />
+        </Box>
 
         {/* Action Buttons */}
         <Group justify="space-between" pt="md">
