@@ -2,7 +2,7 @@ import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { GameList } from "@/GameList.tsx";
 import { Button, Container, Stack, Title, Group, Flex, Box } from "@mantine/core";
 import { useGameData } from "@/useGameData.ts";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActiveGame } from "@/ActiveGame.tsx";
 import type { JoinedGame } from "./types";
 import { usePeers } from "@/usePeers.ts";
@@ -44,7 +44,6 @@ function App() {
     const handleStartGame = async () => {
         if (activeGame) {
             await commands.startGame(activeGame.gameId, activeGame.token);
-            startGame(0);
         }
     };
 
@@ -53,6 +52,14 @@ function App() {
             await commands.updatePlayer(activeGame.gameId, activeGame.token, name);
         }
     };
+
+    useEffect(() => {
+        {
+            if (currentGame?.status === "playing") {
+                startGame(0);
+            }
+        }
+    }, [currentGame?.status]);
 
     return (
         <Container fluid h="100vh">

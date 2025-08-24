@@ -11,8 +11,7 @@ interface GameTileProps {
 }
 
 export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled, onJoinGame, onLeaveGame }) => {
-  const playerCount = 'players' in game ? game.players.length : game.playerCount;
-  const isGameFull = playerCount >= game.maxPlayers;
+  const isGameFull = game.playerCount >= game.maxPlayers;
   const isGameStarted = game.status === 'playing';
   return (
     <Box
@@ -37,7 +36,7 @@ export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled, on
         <Box>
           <Title order={4} size="lg" fw={600}>{game.name}</Title>
           <Text size="sm" c="dimmed">
-            Players: {playerCount}/{game.maxPlayers}
+            Players: {game.playerCount}/{game.maxPlayers}
           </Text>
           <Text size="xs" c="dimmed">Created: {new Date(game.createdAt).toLocaleString()}</Text>
           <Text size="xs" c="dimmed">Game ID: {game.id}</Text>
