@@ -187,7 +187,7 @@ BOOL MR_GetFeatureForceLongitude( const MR_ShapeInterface* pActor, const MR_Poly
    // associated with greatest distance for the calculationof the force field
 
 
-   BOOL lReturnValue;
+   BOOL lReturnValue = TRUE;
 
    int lGreatestDistance = -1;
    int lForceWall = -1;
