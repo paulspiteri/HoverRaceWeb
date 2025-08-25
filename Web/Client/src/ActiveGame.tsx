@@ -69,7 +69,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
       <Card.Section withBorder inheritPadding py="xs">
         <Title order={2}>{game.name}</Title>
         <Text size="sm" c="dimmed">
-          Game Lobby • {game.players.filter((p) => p !== undefined).length}/{game.maxPlayers} Players
+          Game Lobby • {game.playerCount}/{game.maxPlayers} Players
         </Text>
       </Card.Section>
 

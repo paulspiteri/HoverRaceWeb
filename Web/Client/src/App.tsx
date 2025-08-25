@@ -15,7 +15,10 @@ export interface ActiveGame {
 function App() {
     const [activeGame, setActiveGame] = useState<ActiveGame>();
 
-    const { connectionId, games, commands, eventSource } = useGameData("http://68.173.74.78:3001/api", setActiveGame);
+    const { connectionId, games, commands, eventSource } = useGameData(
+        `${window.location.protocol}//${window.location.hostname}:3001/api`,
+        setActiveGame,
+    );
 
     const currentGame =
         activeGame && (games.find((g) => g.id === activeGame.gameId && "players" in g) as JoinedGame | undefined);
