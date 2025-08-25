@@ -181,7 +181,6 @@ void LoadGameStringResources(std::unordered_map<int, std::string>* stringTable)
     for (size_t i = 0; i < strs.size(); ++i)
     {
        const auto& item = strs[i];
-       std::cout << "Adding ID " << item.first << ": " << item.second << "\n";
        stringTable->insert(item);
     }
 }

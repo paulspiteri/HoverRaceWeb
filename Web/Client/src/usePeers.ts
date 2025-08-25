@@ -42,7 +42,7 @@ export const usePeers = (
             type: "peerConnectionStatus",
             peers: game.players.reduce(
                 (acc, player, index) => {
-                    if (player) {
+                    if (player && player.connectionId !== connectionId) {
                         acc[player.connectionId] = {
                             isConnected: peerStatuses[index] === "connected",
                         };
@@ -62,7 +62,7 @@ export const usePeers = (
         } catch (error) {
             console.error("❌ Failed to send status update to host:", error);
         }
-    }, [game, peerStatuses]);
+    }, [connectionId, game, peerStatuses]);
 
     useEffect(() => sendStatusUpdateToHost(), [peerStatuses, sendStatusUpdateToHost]);
 
@@ -93,12 +93,10 @@ export const usePeers = (
 
     useEffect(() => {
         if (game) {
-            console.log(`🎮 Setting up peers for game ${game.id}`);
             const myPlayerIndex = game.players.findIndex((x) => x?.connectionId === connectionId);
             if (myPlayerIndex === -1) {
                 throw new Error("Current connection not found in game players");
             }
-            console.log(`👤 My player index: ${myPlayerIndex}`);
 
             if (!peers.current) {
                 peers.current = new Array<GamePeer | undefined>(game.maxPlayers);

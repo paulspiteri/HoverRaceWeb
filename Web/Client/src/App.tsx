@@ -15,10 +15,11 @@ export interface ActiveGame {
 function App() {
     const [activeGame, setActiveGame] = useState<ActiveGame>();
 
-    const { connectionId, games, commands, eventSource } = useGameData("http://localhost:3001/api", setActiveGame);
+    const { connectionId, games, commands, eventSource } = useGameData("http://68.173.74.78:3001/api", setActiveGame);
 
     const currentGame =
         activeGame && (games.find((g) => g.id === activeGame.gameId && "players" in g) as JoinedGame | undefined);
+    const playerIndex = currentGame?.players.findIndex((p) => p?.connectionId === connectionId);
 
     const onGameData = useCallback((playerId: number, data: unknown) => {
         let binaryData = null;
@@ -71,11 +72,11 @@ function App() {
 
     useEffect(() => {
         {
-            if (currentGame?.status === "playing") {
-                startGame(0);
+            if (currentGame?.status === "playing" && playerIndex !== undefined) {
+                startGame(playerIndex);
             }
         }
-    }, [currentGame?.status]);
+    }, [currentGame?.status, playerIndex]);
 
     return (
         <Container fluid h="100vh" style={{ overflow: "hidden" }} p={0}>

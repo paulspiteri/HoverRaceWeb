@@ -205,13 +205,13 @@ function startGame(playerId) {
     Module._main();
 }
 
-function receiveGameData(playerId, data) {
+function receiveGameData(playerId, binaryData) {
     // Allocate memory in Emscripten heap
     const dataPtr = Module._malloc(binaryData.length);
     Module.HEAPU8.set(binaryData, dataPtr);
 
     // Call C++ function
-    Module._ReceivePeerMessage(dataPtr, binaryData.length);
+    Module._ReceivePeerMessage(playerId, dataPtr, binaryData.length);
 
     // Free the allocated memory
     Module._free(dataPtr);

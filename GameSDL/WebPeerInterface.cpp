@@ -6,10 +6,10 @@
 
 // Global message queue for peer messages
 struct ReceivedMessage {
-    MR_NetMessageBuffer buffer;
     int clientId;
-    
-    ReceivedMessage(const MR_UInt8* data, int length, int client) : clientId(client) {
+    MR_NetMessageBuffer buffer;
+
+    ReceivedMessage(int clientId, const MR_UInt8* data, int length) : clientId(clientId) {
         int copyLen = std::min(length, static_cast<int>(sizeof(buffer)));
         memcpy(&buffer, data, copyLen);
     }
@@ -24,7 +24,7 @@ static bool SendPeerMessage(int clientId, const char* data, int length) {
     // Use EM_ASM to call JavaScript directly with binary data
     int result = EM_ASM_INT({
         // Create a new Uint8Array and copy the data
-        var dataArray = new Uint8Array($1);
+        var dataArray = new Uint8Array($2);
         for (var i = 0; i < $2; i++) {
             dataArray[i] = HEAPU8[$1 + i];
         }
@@ -37,7 +37,7 @@ static bool SendPeerMessage(int clientId, const char* data, int length) {
 
 extern "C" void ReceivePeerMessage(int playerId, const char* data, int length) {
     if (length >= MR_NET_HEADER_LEN && length <= static_cast<int>(sizeof(MR_NetMessageBuffer))) {
-        ReceivedMessage msg(reinterpret_cast<const MR_UInt8*>(data), length, 0);
+        ReceivedMessage msg(playerId, reinterpret_cast<const MR_UInt8*>(data), length);
         g_messageQueue.push(msg);
     }
 }
@@ -132,10 +132,14 @@ bool WebPeerInterface::UDPSend(int pClient, MR_NetMessageBuffer* pMessage, bool 
         return false;
     }
 
-    if (pClient != 0)
-    {
-        return false; // Only single peer (client 0) supported
-    }
+    // if (mId == 0 && pClient != 1)
+    // {
+    //     return false;
+    // }
+    // if (mId == 1 && pClient != 0)
+    // {
+    //     return false;
+    // }
 
     // Calculate total message size
     int lToSend = MR_NET_HEADER_LEN + pMessage->mDataLen;
@@ -154,16 +158,20 @@ bool WebPeerInterface::UDPSend(int pClient, MR_NetMessageBuffer* pMessage, bool 
 
 bool WebPeerInterface::BroadcastMessage(MR_NetMessageBuffer* pMessage, int pReqLevel)
 {
-    if (pReqLevel == MR_NET_DATAGRAM)
+    for( int lCounter = 0; lCounter < eMaxClient; lCounter++ )
     {
-        return UDPSend(0, pMessage, false, false);
+        if (pReqLevel == MR_NET_DATAGRAM)
+        {
+            UDPSend(lCounter, pMessage, false, false);
+        }
+        else
+        {
+            // todo
+            // return Send( pMessage, pReqLevel );
+           UDPSend(lCounter, pMessage, false, false);
+        }
     }
-    else
-    {
-        // todo
-        // return Send( pMessage, pReqLevel );
-        return UDPSend(0, pMessage, false, false);
-    }
+    return TRUE;
 }
 
 bool WebPeerInterface::FetchMessage(int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage, int& pClientId, MR_NetMessageBuffer& pBuffer)
@@ -208,5 +216,5 @@ const char* WebPeerInterface::GetPlayerName(int pIndex) const
 
 bool WebPeerInterface::IsConnected(int pIndex) const
 {
-    return pIndex == 0 && mIsConnected;
+    return true; // needs fixing
 }

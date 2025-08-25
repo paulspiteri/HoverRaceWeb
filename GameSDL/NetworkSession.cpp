@@ -276,6 +276,7 @@ void MR_NetworkSession::ReadNet( )
 
          case MRNM_CREATE_MAIN_ELEM:
             {
+               std::cout << "Create main element " << lClientId  << std::endl;
                MR_ObjectFromFactoryId lTypeId;
                int                    lRoom;
                int                    lHoverId;
@@ -561,7 +562,7 @@ void MR_NetworkSession::WriteNet( )
          }
       }
 
-
+      std::cout << "Deleting character " << sClientToCheck << std::endl;
       // Delete the client character
       mSession.GetCurrentLevel()->DeleteElement( mClient[sClientToCheck ] );
       mClientCharacter[ sClientToCheck ] = NULL;
