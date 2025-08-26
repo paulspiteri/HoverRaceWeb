@@ -7,7 +7,7 @@ import SimplePeer from "simple-peer";
 export interface GamePeer {
     peer: SimplePeer.Instance;
     connectionId: string;
-    gameDataChannel?: RTCDataChannel;
+    unreliableChannel?: RTCDataChannel;
 }
 
 // Utility function to access the internal RTCPeerConnection
@@ -76,6 +76,44 @@ export const usePeers = (
         }
     }, []);
 
+    const handleChannelMessage = useCallback(
+        (data: Uint8Array, playerConnectionId: string, playerIndex: number) => {
+            if (data.length >= 4) {
+                try {
+                    const { messageType, data: payload } = parseEnvelope(data);
+
+                    if (messageType === MESSAGE_TYPES.BINARY) {
+                        onGameData(playerIndex, payload);
+                    } else if (messageType === MESSAGE_TYPES.JSON) {
+                        const message = JSON.parse(new TextDecoder().decode(payload)) as PeerMessage;
+                        if (message.type === "peerConnectionStatus") {
+                            console.log(`📊 Received status update from ${playerConnectionId}:`, message);
+                            setPeersActualStatuses((prev) => {
+                                if (prev) {
+                                    const updated = [...prev];
+                                    updated[playerIndex] = message as PeerConnectionStatusMessage;
+                                    return updated;
+                                }
+                            });
+                        } else {
+                            console.error(
+                                `❌ Unknown JSON message type received from ${playerConnectionId}:`,
+                                (message as PeerMessage).type,
+                            );
+                        }
+                    } else {
+                        console.error(`❌ Unknown envelope type ${messageType} from ${playerConnectionId}`);
+                    }
+                } catch (error) {
+                    console.error(`❌ Failed to parse data from ${playerConnectionId}:`, error);
+                }
+            } else {
+                console.error(`❌ Unexpected short message from ${playerConnectionId}`);
+            }
+        },
+        [onGameData],
+    );
+
     useEffect(() => {
         const onMessage = (event: MessageEvent) => {
             try {
@@ -103,6 +141,13 @@ export const usePeers = (
             }
 
             setPeerStatuses((prev) => {
+                if (!prev || prev.length !== game.maxPlayers) {
+                    return new Array(game.maxPlayers).fill(undefined);
+                }
+                return prev;
+            });
+
+            setPeersActualStatuses((prev) => {
                 if (!prev || prev.length !== game.maxPlayers) {
                     return new Array(game.maxPlayers).fill(undefined);
                 }
@@ -167,9 +212,45 @@ export const usePeers = (
                         });
                     };
 
+                    const handleDataChannelMessage = (
+                        data: unknown,
+                        playerConnectionId: string,
+                        playerIndex: number,
+                    ) => {
+                        const uint8Data = new Uint8Array(data as ArrayBuffer);
+                        handleChannelMessage(uint8Data, playerConnectionId, playerIndex);
+                    };
+
                     newPeer.peer.on("connect", () => {
                         console.log(`🔗 Connected to peer ${playerConnectionId}`);
-                        updatePeerStatus("connected");
+
+                        const pc = getPeerConnection(newPeer.peer);
+                        if (isInitiator) {
+                            newPeer.unreliableChannel = pc.createDataChannel("unreliable", {
+                                ordered: false,
+                                maxRetransmits: 0,
+                            });
+                            console.log(`📡 Created unreliable channel for ${playerConnectionId}`);
+
+                            newPeer.unreliableChannel.onmessage = (event) =>
+                                handleDataChannelMessage(event.data, playerConnectionId, i);
+
+                            updatePeerStatus("connected");
+                        } else {
+                            pc.ondatachannel = (event) => {
+                                const channel = event.channel;
+                                console.log(`📡 Received data channel: ${channel.label} from ${playerConnectionId}`);
+
+                                if (channel.label === "unreliable") {
+                                    newPeer.unreliableChannel = channel;
+                                }
+
+                                channel.onmessage = (event) =>
+                                    handleDataChannelMessage(event.data, playerConnectionId, i);
+
+                                updatePeerStatus("connected");
+                            };
+                        }
                     });
 
                     newPeer.peer.on("close", () => {
@@ -183,53 +264,7 @@ export const usePeers = (
                     });
 
                     newPeer.peer.on("data", (data: ArrayBuffer) => {
-                        try {
-                            const uint8Data = new Uint8Array(data);
-                            if (uint8Data.length >= 4) {
-                                try {
-                                    const { messageType, data: payload } = parseEnvelope(uint8Data);
-
-                                    if (messageType === MESSAGE_TYPES.BINARY) {
-                                        console.log(
-                                            `📩 Received binary data from ${playerConnectionId} (${payload.length} bytes)`,
-                                        );
-                                        onGameData(i, payload);
-                                    } else if (messageType === MESSAGE_TYPES.JSON) {
-                                        const message = JSON.parse(new TextDecoder().decode(payload)) as PeerMessage;
-                                        console.log(`📩 Received JSON message from ${playerConnectionId}:`, message);
-
-                                        if (message.type === "peerConnectionStatus") {
-                                            console.log(
-                                                `📊 Received status update from ${playerConnectionId}:`,
-                                                message,
-                                            );
-                                            setPeersActualStatuses((prev) => {
-                                                const updated = prev
-                                                    ? [...prev]
-                                                    : new Array(game.maxPlayers).fill(undefined);
-                                                updated[i] = message as PeerConnectionStatusMessage;
-                                                return updated;
-                                            });
-                                        } else {
-                                            console.error(
-                                                `❌ Unknown JSON message type received from ${playerConnectionId}:`,
-                                                (message as PeerMessage).type,
-                                            );
-                                        }
-                                    } else {
-                                        console.error(
-                                            `❌ Unknown envelope type ${messageType} from ${playerConnectionId}`,
-                                        );
-                                    }
-                                } catch (error) {
-                                    console.error(`❌ Failed to parse data from ${playerConnectionId}:`, error);
-                                }
-                            } else {
-                                console.error(`❌ Unexpected short message from ${playerConnectionId}`);
-                            }
-                        } catch (error) {
-                            console.error(`❌ Failed to parse data from ${playerConnectionId}:`, error);
-                        }
+                        handleDataChannelMessage(data, playerConnectionId, i);
                     });
                 }
             }
@@ -246,9 +281,9 @@ export const usePeers = (
                 setPeerStatuses(undefined);
             }
         }
-    }, [game, connectionId, sendSignal, gameToken, onGameData]);
+    }, [game, connectionId, sendSignal, gameToken, onGameData, handleChannelMessage]);
 
-    const sendData = useCallback((playerIndex: number, data: Uint8Array): boolean => {
+    const sendData = useCallback((playerIndex: number, data: Uint8Array, reliable: boolean = true): boolean => {
         if (!peers.current) {
             console.warn(`❌ Cannot send data: peers not initialized`);
             return false;
@@ -265,12 +300,25 @@ export const usePeers = (
             return false;
         }
 
+        if (reliable) {
+            // Reliable channel is always available via SimplePeer default
+        } else {
+            if (peer.unreliableChannel?.readyState !== "open") {
+                console.warn(
+                    `❌ Cannot send data to player ${playerIndex}: unreliable channel not open (state: ${peer.unreliableChannel?.readyState}) (${peer.connectionId})`,
+                );
+                return false;
+            }
+        }
+
         try {
             const envelope = createEnvelope(MESSAGE_TYPES.BINARY, data);
-            peer.peer.send(envelope);
-            console.log(
-                `📤 Sent binary data to player ${playerIndex} (${data.length} bytes, ${envelope.length} total)`,
-            );
+
+            if (reliable) {
+                peer.peer.send(envelope);
+            } else {
+                peer.unreliableChannel!.send(new Uint8Array(envelope));
+            }
             return true;
         } catch (error) {
             console.error(`❌ Failed to send data to player ${playerIndex} (${peer.connectionId}):`, error);

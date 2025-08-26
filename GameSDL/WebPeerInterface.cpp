@@ -20,7 +20,7 @@ static std::queue<ReceivedMessage> g_messageQueue;
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 
-static bool SendPeerMessage(int clientId, const char* data, int length) {
+static bool SendPeerMessage(int clientId, const char* data, int length, bool reliable) {
     // Use EM_ASM to call JavaScript directly with binary data
     int result = EM_ASM_INT({
         // Create a new Uint8Array and copy the data
@@ -29,8 +29,8 @@ static bool SendPeerMessage(int clientId, const char* data, int length) {
             dataArray[i] = HEAPU8[$1 + i];
         }
         
-        return sendGameMessage($0, dataArray) ? 1 : 0;
-    }, clientId, data, length);
+        return sendGameMessage($0, dataArray, $3) ? 1 : 0;
+    }, clientId, data, length, reliable);
     
     return result != 0;
 }
@@ -150,7 +150,7 @@ bool WebPeerInterface::UDPSend(int pClient, MR_NetMessageBuffer* pMessage, bool 
     pMessage->mDatagramNumber = 0;
 
 #ifdef __EMSCRIPTEN__
-    return SendPeerMessage(pClient, reinterpret_cast<const char*>(pMessage), lToSend);
+    return SendPeerMessage(pClient, reinterpret_cast<const char*>(pMessage), lToSend, false);
 #else
     return false;
 #endif
