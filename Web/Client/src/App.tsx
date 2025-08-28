@@ -37,7 +37,7 @@ function App() {
         receiveGameData(playerId, binaryData);
     }, []);
 
-    const { peerStatuses, peersActualStatuses, sendData } = usePeers(
+    const { peerStatuses, peersActualStatuses, peerLatencies, sendData } = usePeers(
         connectionId,
         currentGame,
         eventSource,
@@ -130,6 +130,7 @@ function App() {
                                         currentConnectionId={connectionId}
                                         onUpdatePlayer={handleUpdatePlayer}
                                         peersActualStatuses={peersActualStatuses}
+                                        peerLatencies={peerLatencies}
                                     />
                                 )}
                             </Stack>

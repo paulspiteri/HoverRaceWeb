@@ -10,6 +10,11 @@ export interface GamePeer {
     unreliableChannel?: RTCDataChannel;
 }
 
+export interface PeerConnectionLatency {
+    connectionId: string;
+    latency: number;
+}
+
 // Utility function to access the internal RTCPeerConnection
 export const getPeerConnection = (peer: SimplePeer.Instance): RTCPeerConnection => {
     return (peer as object as { _pc: RTCPeerConnection })._pc;
@@ -25,7 +30,40 @@ export const usePeers = (
 ) => {
     const peers = useRef<(GamePeer | undefined)[] | undefined>(undefined);
     const [peerStatuses, setPeerStatuses] = useState<("connecting" | "connected" | "disconnected" | undefined)[]>();
-    const [peersActualStatuses, setPeersActualStatuses] = useState<PeerConnectionStatusMessage[]>(); // only used at the host
+    const [peersActualStatuses, setPeersActualStatuses] = useState<PeerConnectionStatusMessage[]>();
+    const [peerLatencies, setPeerLatencies] = useState<PeerConnectionLatency[]>();
+
+    const sendJsonMessage = useCallback((peer: GamePeer, message: PeerMessage, reliable: boolean = true): boolean => {
+        if (!peer.peer.connected) {
+            console.warn(`❌ Cannot send ${message.type}: peer not connected (${peer.connectionId})`);
+            return false;
+        }
+
+        if (reliable) {
+            // Reliable channel is always available via SimplePeer default
+        } else {
+            if (peer.unreliableChannel?.readyState !== "open") {
+                console.warn(
+                    `❌ Cannot send ${message.type} to ${peer.connectionId}: unreliable channel not open (state: ${peer.unreliableChannel?.readyState})`,
+                );
+                return false;
+            }
+        }
+
+        try {
+            const envelope = createJsonEnvelope(message);
+
+            if (reliable) {
+                peer.peer.send(envelope);
+            } else {
+                peer.unreliableChannel!.send(new Uint8Array(envelope));
+            }
+            return true;
+        } catch (error) {
+            console.error(`❌ Failed to send ${message.type} to ${peer.connectionId}:`, error);
+            return false;
+        }
+    }, []);
 
     // Send status update to HOST peer
     const sendStatusUpdateToHost = useCallback(() => {
@@ -34,7 +72,7 @@ export const usePeers = (
         }
 
         const hostPeer = peers.current?.find((p) => p?.connectionId === game.creatorConnectionId);
-        if (!hostPeer) {
+        if (!hostPeer || !hostPeer.peer.connected) {
             return;
         }
 
@@ -53,16 +91,8 @@ export const usePeers = (
             ),
         };
 
-        try {
-            if (hostPeer.peer.connected) {
-                const envelope = createJsonEnvelope(statusMessage);
-                hostPeer.peer.send(envelope);
-                console.log("📊 Sent status update to host (JSON envelope):", statusMessage);
-            }
-        } catch (error) {
-            console.error("❌ Failed to send status update to host:", error);
-        }
-    }, [connectionId, game, peerStatuses]);
+        sendJsonMessage(hostPeer, statusMessage);
+    }, [connectionId, game, peerStatuses, sendJsonMessage]);
 
     useEffect(() => sendStatusUpdateToHost(), [peerStatuses, sendStatusUpdateToHost]);
 
@@ -82,7 +112,7 @@ export const usePeers = (
                 try {
                     const { messageType, data: payload } = parseEnvelope(data);
 
-                    if (messageType === MESSAGE_TYPES.BINARY) {
+                    if (messageType === MESSAGE_TYPES.GAME_BINARY) {
                         onGameData(playerIndex, payload);
                     } else if (messageType === MESSAGE_TYPES.JSON) {
                         const message = JSON.parse(new TextDecoder().decode(payload)) as PeerMessage;
@@ -95,6 +125,33 @@ export const usePeers = (
                                     return updated;
                                 }
                             });
+                        } else if (message.type === "peerConnectionPing") {
+                            if (message.pingType === "ping") {
+                                console.log(`🏓 Received ping from ${playerConnectionId}:`, message);
+                                sendJsonMessage(
+                                    peers.current![playerIndex]!,
+                                    {
+                                        type: "peerConnectionPing",
+                                        pingType: "pong",
+                                        timestamp: message.timestamp,
+                                    },
+                                    false,
+                                );
+                            }
+                            if (message.pingType === "pong") {
+                                const latency = Date.now() - message.timestamp;
+                                console.log(`📶 Received pong from ${playerConnectionId}, latency: ${latency}ms`);
+                                setPeerLatencies((prev) => {
+                                    if (prev) {
+                                        const updated = [...prev];
+                                        updated[playerIndex] = {
+                                            connectionId: playerConnectionId,
+                                            latency: latency,
+                                        };
+                                        return updated;
+                                    }
+                                });
+                            }
                         } else {
                             console.error(
                                 `❌ Unknown JSON message type received from ${playerConnectionId}:`,
@@ -111,7 +168,7 @@ export const usePeers = (
                 console.error(`❌ Unexpected short message from ${playerConnectionId}`);
             }
         },
-        [onGameData],
+        [onGameData, sendJsonMessage],
     );
 
     useEffect(() => {
@@ -139,20 +196,9 @@ export const usePeers = (
             if (!peers.current) {
                 peers.current = new Array<GamePeer | undefined>(game.maxPlayers);
             }
-
-            setPeerStatuses((prev) => {
-                if (!prev || prev.length !== game.maxPlayers) {
-                    return new Array(game.maxPlayers).fill(undefined);
-                }
-                return prev;
-            });
-
-            setPeersActualStatuses((prev) => {
-                if (!prev || prev.length !== game.maxPlayers) {
-                    return new Array(game.maxPlayers).fill(undefined);
-                }
-                return prev;
-            });
+            setPeerStatuses((prev) => (!prev ? new Array(game.maxPlayers).fill(undefined) : prev));
+            setPeersActualStatuses((prev) => (!prev ? new Array(game.maxPlayers).fill(undefined) : prev));
+            setPeerLatencies((prev) => (!prev ? new Array(game.maxPlayers).fill(undefined) : prev));
 
             for (let i = 0; i < game.maxPlayers; i++) {
                 if (i === myPlayerIndex) {
@@ -201,15 +247,21 @@ export const usePeers = (
                     const updatePeerStatus = (status: "connected" | "disconnected") => {
                         setPeerStatuses((prev) => {
                             const updated = [...(prev || [])];
-                            // Find the current index of this peer (don't rely on closure)
-                            const currentIndex = peers.current?.findIndex(
-                                (p) => p?.connectionId === playerConnectionId,
-                            );
-                            if (currentIndex !== undefined && currentIndex >= 0) {
-                                updated[currentIndex] = status;
-                            }
+                            updated[i] = status;
                             return updated;
                         });
+
+                        if (status === "connected") {
+                            sendJsonMessage(
+                                peers.current![i]!,
+                                {
+                                    type: "peerConnectionPing",
+                                    pingType: "ping",
+                                    timestamp: Date.now(),
+                                },
+                                false,
+                            );
+                        }
                     };
 
                     const handleDataChannelMessage = (
@@ -234,8 +286,7 @@ export const usePeers = (
 
                             newPeer.unreliableChannel.onmessage = (event) =>
                                 handleDataChannelMessage(event.data, playerConnectionId, i);
-
-                            updatePeerStatus("connected");
+                            newPeer.unreliableChannel.onopen = () => updatePeerStatus("connected");
                         } else {
                             pc.ondatachannel = (event) => {
                                 const channel = event.channel;
@@ -248,7 +299,7 @@ export const usePeers = (
                                 channel.onmessage = (event) =>
                                     handleDataChannelMessage(event.data, playerConnectionId, i);
 
-                                updatePeerStatus("connected");
+                                channel.onopen = () => updatePeerStatus("connected");
                             };
                         }
                     });
@@ -279,9 +330,11 @@ export const usePeers = (
                 }
                 peers.current = undefined;
                 setPeerStatuses(undefined);
+                setPeersActualStatuses(undefined);
+                setPeerLatencies(undefined);
             }
         }
-    }, [game, connectionId, sendSignal, gameToken, onGameData, handleChannelMessage]);
+    }, [game, connectionId, sendSignal, gameToken, onGameData, handleChannelMessage, sendJsonMessage]);
 
     const sendData = useCallback((playerIndex: number, data: Uint8Array, reliable: boolean = true): boolean => {
         if (!peers.current) {
@@ -312,7 +365,7 @@ export const usePeers = (
         }
 
         try {
-            const envelope = createEnvelope(MESSAGE_TYPES.BINARY, data);
+            const envelope = createEnvelope(MESSAGE_TYPES.GAME_BINARY, data);
 
             if (reliable) {
                 peer.peer.send(envelope);
@@ -329,6 +382,7 @@ export const usePeers = (
     return {
         peerStatuses,
         peersActualStatuses,
+        peerLatencies,
         sendData,
     };
 };

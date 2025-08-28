@@ -1,26 +1,25 @@
 import * as React from "react";
 import type { JoinedGame } from "./types";
 import type { PeerConnectionStatusMessage } from "@/peerTypes.ts";
+import type { PeerConnectionLatency } from "@/usePeers.ts";
 import { useMemo } from "react";
 import { Title, Stack, Group, Text, Badge, Box, Avatar, Flex } from "@mantine/core";
-
-interface PlayerListProps {
-    gamePlayers: JoinedGame["players"];
-    creatorConnectionId: string;
-    peerStatuses: ("connecting" | "connected" | "disconnected" | undefined)[] | undefined;
-    currentConnectionId: string | undefined;
-    peersActualStatuses?: (PeerConnectionStatusMessage | undefined)[];
-    isHost?: boolean;
-}
 
 interface ConnectionStatusProps {
     player: { connectionId: string };
     index: number;
     peerStatuses: PlayerListProps["peerStatuses"];
     currentConnectionId: string | undefined;
+    peerLatencies?: (PeerConnectionLatency | undefined)[];
 }
 
-const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ player, index, peerStatuses, currentConnectionId }) => {
+const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
+    player,
+    index,
+    peerStatuses,
+    currentConnectionId,
+    peerLatencies,
+}) => {
     if (player.connectionId === currentConnectionId) {
         return (
             <Group gap="xs">
@@ -35,12 +34,14 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ player, index, peer
     const status = peerStatuses?.[index] || "disconnected";
     const statusColor = status === "connected" ? "green" : status === "connecting" ? "yellow" : "red";
     const statusText = status === "connected" ? "Connected" : status === "connecting" ? "Connecting" : "Disconnected";
+    const latency = peerLatencies?.[index]?.latency;
 
     return (
         <Group gap="xs">
             <Box w={8} h={8} bg={statusColor} style={{ borderRadius: "50%" }} />
             <Text size="sm" c="dimmed">
                 {statusText}
+                {status === "connected" && latency && ` • ${latency}ms`}
             </Text>
         </Group>
     );
@@ -78,12 +79,23 @@ const MeshStatus: React.FC<MeshStatusProps> = ({ index, gamePlayers, peerStatus 
     );
 };
 
+interface PlayerListProps {
+    gamePlayers: JoinedGame["players"];
+    creatorConnectionId: string;
+    peerStatuses: ("connecting" | "connected" | "disconnected" | undefined)[] | undefined;
+    currentConnectionId: string | undefined;
+    peersActualStatuses?: (PeerConnectionStatusMessage | undefined)[];
+    peerLatencies?: (PeerConnectionLatency | undefined)[];
+    isHost?: boolean;
+}
+
 export const PlayerList: React.FC<PlayerListProps> = ({
     gamePlayers,
     creatorConnectionId,
     peerStatuses,
     currentConnectionId,
     peersActualStatuses,
+    peerLatencies,
     isHost = false,
 }) => {
     return (
@@ -154,6 +166,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                                             index={index}
                                             peerStatuses={peerStatuses}
                                             currentConnectionId={currentConnectionId}
+                                            peerLatencies={peerLatencies}
                                         />
 
                                         {/* Overall connection status (host only) */}

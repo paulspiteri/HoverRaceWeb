@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 import { PlayerList } from './PlayerList';
 import { PlayerNameInput } from './PlayerNameInput';
 import type { PeerConnectionStatusMessage } from '@/peerTypes.ts';
+import type { PeerConnectionLatency } from '@/usePeers.ts';
 
 interface ActiveGameProps {
   game: JoinedGame;
@@ -15,6 +16,7 @@ interface ActiveGameProps {
   currentConnectionId: string | undefined;
   onUpdatePlayer: (name: string) => Promise<void>;
   peersActualStatuses?: (PeerConnectionStatusMessage | undefined)[];
+  peerLatencies?: (PeerConnectionLatency | undefined)[];
 }
 
 export const ActiveGame: React.FC<ActiveGameProps> = ({
@@ -25,6 +27,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
   currentConnectionId,
   onUpdatePlayer,
   peersActualStatuses,
+  peerLatencies,
 }) => {
   // Get current player info and determine if creator (index 0)
   const currentPlayerIndex = game.players.findIndex((p) => p?.connectionId === currentConnectionId);
@@ -83,6 +86,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
             peerStatuses={peerStatuses}
             currentConnectionId={currentConnectionId}
             peersActualStatuses={peersActualStatuses}
+            peerLatencies={peerLatencies}
             isHost={isCreator}
           />
         </Box>

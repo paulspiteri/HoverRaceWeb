@@ -5,4 +5,10 @@ export interface PeerConnectionStatusMessage {
     peers: Record<ConnectionId, { isConnected: boolean }>;
 }
 
-export type PeerMessage = PeerConnectionStatusMessage;
+export interface PeerPingMessage {
+    type: "peerConnectionPing";
+    timestamp: number;
+    pingType: "ping" | "pong";
+}
+
+export type PeerMessage = PeerConnectionStatusMessage | PeerPingMessage;
