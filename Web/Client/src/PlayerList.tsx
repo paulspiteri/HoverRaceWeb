@@ -34,7 +34,7 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     const status = peerStatuses?.[index] || "disconnected";
     const statusColor = status === "connected" ? "green" : status === "connecting" ? "yellow" : "red";
     const statusText = status === "connected" ? "Connected" : status === "connecting" ? "Connecting" : "Disconnected";
-    const latency = peerLatencies?.[index]?.latency;
+    const latency = peerLatencies?.[index]?.averageLatency;
 
     return (
         <Group gap="xs">
