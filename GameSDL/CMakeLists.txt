@@ -17,7 +17,7 @@ if(EMSCRIPTEN)
         OUTPUT_NAME "hoverrace"
         SUFFIX ".js"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/Web/Client/public"
-        LINK_FLAGS "-s MIN_WEBGL_VERSION=2 -s USE_WEBGL2=1 -sASSERTIONS -s EXPORTED_FUNCTIONS=['_main','_ChangeWindowSize','_ChangeToTrack','_ReceivePeerMessage','_SetPlayerId','_malloc','_free'] -s EXPORTED_RUNTIME_METHODS=['ccall','HEAPU8']")
+        LINK_FLAGS "-s MIN_WEBGL_VERSION=2 -s USE_WEBGL2=1 -sASSERTIONS -s EXPORTED_FUNCTIONS=['_main','_ChangeWindowSize','_ReceivePeerMessage','_SetPlayerId','_SetPeerStatus','_malloc','_free'] -s EXPORTED_RUNTIME_METHODS=['ccall','HEAPU8']")
     target_link_options(GameSDL PRIVATE
     "--shell-file=${CMAKE_SOURCE_DIR}/Emscripten/Hover.html"
     "--preload-file=${CMAKE_SOURCE_DIR}/Assets/ObjFac1.dat@ObjFac1.dat"

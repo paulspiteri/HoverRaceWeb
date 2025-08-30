@@ -106,7 +106,7 @@ class MR_NetworkSession: public MR_ClientSession
 
    public:
       // Creation and destruction
-      MR_NetworkSession(int playerId);
+      MR_NetworkSession(int playerId, std::array<PeerStatus, WebPeerInterface::eMaxClient> peers);
       ~MR_NetworkSession();
 
       // Simulation control

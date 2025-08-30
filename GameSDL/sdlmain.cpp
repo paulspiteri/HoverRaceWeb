@@ -9,6 +9,7 @@
 #include <filesystem>
 
 #include "backends/imgui_impl_sdl3.h"
+#include "WebPeerInterface.h"
 
 SDL_Window *sdlWindow = nullptr;
 SDL_Renderer *renderer = nullptr;
@@ -19,18 +20,9 @@ MR_SDLGameApp *game = nullptr;
 int lControlState = 0;
 int gPlayerId = 0;
 
-extern "C" {
-    void ChangeToTrack(const char *trackFile) {
-        printf("ChangeToTrack: %s\n", trackFile);
-        if (game != nullptr) {
-            game->Clean();
-            game->LoadSelectedTrack(trackFile, gPlayerId);
-            int width, height;
-            SDL_GetWindowSize(glWindow, &width, &height);
-            game->SetOpenGLResolution(width, height);
-        }
-    }
+std::array<PeerStatus, WebPeerInterface::eMaxClient> gPeerStatus; // load here default values before game starts
 
+extern "C" {
     void ChangeWindowSize(const int width, const int height) {
         std::cout << "ChangeWindowSize " << width << "x" << height << std::endl;
         SDL_SetWindowSize(glWindow, width, height);
@@ -40,7 +32,16 @@ extern "C" {
         printf("SetPlayerId: %d\n", playerId);
         gPlayerId = playerId;
     }
+
+    void SetPeerStatus(int playerId, bool isConnected, int minLatency, int avgLatency) {
+        gPeerStatus.at(playerId).isConnected = isConnected;
+        gPeerStatus.at(playerId).minLatency = minLatency;
+        gPeerStatus.at(playerId).avgLatency = avgLatency;
+        printf("SetPeerStatus: Player %d - Connected: %s, MinLatency: %d, AvgLatency: %d\n",
+               playerId, isConnected ? "true" : "false", minLatency, avgLatency);
+    }
 }
+
 std::optional<std::string> GetTrack() {
     std::string defaultTrackFile = "Steeplechase.trk";
     if (std::filesystem::exists(defaultTrackFile)) {
@@ -67,22 +68,6 @@ std::optional<std::string> GetTrack() {
 }
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
-    int playerNumber = 0;
-
-    for (int i = 1; i < argc; i++) {
-        std::string arg = argv[i];
-        if (arg.find("--player=") == 0) {
-            std::string playerStr = arg.substr(9); // Skip "--player="
-            try {
-                playerNumber = std::stoi(playerStr);
-                std::cout << "Player number set to: " << playerNumber << std::endl;
-            } catch (const std::exception& e) {
-                SDL_Log("Invalid player number: %s", playerStr.c_str());
-                return SDL_APP_FAILURE;
-            }
-        }
-    }
-
     MR_SoundServer::Init();
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
@@ -141,9 +126,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     {
         return SDL_APP_FAILURE;
     }
-    game->SetNetworkMode(playerNumber == 0);
     ASSERT(gPlayerId >= 0);
-    game->LoadSelectedTrack(track.value().c_str(), gPlayerId);
+    game->LoadSelectedTrack(track.value().c_str(), gPlayerId, gPeerStatus);
     ImGui_ImplSDL3_InitForOther(glWindow);
     return SDL_APP_CONTINUE;
 

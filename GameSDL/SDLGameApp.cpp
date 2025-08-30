@@ -87,11 +87,6 @@ BOOL MR_SDLGameApp::InitGame()
    return lReturnValue;
 }
 
-void MR_SDLGameApp::SetNetworkMode(bool isHost)
-{
-   mIsHost = isHost;
-}
-
 void MR_SDLGameApp::Simulate()
 {
    if (mCurrentSession != nullptr) 
@@ -176,7 +171,7 @@ void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
    }
 }
 
-void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId)
+void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, std::array<PeerStatus, WebPeerInterface::eMaxClient> peers)
 {
    BOOL lSuccess = TRUE;
 
@@ -194,7 +189,7 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId)
       mObserver1 = MR_Observer::New();
 
       // Create the new session
-      MR_NetworkSession* lCurrentSession = new MR_NetworkSession(playerId);
+      MR_NetworkSession* lCurrentSession = new MR_NetworkSession(playerId, peers);
       std::cout << "NetworkSession created " << std::endl;
 
       const char* trackTitle;

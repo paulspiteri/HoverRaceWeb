@@ -5,6 +5,7 @@
 #include <SDL3/SDL.h>
 
 #include "GLLevelLoader.h"
+#include "WebPeerInterface.h"
 #include "../VideoServices/GL/GLRenderer.h"
 
 class MR_SDLGameApp
@@ -36,8 +37,7 @@ class MR_SDLGameApp
 
       void Clean();
       BOOL InitGame();
-      void SetNetworkMode(bool isHost);
-      void LoadSelectedTrack(const char* trackFile, int playerId);
+      void LoadSelectedTrack(const char* trackFile, int playerId, std::array<PeerStatus, WebPeerInterface::eMaxClient> peers);
       void SetVideoMode(int width, int height);
       void RefreshView(SDL_Texture* texture);
       void Simulate();

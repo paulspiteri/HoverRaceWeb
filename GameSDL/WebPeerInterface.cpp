@@ -44,13 +44,14 @@ extern "C" void ReceivePeerMessage(int playerId, const char* data, int length) {
 
 #endif
 
-WebPeerInterface::WebPeerInterface(int playerId)
+WebPeerInterface::WebPeerInterface(int playerId, std::array<PeerStatus, eMaxClient> peers)
 {
     ASSERT(MR_NET_HEADER_LEN == 3);
 
     mPlayer = "Unknown Player!";
     mId = playerId;
     mIsConnected = true;    //                      I SET TO TRUE BY DEFAULT
+    mPeers = peers;
     // mServerMode       = FALSE;
     // mServerPort       = 0;
     //
@@ -78,29 +79,15 @@ const char* WebPeerInterface::GetPlayerName() const
     return mPlayer.c_str();
 }
 
-bool WebPeerInterface::MasterConnect(const char* pGameName, bool pPromptForPort, unsigned pDefaultPort, int pReturnMessage)
-{
-  return true;
-}
-
-bool WebPeerInterface::SlavePreConnect(std::string& pGameName)
-{
-    return false;
-}
-
-bool WebPeerInterface::SlaveConnect(const char* pServerIP, unsigned pPort, const char* pGameName, int pReturnMessage)
-{
-  return true;
-}
-
 void WebPeerInterface::Disconnect()
 {
     mIsConnected = false;
+    std::ranges::for_each(mPeers, [](auto& peer) { peer.isConnected = false; });
 }
 
 int WebPeerInterface::GetClientCount() const
 {
-    return mIsConnected ? 1 : 0;
+    return std::ranges::count_if(mPeers, [](const auto& peer) { return peer.isConnected; });
 }
 
 int WebPeerInterface::GetId() const
@@ -112,34 +99,25 @@ int WebPeerInterface::GetId() const
 
 int WebPeerInterface::GetLagFromServer() const
 {
-    return 0;
+    return mPeers[0].minLatency / 2;
 }
 
 int WebPeerInterface::GetAvgLag(int pClient) const
 {
-    return 0;
+    return mPeers[pClient].avgLatency / 2;
 }
 
 int WebPeerInterface::GetMinLag(int pClient) const
 {
-    return 0;
+    return mPeers[pClient].minLatency / 2;
 }
 
 bool WebPeerInterface::UDPSend(int pClient, MR_NetMessageBuffer* pMessage, bool pLongPort, bool pResendLast)
 {
-    if (!mIsConnected)
+    if (!mPeers[pClient].isConnected)
     {
         return false;
     }
-
-    // if (mId == 0 && pClient != 1)
-    // {
-    //     return false;
-    // }
-    // if (mId == 1 && pClient != 0)
-    // {
-    //     return false;
-    // }
 
     // Calculate total message size
     int lToSend = MR_NET_HEADER_LEN + pMessage->mDataLen;
@@ -208,7 +186,7 @@ const char* WebPeerInterface::GetPlayerName(int pIndex) const
     {
         if (pIndex < eMaxClient)
         {
-            lReturnValue = mClientName[pIndex].c_str();
+            lReturnValue = mPeers[pIndex].name.c_str();
         }
     }
     return lReturnValue;
@@ -216,5 +194,5 @@ const char* WebPeerInterface::GetPlayerName(int pIndex) const
 
 bool WebPeerInterface::IsConnected(int pIndex) const
 {
-    return true; // needs fixing
+    return mPeers.at(pIndex).isConnected;
 }

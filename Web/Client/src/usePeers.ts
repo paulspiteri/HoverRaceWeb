@@ -14,6 +14,7 @@ export interface PeerConnectionLatency {
     connectionId: string;
     latencies: number[];
     averageLatency: number;
+    minimumLatency: number;
 }
 
 // Utility function to access the internal RTCPeerConnection
@@ -99,12 +100,13 @@ export const usePeers = (
 
     useEffect(() => sendStatusUpdateToHost(), [peerStatuses, sendStatusUpdateToHost]);
 
+    const gameStatus = game?.status;
     useEffect(() => {
-        if (!game) return;
+        if (!peerStatuses || gameStatus !== "waiting") return;
 
         const tmr = setInterval(() => {
             if (!peers.current) return;
-
+            let anyNeedsPing = false;
             for (let i = 0; i < peers.current.length; i++) {
                 const peer = peers.current[i];
                 if (!peer || !peer.peer.connected) continue;
@@ -112,6 +114,7 @@ export const usePeers = (
                 const latencyData = peerLatencies?.[i];
                 const needsPing = !latencyData || latencyData.latencies.length < LATENCY_MEASUREMENT_COUNT;
                 if (needsPing) {
+                    anyNeedsPing = true;
                     console.log(`🏓 Sending scheduled ping to player ${i} (${peer.connectionId})`);
                     sendJsonMessage(
                         peer,
@@ -124,10 +127,13 @@ export const usePeers = (
                     );
                 }
             }
+            if (!anyNeedsPing) {
+                clearInterval(tmr);
+            }
         }, 1000);
 
         return () => clearInterval(tmr);
-    }, [peers, game, peerLatencies, sendJsonMessage]);
+    }, [peerStatuses, peerLatencies, sendJsonMessage, gameStatus]);
 
     const onSignalReceived = useCallback((signal: SignalMessage) => {
         console.log(`📡 Received signal from ${signal.fromConnectionId}`);
@@ -182,11 +188,13 @@ export const usePeers = (
                                         const averageLatency = Math.round(
                                             newLatencies.reduce((a, b) => a + b, 0) / newLatencies.length,
                                         );
+                                        const minimumLatency = Math.min(...newLatencies);
 
                                         updated[playerIndex] = {
                                             connectionId: playerConnectionId,
                                             latencies: newLatencies,
                                             averageLatency: averageLatency,
+                                            minimumLatency: minimumLatency,
                                         };
                                         return updated;
                                     }
@@ -267,7 +275,7 @@ export const usePeers = (
 
                     const newPeer: GamePeer = {
                         connectionId: playerConnectionId,
-                        peer: new SimplePeer({ initiator: isInitiator, trickle: false }),
+                        peer: new SimplePeer({ initiator: isInitiator, trickle: true }),
                     };
                     peers.current[i] = newPeer;
 

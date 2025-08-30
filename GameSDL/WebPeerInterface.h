@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <string>
 
 #include "../Util/MR_Types.h"
@@ -24,6 +25,15 @@ public:
 
 #define MR_NET_HEADER_LEN  (sizeof( MR_NetMessageBuffer )-MR_MAX_NET_MESSAGE_LEN)
 
+struct PeerStatus {
+    bool isConnected;
+    int minLatency;
+    int avgLatency;
+    std::string name;
+
+    PeerStatus() : isConnected(false), minLatency(0), avgLatency(0), name("Unknown Player") {}
+};
+
 class WebPeerInterface
 {
 public:
@@ -35,19 +45,15 @@ public:
 private:
     std::string  mPlayer;
     int          mId;
-    std::string  mClientName[ eMaxClient ];
     bool         mIsConnected;
-    
+    std::array<PeerStatus, eMaxClient> mPeers;
+
 public:
-    WebPeerInterface(int playerId);
+    WebPeerInterface(int playerId, std::array<PeerStatus, eMaxClient> peers);
     ~WebPeerInterface();
 
     void  SetPlayerName( const char* pPlayerName );
     const char* GetPlayerName()const;
-
-    bool MasterConnect( const char* pGameName, bool pPromptForPort = true, unsigned pDefaultPort = MR_DEFAULT_NET_PORT, int pReturnMessage = 0);
-    bool SlavePreConnect( std::string& pGameName );
-    bool SlaveConnect( const char* pServerIP=nullptr, unsigned pPort = MR_DEFAULT_NET_PORT, const char* pGameName = nullptr, int pReturnMessage = 0 );
 
     void Disconnect();
 

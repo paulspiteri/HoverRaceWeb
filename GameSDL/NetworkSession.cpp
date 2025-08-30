@@ -58,8 +58,8 @@ uint32_t timeGetTime() {
    return static_cast<uint32_t>(elapsed.count());
 }
 
-MR_NetworkSession::MR_NetworkSession(int playerId)
-                  :MR_ClientSession(), mNetInterface(playerId)
+MR_NetworkSession::MR_NetworkSession(int playerId,  std::array<PeerStatus, WebPeerInterface::eMaxClient> peers)
+                  :MR_ClientSession(), mNetInterface(playerId, peers)
 {
    mMasterMode   = FALSE;
 
@@ -589,20 +589,21 @@ BOOL MR_NetworkSession::WaitConnections( const char* pTrackName, BOOL pPromptFor
    mSended12SecClockUpdate = FALSE;
    mSended8SecClockUpdate = FALSE;
 
-   return mNetInterface.MasterConnect( pTrackName, pPromptForPort, pDefaultPort, pReturnMessage );
+   return TRUE;
 }
 
 BOOL MR_NetworkSession::PreConnectToServer( std::string& pTrackName )
 {  
    mMasterMode = FALSE;
-   return mNetInterface.SlavePreConnect( pTrackName );
+
+   return TRUE;
 }
 
 BOOL MR_NetworkSession::ConnectToServer( const char* pServerIP, unsigned pPort, const char* pGameName, int pReturnMessage )
 {  
    mMasterMode = FALSE;
 
-   return mNetInterface.SlaveConnect( pServerIP, pPort, pGameName, pReturnMessage );
+   return TRUE;
 }
 
 void MR_NetworkSession::SetSimulationTime( MR_SimulationTime pTime )

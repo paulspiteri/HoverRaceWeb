@@ -73,13 +73,30 @@ function App() {
         }
     };
 
+    const isGamePlaying = currentGame?.status === "playing" && playerIndex !== undefined;
     useEffect(() => {
         {
-            if (currentGame?.status === "playing" && playerIndex !== undefined) {
+            if (isGamePlaying) {
+                peerStatuses?.forEach((x, idx) => {
+                    const latencies = peerLatencies?.[idx];
+                    setPlayerStatus(
+                        idx,
+                        x === "connected",
+                        latencies?.minimumLatency ?? 0,
+                        latencies?.averageLatency ?? 0,
+                    );
+                });
+            }
+        }
+    }, [peerStatuses, peerLatencies, isGamePlaying]);
+
+    useEffect(() => {
+        {
+            if (isGamePlaying) {
                 startGame(playerIndex);
             }
         }
-    }, [currentGame?.status, playerIndex]);
+    }, [isGamePlaying, playerIndex]);
 
     return (
         <Container fluid h="100vh" style={{ overflow: "hidden" }} p={0}>
