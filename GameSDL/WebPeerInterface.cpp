@@ -50,7 +50,6 @@ WebPeerInterface::WebPeerInterface(int playerId, std::array<PeerStatus, eMaxClie
 
     mPlayer = "Unknown Player!";
     mId = playerId;
-    mIsConnected = true;    //                      I SET TO TRUE BY DEFAULT
     mPeers = peers;
     // mServerMode       = FALSE;
     // mServerPort       = 0;
@@ -81,7 +80,6 @@ const char* WebPeerInterface::GetPlayerName() const
 
 void WebPeerInterface::Disconnect()
 {
-    mIsConnected = false;
     std::ranges::for_each(mPeers, [](auto& peer) { peer.isConnected = false; });
 }
 
@@ -99,6 +97,7 @@ int WebPeerInterface::GetId() const
 
 int WebPeerInterface::GetLagFromServer() const
 {
+    std::cout << "GetLagFromServer " << mPeers[0].minLatency << "ms" << std::endl;
     return mPeers[0].minLatency / 2;
 }
 
@@ -116,7 +115,7 @@ bool WebPeerInterface::UDPSend(int pClient, MR_NetMessageBuffer* pMessage, bool 
 {
     if (!mPeers[pClient].isConnected)
     {
-        return false;
+        return true;    // false means buffer full in the old world
     }
 
     // Calculate total message size
@@ -128,10 +127,9 @@ bool WebPeerInterface::UDPSend(int pClient, MR_NetMessageBuffer* pMessage, bool 
     pMessage->mDatagramNumber = 0;
 
 #ifdef __EMSCRIPTEN__
-    return SendPeerMessage(pClient, reinterpret_cast<const char*>(pMessage), lToSend, false);
-#else
-    return false;
+    SendPeerMessage(pClient, reinterpret_cast<const char*>(pMessage), lToSend, false);
 #endif
+    return true;
 }
 
 bool WebPeerInterface::BroadcastMessage(MR_NetMessageBuffer* pMessage, int pReqLevel)

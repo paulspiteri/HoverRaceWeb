@@ -45,7 +45,6 @@ public:
 private:
     std::string  mPlayer;
     int          mId;
-    bool         mIsConnected;
     std::array<PeerStatus, eMaxClient> mPeers;
 
 public:

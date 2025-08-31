@@ -120,9 +120,6 @@ class MR_NetworkSession: public MR_ClientSession
 
       void        SetPlayerName( const char* pPlayerName );
       const char* GetPlayerName()const;
-      BOOL WaitConnections(const char* pTrackName, BOOL pPromptForPort = TRUE, unsigned pDefaultPort = MR_DEFAULT_NET_PORT, int pReturnMessage = 0 );
-      BOOL PreConnectToServer(std::string& pTrackName );
-      BOOL ConnectToServer(const char* pServerIP=NULL, unsigned pPort = MR_DEFAULT_NET_PORT, const char* pGameName = NULL, int pReturnMessage = 0 );
 
       int   ResultAvaillable()const; // Return the number of players desc avail
       void  GetResult( int pPosition, const char*& pPlayerName, int& pId, BOOL& pConnected, int& pNbLap, MR_SimulationTime& pFinishTime, MR_SimulationTime& pBestLap )const;

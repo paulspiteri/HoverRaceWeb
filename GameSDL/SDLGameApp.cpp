@@ -214,7 +214,7 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, std::
          mGLLevelLoader->LoadLevel(level, lCurrentSession->GetBackImage());
          auto levelSize = mGLLevelLoader->GetLevelSize(level);
          mObserver1->SetMapSize(levelSize);
-         lCurrentSession->SetSimulationTime( -10000 );
+         lCurrentSession->SetSimulationTime( -13000 );
       }
 
       // Create the main character

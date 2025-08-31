@@ -61,7 +61,10 @@ uint32_t timeGetTime() {
 MR_NetworkSession::MR_NetworkSession(int playerId,  std::array<PeerStatus, WebPeerInterface::eMaxClient> peers)
                   :MR_ClientSession(), mNetInterface(playerId, peers)
 {
-   mMasterMode   = FALSE;
+   mMasterMode = playerId == 0;
+   mSended12SecClockUpdate = FALSE;
+   mSended8SecClockUpdate = FALSE;
+
 
    for( int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
@@ -269,7 +272,7 @@ void MR_NetworkSession::ReadNet( )
             {
                MR_SimulationTime lNewTime = *(MR_Int32* )&(lMessage[0]);
                // lNewTime += mNetInterface.GetAvgLag( lClientId ); Done by SetSimulationTime
- 
+               std::cout << "Set time " << lNewTime << std::endl;
                mSession.SetSimulationTime( lNewTime );
             }
             break;
@@ -331,7 +334,6 @@ void MR_NetworkSession::ReadNet( )
                if( lLastCollisionAge < (mNetInterface.GetAvgLag( lClientId )+40) )
                {
                   // Drop this message
-                  std::cout << "Drop message " << lLastCollisionAge << std::endl;
                }
                else
                {
@@ -580,30 +582,6 @@ void MR_NetworkSession::SetPlayerName( const char* pPlayerName )
 const char* MR_NetworkSession::GetPlayerName()const
 {
    return mNetInterface.GetPlayerName();
-}
-
-
-BOOL MR_NetworkSession::WaitConnections( const char* pTrackName, BOOL pPromptForPort, unsigned pDefaultPort, int pReturnMessage )
-{
-   mMasterMode = TRUE;
-   mSended12SecClockUpdate = FALSE;
-   mSended8SecClockUpdate = FALSE;
-
-   return TRUE;
-}
-
-BOOL MR_NetworkSession::PreConnectToServer( std::string& pTrackName )
-{  
-   mMasterMode = FALSE;
-
-   return TRUE;
-}
-
-BOOL MR_NetworkSession::ConnectToServer( const char* pServerIP, unsigned pPort, const char* pGameName, int pReturnMessage )
-{  
-   mMasterMode = FALSE;
-
-   return TRUE;
 }
 
 void MR_NetworkSession::SetSimulationTime( MR_SimulationTime pTime )
@@ -881,17 +859,8 @@ void MR_NetworkSession::BroadcastTime( )
 
    for( int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
-      if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE, FALSE ) )
-      {
-         TRACE( "SendUDPTime:%d\n", lCounter );
-      }
-      else
-      {
-       //  TRACE( "Buffer FullTime:%d\n", lCounter );
-      }
+      mNetInterface.UDPSend( lCounter, &lMessage, TRUE, FALSE );
    }
-
-
 }
 
 
