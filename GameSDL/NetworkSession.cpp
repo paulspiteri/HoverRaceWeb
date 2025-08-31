@@ -203,6 +203,10 @@ const MR_MainCharacter* MR_NetworkSession::GetPlayer( int pPlayerIndex )const
    return lReturnValue;
 }
 
+void MR_NetworkSession::DisconnectPlayer(int pPlayerIndex)
+{
+   mNetInterface.DisconnectPlayer(pPlayerIndex);
+}
 
 int MR_NetworkSession::GetRank( const MR_MainCharacter* /*pPlayer*/ )const
 {

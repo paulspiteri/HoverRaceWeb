@@ -83,6 +83,11 @@ void WebPeerInterface::Disconnect()
     std::ranges::for_each(mPeers, [](auto& peer) { peer.isConnected = false; });
 }
 
+void WebPeerInterface::DisconnectPlayer(int pIndex)
+{
+    mPeers[pIndex].isConnected = false;
+}
+
 int WebPeerInterface::GetClientCount() const
 {
     return std::ranges::count_if(mPeers, [](const auto& peer) { return peer.isConnected; });

@@ -55,6 +55,7 @@ public:
     const char* GetPlayerName()const;
 
     void Disconnect();
+    void DisconnectPlayer(int pIndex);
 
     int  GetClientCount()const;
     int  GetId()const;

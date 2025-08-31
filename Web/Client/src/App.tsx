@@ -37,6 +37,8 @@ function App() {
         receiveGameData(playerId, binaryData);
     }, []);
 
+    const onGamePlayerDisconnected = useCallback((playerId: number) => void setPlayerStatus(playerId, false, 0, 0), []);
+
     const { peerStatuses, peersActualStatuses, peerLatencies, sendData } = usePeers(
         connectionId,
         currentGame,
@@ -44,6 +46,7 @@ function App() {
         commands.sendSignal,
         activeGame?.token,
         onGameData,
+        onGamePlayerDisconnected,
     );
 
     useEffect(() => void (global.sendGameMessage = sendData), [sendData]);

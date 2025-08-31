@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Observer.h"
-#include "ClientSession.h"
 #include <SDL3/SDL.h>
 
 #include "GLLevelLoader.h"
+#include "NetworkSession.h"
 #include "WebPeerInterface.h"
 #include "../VideoServices/GL/GLRenderer.h"
 
@@ -19,7 +19,7 @@ class MR_SDLGameApp
       GLRenderer*              mGLRenderer;
       GLLevelLoader*           mGLLevelLoader;
       MR_Observer*             mObserver1;
-      MR_ClientSession*        mCurrentSession;
+      MR_NetworkSession*        mCurrentSession;
 
       int                      mClrScrTodo;
 
@@ -44,4 +44,5 @@ class MR_SDLGameApp
       void SetControlState(int pState1);
       void SetResolution(int width, int height);
       void SetOpenGLResolution(int width, int height);
+      void DisconnectPlayer(int playerId);
 };

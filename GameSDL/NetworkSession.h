@@ -132,6 +132,7 @@ class MR_NetworkSession: public MR_ClientSession
       void GetCurrentMessage( char* pDest );
 
       const MR_MainCharacter* GetPlayer( int pPlayerIndex )const;
+      void DisconnectPlayer(int pPlayerIndex);
 
 };
 

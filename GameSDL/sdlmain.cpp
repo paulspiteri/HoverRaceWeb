@@ -34,12 +34,19 @@ extern "C" {
     }
 
     void SetPeerStatus(int playerId, bool isConnected, int minLatency, int avgLatency) {
-        gPeerStatus.at(playerId).isConnected = isConnected;
-        gPeerStatus.at(playerId).minLatency = minLatency;
-        gPeerStatus.at(playerId).avgLatency = avgLatency;
-        if (isConnected)
+        if (game == nullptr)
         {
-            printf("SetPeerStatus: Player %d - MinLatency: %d, AvgLatency: %d", playerId, minLatency, avgLatency);
+            gPeerStatus.at(playerId).isConnected = isConnected;
+            gPeerStatus.at(playerId).minLatency = minLatency;
+            gPeerStatus.at(playerId).avgLatency = avgLatency;
+            if (isConnected)
+            {
+                printf("SetPeerStatus: Player %d - MinLatency: %d, AvgLatency: %d", playerId, minLatency, avgLatency);
+            }
+        }
+        else
+        {
+            game->DisconnectPlayer(playerId);
         }
     }
 }

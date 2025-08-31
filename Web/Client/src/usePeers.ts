@@ -31,6 +31,7 @@ export const usePeers = (
     sendSignal: (gameId: string, targetConnectionId: string, gameToken: string, signalData: string) => Promise<void>,
     gameToken: string | undefined,
     onGameData: (playerIndex: number, data: unknown) => void,
+    onGamePlayerPeerDisconnect: (playerIndex: number) => void,
 ) => {
     const peers = useRef<(GamePeer | undefined)[] | undefined>(undefined);
     const [peerStatuses, setPeerStatuses] = useState<("connecting" | "connected" | "disconnected" | undefined)[]>();
@@ -298,6 +299,10 @@ export const usePeers = (
                             updated[i] = status;
                             return updated;
                         });
+
+                        if (status === "disconnected" && game.status === "playing") {
+                            onGamePlayerPeerDisconnect(i);
+                        }
                     };
 
                     const handleDataChannelMessage = (
@@ -370,7 +375,16 @@ export const usePeers = (
                 setPeerLatencies(undefined);
             }
         }
-    }, [game, connectionId, sendSignal, gameToken, onGameData, handleChannelMessage, sendJsonMessage]);
+    }, [
+        game,
+        connectionId,
+        sendSignal,
+        gameToken,
+        onGameData,
+        handleChannelMessage,
+        sendJsonMessage,
+        onGamePlayerPeerDisconnect,
+    ]);
 
     const sendData = useCallback((playerIndex: number, data: Uint8Array, reliable: boolean = true): boolean => {
         if (!peers.current) {
