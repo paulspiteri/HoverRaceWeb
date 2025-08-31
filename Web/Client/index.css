@@ -76,3 +76,7 @@ canvas.emscripten {
         right: 15px;
     }
 }
+
+.game-tile-hover:hover {
+    border-color: var(--mantine-color-blue-3) !important;
+}

@@ -1,13 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Game, ServerMessage } from "@/types.ts";
 import { createCommands } from "@/commands.ts";
-import type { ActiveGame } from "@/App.tsx";
-import * as React from "react";
 
-export const useGameData = (
-    baseUrl: string,
-    setActiveGame: React.Dispatch<React.SetStateAction<ActiveGame | undefined>>,
-) => {
+export const useGameData = (baseUrl: string, setActiveGame: (id: string | undefined, token?: string) => void) => {
     const url = `${baseUrl}/games/stream`;
     const [eventSource, setEventSource] = useState<EventSource>();
     const [connectionId, setConnectionId] = useState<string>();
@@ -38,7 +33,6 @@ export const useGameData = (
 
                     case "gameDeleted":
                         setGames((prev) => prev.filter((game) => game.id !== data.gameId));
-                        setActiveGame((game) => (game?.gameId === data.gameId ? undefined : game)); // unset active game if deleted
                         console.log("Game deleted:", data.gameId);
                         break;
 

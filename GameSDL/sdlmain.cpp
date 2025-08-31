@@ -41,7 +41,7 @@ extern "C" {
             gPeerStatus.at(playerId).avgLatency = avgLatency;
             if (isConnected)
             {
-                printf("SetPeerStatus: Player %d - MinLatency: %d, AvgLatency: %d", playerId, minLatency, avgLatency);
+                printf("SetPeerStatus: Player %d - MinLatency: %d, AvgLatency: %d\n", playerId, minLatency, avgLatency);
             }
         }
         else
