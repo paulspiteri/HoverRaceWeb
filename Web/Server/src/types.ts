@@ -1,10 +1,10 @@
 export type Player = {
     connectionId: string;
-    gameToken?: string; // Only present for joined players, not creators
+    gameToken: string;
     name?: string;
 };
 
-export type ClientPlayer = Omit<Player, 'gameToken'>;
+export type ClientPlayer = Omit<Player, "gameToken">;
 
 export type ServerGame = {
     id: string;
@@ -12,8 +12,7 @@ export type ServerGame = {
     players: (Player | undefined)[];
     maxPlayers: number;
     createdAt: Date;
-    creatorConnectionId: string;
-    status: 'waiting' | 'playing';
+    status: "waiting" | "playing";
 };
 
 export type CreateGameRequest = {
@@ -57,8 +56,7 @@ export type AvailableGame = {
     playerCount: number;
     maxPlayers: number;
     createdAt: Date;
-    creatorConnectionId: string;
-    status: 'waiting' | 'playing';
+    status: "waiting" | "playing";
 };
 
 export type JoinedGame = AvailableGame & {

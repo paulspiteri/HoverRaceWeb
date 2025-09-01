@@ -17,15 +17,14 @@ export class GameManager extends EventEmitter {
             gameToken: creatorToken,
             name: gameData.creatorName,
         };
-        
+
         const game: ServerGame = {
             id: this.generateId(),
             name: gameData.name,
             players,
             maxPlayers: gameData.maxPlayers,
             createdAt: new Date(),
-            creatorConnectionId: gameData.creatorConnectionId,
-            status: 'waiting',
+            status: "waiting",
         };
 
         this.games.set(game.id, game);
@@ -45,16 +44,11 @@ export class GameManager extends EventEmitter {
 
     deleteGameByToken(gameId: string, gameToken: string): boolean {
         const game = this.games.get(gameId);
-        if (!game) return false;
+        if (!game || !gameToken) return false;
 
         // Find the creator by checking if they have the token
-        const creator = game.players.find(
-            (p) =>
-                p?.connectionId === game.creatorConnectionId &&
-                p?.gameToken === gameToken
-        );
-
-        if (!creator) return false;
+        const creatorPlayer = game.players[0];
+        if (creatorPlayer?.gameToken !== gameToken) return false;
 
         this.games.delete(gameId);
         this.emit("gameDeleted", gameId);
@@ -73,12 +67,9 @@ export class GameManager extends EventEmitter {
         const game = this.games.get(gameId);
         if (!game) return undefined;
 
-        if (game.creatorConnectionId === connectionId) return undefined;
+        if (game.status !== "waiting") return undefined;
 
-        if (game.status !== 'waiting') return undefined;
-
-        if (game.players.some((p) => p?.connectionId === connectionId))
-            return undefined;
+        if (game.players.some((p) => p?.connectionId === connectionId)) return undefined;
 
         const emptySlotIndex = game.players.findIndex((p) => p === undefined);
         if (emptySlotIndex === -1) return undefined;
@@ -93,24 +84,16 @@ export class GameManager extends EventEmitter {
         const game = this.games.get(gameId);
         if (!game) return false;
 
-        const playerIndex = game.players.findIndex(
-            (p) => p?.gameToken === gameToken
-        );
+        const playerIndex = game.players.findIndex((p) => p?.gameToken === gameToken);
         if (playerIndex === -1) return false;
 
-        const player = game.players[playerIndex];
-
         // If this is the creator leaving, only delete the game if it hasn't started yet
-        if (game.creatorConnectionId === player!.connectionId) {
-            if (game.status === 'waiting') {
-                this.deleteGame(gameId);
-                return true;
-            }
-            // If game has started, treat creator like any other player
+        if (playerIndex === 0 && game.status === "waiting") {
+            this.deleteGame(gameId);
+        } else {
+            game.players[playerIndex] = undefined;
+            this.emit("gameUpdated", game);
         }
-
-        game.players[playerIndex] = undefined;
-        this.emit("gameUpdated", game);
         return true;
     }
 
@@ -128,21 +111,14 @@ export class GameManager extends EventEmitter {
 
     startGame(gameId: string, creatorToken: string): boolean {
         const game = this.games.get(gameId);
-        if (!game) return false;
+        if (!game || !creatorToken) return false;
 
-        // Find the creator by checking if they have the token
-        const creator = game.players.find(
-            (p) =>
-                p?.connectionId === game.creatorConnectionId &&
-                p?.gameToken === creatorToken
-        );
-
-        if (!creator) return false;
+        if (game.players[0]?.gameToken !== creatorToken) return false;
 
         // Can only start games that are waiting
-        if (game.status !== 'waiting') return false;
+        if (game.status !== "waiting") return false;
 
-        game.status = 'playing';
+        game.status = "playing";
         this.emit("gameUpdated", game);
         return true;
     }

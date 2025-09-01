@@ -42,9 +42,7 @@ app.get("/api/games/stream", (req, res) => {
 
     // Generate unique connection ID for this client
     const connectionId = uuidv4();
-    console.log(
-        `📡 SSE connection established   🔑 Generated connectionId: ${connectionId}`
-    );
+    console.log(`📡 SSE connection established   🔑 Generated connectionId: ${connectionId}`);
 
     // Send connection ID and current games immediately (public data only)
     const games = gameManager.getAllGames();
@@ -68,15 +66,16 @@ app.get("/api/games/stream", (req, res) => {
         console.log(`🔌 SSE connection closed: ${disconnectedConnectionId}`);
         sseClients.delete(res);
 
-        // If this connection created any games, delete them
+        // Remove disconnected players from games (including creators)
         if (disconnectedConnectionId) {
             const games = gameManager.getAllGames();
             games.forEach((game) => {
-                if (game.creatorConnectionId === disconnectedConnectionId) {
+                const player = game.players.find((p) => p?.connectionId === disconnectedConnectionId);
+                if (player && player.gameToken) {
                     console.log(
-                        `🗑️ Auto-deleting game ${game.id} (creator disconnected)`
+                        `🚪 Auto-removing player ${player.name || disconnectedConnectionId} from game ${game.id} (player disconnected)`,
                     );
-                    gameManager.deleteGame(game.id);
+                    gameManager.leaveGame(game.id, player.gameToken);
                 }
             });
         }
@@ -90,11 +89,7 @@ app.post("/api/games", (req, res) => {
         const gameData: CreateGameRequest = req.body;
         console.log(`📝 Game data:`, gameData);
 
-        if (
-            !gameData.name ||
-            !gameData.maxPlayers ||
-            !gameData.creatorConnectionId
-        ) {
+        if (!gameData.name || !gameData.maxPlayers || !gameData.creatorConnectionId) {
             console.log("❌ Missing required fields");
             return res.status(400).json({ error: "Missing required fields" });
         }
@@ -117,9 +112,7 @@ app.post("/api/games/:id/join", (req, res) => {
     try {
         const { id } = req.params;
         const { connectionId, name }: JoinGameRequest = req.body;
-        console.log(
-            `🎯 Joining game ${id} with connectionId: ${connectionId}, name: ${name}`
-        );
+        console.log(`🎯 Joining game ${id} with connectionId: ${connectionId}, name: ${name}`);
 
         if (!connectionId) {
             console.log("❌ Missing connectionId");
@@ -127,14 +120,10 @@ app.post("/api/games/:id/join", (req, res) => {
         }
 
         // Validate connectionId exists in active SSE connections
-        const isValidConnectionId = Array.from(sseClients.values()).includes(
-            connectionId
-        );
+        const isValidConnectionId = Array.from(sseClients.values()).includes(connectionId);
         if (!isValidConnectionId) {
             console.log("❌ Invalid or inactive connectionId");
-            return res
-                .status(400)
-                .json({ error: "Invalid or inactive connectionId" });
+            return res.status(400).json({ error: "Invalid or inactive connectionId" });
         }
 
         const gameToken = gameManager.joinGame(id, connectionId, name);
@@ -220,8 +209,7 @@ app.post("/api/games/:id/signal", (req, res) => {
     console.log("📡 POST /api/games/:id/signal - Send signal request");
     try {
         const { id } = req.params;
-        const { targetConnectionId, gameToken, signalData }: SignalRequest =
-            req.body;
+        const { targetConnectionId, gameToken, signalData }: SignalRequest = req.body;
         console.log(`🎯 Sending signal in game ${id} to ${targetConnectionId}`);
 
         if (!targetConnectionId || !gameToken || !signalData) {
@@ -247,14 +235,10 @@ app.post("/api/games/:id/signal", (req, res) => {
         }
 
         // Verify target is also in the same game
-        const target = game.players.find(
-            (p) => p?.connectionId === targetConnectionId
-        );
+        const target = game.players.find((p) => p?.connectionId === targetConnectionId);
         if (!target) {
             console.log(`❌ Target ${targetConnectionId} not in game ${id}`);
-            return res
-                .status(400)
-                .json({ error: "Target player not in this game" });
+            return res.status(400).json({ error: "Target player not in this game" });
         }
 
         // Find target's SSE connection
@@ -267,12 +251,8 @@ app.post("/api/games/:id/signal", (req, res) => {
         }
 
         if (!targetClient) {
-            console.log(
-                `❌ Target ${targetConnectionId} not connected via SSE`
-            );
-            return res
-                .status(400)
-                .json({ error: "Target player not connected" });
+            console.log(`❌ Target ${targetConnectionId} not connected via SSE`);
+            return res.status(400).json({ error: "Target player not connected" });
         }
 
         // Send signal only to target
@@ -284,15 +264,10 @@ app.post("/api/games/:id/signal", (req, res) => {
 
         try {
             targetClient.write(`data: ${JSON.stringify(signalMessage)}\n\n`);
-            console.log(
-                `✅ Signal sent from ${sender.connectionId} to ${targetConnectionId}`
-            );
+            console.log(`✅ Signal sent from ${sender.connectionId} to ${targetConnectionId}`);
             res.status(200).json({ message: "Signal sent successfully" });
         } catch (writeError) {
-            console.log(
-                `❌ Failed to send signal to ${targetConnectionId}:`,
-                writeError
-            );
+            console.log(`❌ Failed to send signal to ${targetConnectionId}:`, writeError);
             // Remove dead connection
             sseClients.delete(targetClient);
             res.status(500).json({ error: "Failed to deliver signal" });
@@ -313,9 +288,7 @@ app.put("/api/games/:id/player", (req, res) => {
 
         if (!gameToken || !name) {
             console.log("❌ Missing required fields");
-            return res
-                .status(400)
-                .json({ error: "Missing required fields: gameToken, name" });
+            return res.status(400).json({ error: "Missing required fields: gameToken, name" });
         }
 
         const updated = gameManager.updatePlayer(id, gameToken, name);
@@ -324,9 +297,7 @@ app.put("/api/games/:id/player", (req, res) => {
             console.log(`✅ Successfully updated player in game ${id}`);
             res.status(200).json({ message: "Player updated successfully" });
         } else {
-            console.log(
-                `❌ Failed to update player in game ${id} - invalid token or game not found`
-            );
+            console.log(`❌ Failed to update player in game ${id} - invalid token or game not found`);
             res.status(400).json({
                 error: "Invalid gameToken or game not found",
             });
@@ -375,7 +346,6 @@ function toPublicGameData(game: ServerGame): AvailableGame {
         playerCount: game.players.filter((p) => p !== undefined).length,
         maxPlayers: game.maxPlayers,
         createdAt: game.createdAt,
-        creatorConnectionId: game.creatorConnectionId,
         status: game.status,
     };
 }
@@ -386,28 +356,19 @@ function toJoinedGame(game: ServerGame): JoinedGame {
         id: game.id,
         name: game.name,
         playerCount: game.players.filter((p) => p !== undefined).length,
-        players: game.players.map((p) =>
-            p ? { connectionId: p.connectionId, name: p.name } : undefined
-        ),
+        players: game.players.map((p) => (p ? { connectionId: p.connectionId, name: p.name } : undefined)),
         maxPlayers: game.maxPlayers,
         createdAt: game.createdAt,
-        creatorConnectionId: game.creatorConnectionId,
         status: game.status,
     };
 }
 
 // Broadcast public game updates to non-participant SSE clients only
-function broadcastPublicUpdate(
-    data: ServerMessage,
-    excludeConnectionIds?: string[]
-) {
+function broadcastPublicUpdate(data: ServerMessage, excludeConnectionIds?: string[]) {
     const message = `data: ${JSON.stringify(data)}\n\n`;
     let sentCount = 0;
     sseClients.forEach((connectionId, client) => {
-        if (
-            !excludeConnectionIds ||
-            !excludeConnectionIds.includes(connectionId)
-        ) {
+        if (!excludeConnectionIds || !excludeConnectionIds.includes(connectionId)) {
             try {
                 client.write(message);
                 sentCount++;
@@ -416,17 +377,13 @@ function broadcastPublicUpdate(
             }
         }
     });
-    console.log(
-        `📤 Public broadcast sent to ${sentCount} non-participant clients`
-    );
+    console.log(`📤 Public broadcast sent to ${sentCount} non-participant clients`);
 }
 
 // Broadcast private game updates only to participants
 function broadcastPrivateUpdate(game: ServerGame, data: ServerMessage) {
     const message = `data: ${JSON.stringify(data)}\n\n`;
-    const participantConnectionIds = game.players
-        .filter((p) => p !== undefined)
-        .map((p) => p!.connectionId);
+    const participantConnectionIds = game.players.filter((p) => p !== undefined).map((p) => p!.connectionId);
 
     sseClients.forEach((connectionId, client) => {
         if (participantConnectionIds.includes(connectionId)) {
@@ -441,9 +398,7 @@ function broadcastPrivateUpdate(game: ServerGame, data: ServerMessage) {
 
 // Shared function to broadcast game updates
 function broadcastGameUpdate(game: ServerGame) {
-    const participantConnectionIds = game.players
-        .filter((p) => p !== undefined)
-        .map((p) => p!.connectionId);
+    const participantConnectionIds = game.players.filter((p) => p !== undefined).map((p) => p!.connectionId);
 
     // Send public data to non-participants
     const gameUpdatedMessage: GameUpdatedMessage = {
