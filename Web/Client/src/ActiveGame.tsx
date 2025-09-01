@@ -89,7 +89,6 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
                 <Box flex={1} style={{ minHeight: 0 }}>
                     <PlayerList
                         gamePlayers={game.players}
-                        creatorConnectionId={game.creatorConnectionId}
                         peerStatuses={peerStatuses}
                         currentConnectionId={currentConnectionId}
                         peersActualStatuses={peersActualStatuses}

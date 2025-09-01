@@ -81,7 +81,6 @@ const MeshStatus: React.FC<MeshStatusProps> = ({ index, gamePlayers, peerStatus 
 
 interface PlayerListProps {
     gamePlayers: JoinedGame["players"];
-    creatorConnectionId: string;
     peerStatuses: ("connecting" | "connected" | "disconnected" | undefined)[] | undefined;
     currentConnectionId: string | undefined;
     peersActualStatuses?: (PeerConnectionStatusMessage | undefined)[];
@@ -91,7 +90,6 @@ interface PlayerListProps {
 
 export const PlayerList: React.FC<PlayerListProps> = ({
     gamePlayers,
-    creatorConnectionId,
     peerStatuses,
     currentConnectionId,
     peersActualStatuses,
@@ -149,7 +147,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                                         <Box>
                                             <Group gap="xs">
                                                 <Text fw={500}>{player.name || `Player ${index + 1}`}</Text>
-                                                {player.connectionId === creatorConnectionId && (
+                                                {index === 0 && (
                                                     <Badge size="xs" variant="light">
                                                         Host
                                                     </Badge>

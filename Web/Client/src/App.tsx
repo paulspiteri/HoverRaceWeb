@@ -1,6 +1,7 @@
 import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { GameList } from "@/GameList.tsx";
-import { Button, Container, Stack, Title, Group, Flex, Box } from "@mantine/core";
+import { Button, Container, Stack, Title, Group, Flex, Box, ActionIcon } from "@mantine/core";
+import { IconHome } from "@tabler/icons-react";
 import { useGameData } from "@/useGameData.ts";
 import { useCallback, useEffect, useRef } from "react";
 import { ActiveGame } from "@/ActiveGame.tsx";
@@ -56,17 +57,29 @@ function Root() {
                         <Container size="xl" w="100%" h="100%">
                             <Stack gap="xl" h="100%">
                                 <Group justify="center">
-                                    <Title
-                                        order={1}
-                                        size="h1"
-                                        style={{
-                                            background: "linear-gradient(45deg, #1976d2, #9c27b0)",
-                                            WebkitBackgroundClip: "text",
-                                            WebkitTextFillColor: "transparent",
-                                        }}
-                                    >
-                                        HoverRace
-                                    </Title>
+                                    <Group gap="sm" align="center">
+                                        <ActionIcon
+                                            variant="subtle"
+                                            onClick={() => navigate("/")}
+                                            size="xl"
+                                            title="Go to Home"
+                                        >
+                                            <IconHome size={24} />
+                                        </ActionIcon>
+                                        <Title
+                                            order={1}
+                                            size="h1"
+                                            style={{
+                                                background: "linear-gradient(45deg, #1976d2, #9c27b0)",
+                                                WebkitBackgroundClip: "text",
+                                                WebkitTextFillColor: "transparent",
+                                                cursor: "pointer",
+                                            }}
+                                            onClick={() => navigate("/")}
+                                        >
+                                            HoverRace
+                                        </Title>
+                                    </Group>
                                 </Group>
 
                                 <Outlet
