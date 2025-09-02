@@ -72,7 +72,7 @@ export class GameManager extends EventEmitter {
         if (game.players.some((p) => p?.connectionId === connectionId)) return undefined;
 
         const emptySlotIndex = game.players.findIndex((p) => p === undefined);
-        if (emptySlotIndex === -1) return undefined;
+        if (emptySlotIndex === -1 || emptySlotIndex === 0) return undefined;
 
         const gameToken = uuidv4();
         game.players[emptySlotIndex] = { connectionId, gameToken, name };

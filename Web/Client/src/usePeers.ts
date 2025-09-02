@@ -76,7 +76,7 @@ export const usePeers = (
             return;
         }
 
-        const hostPeer = peers.current?.find((p) => p?.connectionId === game.creatorConnectionId);
+        const hostPeer = peers.current[0];
         if (!hostPeer || !hostPeer.peer.connected) {
             return;
         }
@@ -110,7 +110,7 @@ export const usePeers = (
             let anyNeedsPing = false;
             for (let i = 0; i < peers.current.length; i++) {
                 const peer = peers.current[i];
-                if (!peer || !peer.peer.connected) continue;
+                if (!peer || !peer.peer.connected || peerStatuses[i] !== "connected") continue;
 
                 const latencyData = peerLatencies?.[i];
                 const needsPing = !latencyData || latencyData.latencies.length < LATENCY_MEASUREMENT_COUNT;
@@ -276,7 +276,7 @@ export const usePeers = (
 
                     const newPeer: GamePeer = {
                         connectionId: playerConnectionId,
-                        peer: new SimplePeer({ initiator: isInitiator, trickle: true }),
+                        peer: new SimplePeer({ initiator: isInitiator, trickle: false }),
                     };
                     peers.current[i] = newPeer;
 
