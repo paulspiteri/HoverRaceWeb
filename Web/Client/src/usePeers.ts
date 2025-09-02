@@ -34,6 +34,7 @@ export const usePeers = (
     onGamePlayerPeerDisconnect: (playerIndex: number) => void,
 ) => {
     const peers = useRef<(GamePeer | undefined)[] | undefined>(undefined);
+    const earlySignals = useRef<Record<string, SignalMessage>>(undefined);
     const [peerStatuses, setPeerStatuses] = useState<("connecting" | "connected" | "disconnected" | undefined)[]>();
     const [peersActualStatuses, setPeersActualStatuses] = useState<PeerConnectionStatusMessage[]>();
     const [peerLatencies, setPeerLatencies] = useState<PeerConnectionLatency[]>();
@@ -141,8 +142,11 @@ export const usePeers = (
         const gamePeer = peers.current?.find((x) => x && x.connectionId === signal.fromConnectionId);
         if (gamePeer) {
             gamePeer.peer.signal(signal.signalData);
+        } else if (earlySignals.current) {
+            console.warn(`❌ Signal received from unknown peer - saving in buffer.`);
+            earlySignals.current[signal.fromConnectionId] = signal;
         } else {
-            console.warn(`❌ No peer found for signal from ${signal.fromConnectionId}`);
+            console.warn(`❌ Signal received with no active game.`);
         }
     }, []);
 
@@ -245,6 +249,9 @@ export const usePeers = (
             if (!peers.current) {
                 peers.current = new Array<GamePeer | undefined>(game.maxPlayers);
             }
+            if (!earlySignals.current) {
+                earlySignals.current = {};
+            }
             setPeerStatuses((prev) => (!prev ? new Array(game.maxPlayers).fill(undefined) : prev));
             setPeersActualStatuses((prev) => (!prev ? new Array(game.maxPlayers).fill(undefined) : prev));
             setPeerLatencies((prev) => (!prev ? new Array(game.maxPlayers).fill(undefined) : prev));
@@ -276,9 +283,15 @@ export const usePeers = (
 
                     const newPeer: GamePeer = {
                         connectionId: playerConnectionId,
-                        peer: new SimplePeer({ initiator: isInitiator, trickle: false }),
+                        peer: new SimplePeer({ initiator: isInitiator, trickle: true }),
                     };
                     peers.current[i] = newPeer;
+
+                    // If we have a signal for this player, use it immediately
+                    if (earlySignals.current[playerConnectionId]) {
+                        newPeer.peer.signal(earlySignals.current[playerConnectionId].signalData);
+                        delete earlySignals.current[playerConnectionId];
+                    }
 
                     setPeerStatuses((prev) => {
                         const updated = [...(prev || [])];
@@ -370,6 +383,7 @@ export const usePeers = (
                     }
                 }
                 peers.current = undefined;
+                earlySignals.current = undefined;
                 setPeerStatuses(undefined);
                 setPeersActualStatuses(undefined);
                 setPeerLatencies(undefined);
