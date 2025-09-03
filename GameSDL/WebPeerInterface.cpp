@@ -197,5 +197,9 @@ const char* WebPeerInterface::GetPlayerName(int pIndex) const
 
 bool WebPeerInterface::IsConnected(int pIndex) const
 {
+    if (pIndex == -1)
+    {
+        return true;    // self
+    }
     return mPeers.at(pIndex).isConnected;
 }
