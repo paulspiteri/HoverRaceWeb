@@ -14,22 +14,24 @@ canvasElement.addEventListener(
     false,
 );
 
-var Module = {
-    noInitialRun: true,
-    print(...args) {
-        console.log(...args);
-    },
-    canvas: canvasElement,
-    totalDependencies: 0,
-    monitorRunDependencies(left) {
-        this.totalDependencies = Math.max(this.totalDependencies, left);
-        // Module.setStatus(
-        //     left
-        //         ? "Preparing... (" + (this.totalDependencies - left) + "/" + this.totalDependencies + ")"
-        //         : "All downloads complete.",
-        // );
-    },
-};
+var Module = (async () => {
+    Module = await HoverRace({
+        noInitialRun: true,
+        print(...args) {
+            console.log(...args);
+        },
+        canvas: canvasElement,
+        totalDependencies: 0,
+        monitorRunDependencies(left) {
+            this.totalDependencies = Math.max(this.totalDependencies, left);
+            // Module.setStatus(
+            //     left
+            //         ? "Preparing... (" + (this.totalDependencies - left) + "/" + this.totalDependencies + ")"
+            //         : "All downloads complete.",
+            // );
+        },
+    });
+})();
 window.onerror = () => {
     console.error("[post-exception status] ");
 };
