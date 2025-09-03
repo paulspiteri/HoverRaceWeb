@@ -281,29 +281,49 @@ export const usePeers = (
                     const playerConnectionId = gamePlayer.connectionId;
                     console.log(`🤝 Creating peer for player ${i} (${playerConnectionId}) - initiator: ${isInitiator}`);
 
+                    const simplePeer = new SimplePeer({ initiator: isInitiator, trickle: true });
                     const newPeer: GamePeer = {
                         connectionId: playerConnectionId,
-                        peer: new SimplePeer({ initiator: isInitiator, trickle: true }),
+                        peer: simplePeer,
                     };
                     peers.current[i] = newPeer;
 
                     // If we have a signal for this player, use it immediately
                     if (earlySignals.current[playerConnectionId]) {
-                        newPeer.peer.signal(earlySignals.current[playerConnectionId].signalData);
+                        simplePeer.signal(earlySignals.current[playerConnectionId].signalData);
                         delete earlySignals.current[playerConnectionId];
+                    }
+
+                    simplePeer.on("signal", (data: SimplePeer.SignalData) => {
+                        console.log(`📤 Sending signal to ${playerConnectionId}`);
+                        if (game && gameToken) {
+                            sendSignal(game.id, playerConnectionId, gameToken, JSON.stringify(data));
+                        }
+                    });
+
+                    if (!isInitiator) {
+                        const pc = getPeerConnection(simplePeer);
+                        pc.addEventListener("datachannel", (event) => {
+                            const channel = event.channel;
+                            if (channel.label === "unreliable") {
+                                console.log(`📡 Received data channel: ${channel.label} from ${playerConnectionId}`);
+
+                                newPeer.unreliableChannel = channel;
+
+                                channel.onmessage = (event) =>
+                                    handleDataChannelMessage(event.data, playerConnectionId, i);
+                                channel.onopen = () => {
+                                    console.log(`📡 Unreliable channel open to ${playerConnectionId}`);
+                                    updatePeerStatus("connected");
+                                };
+                            }
+                        });
                     }
 
                     setPeerStatuses((prev) => {
                         const updated = [...(prev || [])];
                         updated[i] = "connecting";
                         return updated;
-                    });
-
-                    newPeer.peer.on("signal", (data: SimplePeer.SignalData) => {
-                        console.log(`📤 Sending signal to ${playerConnectionId}`);
-                        if (game && gameToken) {
-                            sendSignal(game.id, playerConnectionId, gameToken, JSON.stringify(data));
-                        }
                     });
 
                     const updatePeerStatus = (status: "connected" | "disconnected") => {
@@ -327,11 +347,11 @@ export const usePeers = (
                         handleChannelMessage(uint8Data, playerConnectionId, playerIndex);
                     };
 
-                    newPeer.peer.on("connect", () => {
+                    simplePeer.on("connect", () => {
                         console.log(`🔗 Connected to peer ${playerConnectionId}`);
 
-                        const pc = getPeerConnection(newPeer.peer);
                         if (isInitiator) {
+                            const pc = getPeerConnection(simplePeer);
                             newPeer.unreliableChannel = pc.createDataChannel("unreliable", {
                                 ordered: false,
                                 maxRetransmits: 0,
@@ -341,34 +361,20 @@ export const usePeers = (
                             newPeer.unreliableChannel.onmessage = (event) =>
                                 handleDataChannelMessage(event.data, playerConnectionId, i);
                             newPeer.unreliableChannel.onopen = () => updatePeerStatus("connected");
-                        } else {
-                            pc.ondatachannel = (event) => {
-                                const channel = event.channel;
-                                console.log(`📡 Received data channel: ${channel.label} from ${playerConnectionId}`);
-
-                                if (channel.label === "unreliable") {
-                                    newPeer.unreliableChannel = channel;
-                                }
-
-                                channel.onmessage = (event) =>
-                                    handleDataChannelMessage(event.data, playerConnectionId, i);
-
-                                channel.onopen = () => updatePeerStatus("connected");
-                            };
                         }
                     });
 
-                    newPeer.peer.on("close", () => {
+                    simplePeer.on("close", () => {
                         console.log(`🔌 Peer disconnected: ${playerConnectionId}`);
                         updatePeerStatus("disconnected");
                     });
 
-                    newPeer.peer.on("error", (err: Error) => {
+                    simplePeer.on("error", (err: Error) => {
                         console.error(`❌ Peer error with ${playerConnectionId}:`, err);
                         updatePeerStatus("disconnected");
                     });
 
-                    newPeer.peer.on("data", (data: ArrayBuffer) => {
+                    simplePeer.on("data", (data: ArrayBuffer) => {
                         handleDataChannelMessage(data, playerConnectionId, i);
                     });
                 }
