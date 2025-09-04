@@ -193,21 +193,6 @@ window.addEventListener("resize", updateCanvasSize);
 window.addEventListener("orientationchange", updateCanvasSize);
 window.addEventListener("fullscreenchange", updateCanvasSize);
 
-function startGame(playerId) {
-    const container = document.getElementById("fullscreen-container");
-    if (container) {
-        container.style.display = "block";
-    }
-    const reactroot = document.getElementById("react-root");
-    if (reactroot) {
-        reactroot.style.display = "none";
-    }
-
-    Module._SetPlayerId(playerId);
-
-    Module._main();
-}
-
 function receiveGameData(playerId, binaryData) {
     // Allocate memory in Emscripten heap
     const dataPtr = Module._malloc(binaryData.length);

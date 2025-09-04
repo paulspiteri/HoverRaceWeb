@@ -17,18 +17,6 @@ html, body {
     top: 0;
 }
 
-/* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-canvas.emscripten {
-    display: block;
-    border: 0 none;
-    background-color: black;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-}
-
 #joystick-zone {
     display: none;
     position: fixed;

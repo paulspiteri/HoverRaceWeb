@@ -16,6 +16,8 @@ import {
     useOutletContext,
 } from "react-router-dom";
 import type { Commands } from "@/commands.ts";
+import styles from "./App.module.css";
+import { startGame } from "@/gameInterop.ts";
 
 interface GameOutletContext {
     connectionId: string | undefined;
@@ -110,6 +112,17 @@ function Root() {
                     <GameList games={games} onJoinGame={handleJoinGame} />
                 </Flex>
             </Flex>
+            <div className={styles["canvas-border"]}>
+                <canvas
+                    id="canvas"
+                    tabIndex={-1}
+                    className={styles["canvas-emscripten"]}
+                    style={{
+                        width: "350px",
+                        height: "262px",
+                    }}
+                />
+            </div>
         </Container>
     );
 }
@@ -198,12 +211,12 @@ function GamePage() {
             if (isGamePlaying) {
                 peerStatuses?.forEach((x, idx) => {
                     const latencies = peerLatencies?.[idx];
-                    setPlayerStatus(
-                        idx,
-                        x === "connected",
-                        latencies?.minimumLatency ?? 0,
-                        latencies?.averageLatency ?? 0,
-                    );
+                    // setPlayerStatus(
+                    //     idx,
+                    //     x === "connected",
+                    //     latencies?.minimumLatency ?? 0,
+                    //     latencies?.averageLatency ?? 0,
+                    // );
                 });
             }
         }
@@ -211,7 +224,10 @@ function GamePage() {
 
     useEffect(() => {
         if (isGamePlaying) {
-            startGame(playerIndex);
+            const canvas = document.getElementById("canvas") as HTMLCanvasElement | null;
+            if (canvas) {
+                startGame(canvas, playerIndex);
+            }
         }
     }, [isGamePlaying, playerIndex]);
 

@@ -1,0 +1,16 @@
+.canvas-border {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    background-color: white;
+    z-index: 1;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+}
+
+.canvas-emscripten {
+    display: block;
+    border: 0 none;
+    background-color: black;
+}
