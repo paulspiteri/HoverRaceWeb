@@ -18,7 +18,7 @@ import {
 } from "react-router-dom";
 import type { Commands } from "@/commands.ts";
 import styles from "./App.module.css";
-import { startGame, useGameInstance } from "@/gameInterop.ts";
+import { useGameInstance } from "@/gameInterop.ts";
 
 interface GameOutletContext {
     connectionId: string | undefined;
@@ -160,7 +160,7 @@ const NoGame: React.FC = () => {
 const GamePage: React.FC = () => {
     const { gameId } = useParams();
     const { connectionId, games, commands, eventSource, gameToken, canvasRef } = useOutletContext<GameOutletContext>();
-    const { gameInstance, isLoading } = useGameInstance(canvasRef.current);
+    const { gameInstanceApi, isLoading } = useGameInstance(canvasRef.current);
 
     const currentGame =
         gameId !== undefined
@@ -181,7 +181,10 @@ const GamePage: React.FC = () => {
         receiveGameData(playerId, binaryData);
     }, []);
 
-    const onGamePlayerDisconnected = useCallback((playerId: number) => void setPlayerStatus(playerId, false, 0, 0), []);
+    const onGamePlayerDisconnected = useCallback(
+        (playerId: number) => void gameInstanceApi?.setPlayerStatus(playerId, false, 0, 0),
+        [gameInstanceApi],
+    );
 
     const { peerStatuses, peersActualStatuses, peerLatencies, sendData } = usePeers(
         connectionId,
@@ -189,6 +192,7 @@ const GamePage: React.FC = () => {
         eventSource,
         commands.sendSignal,
         gameToken,
+        isLoading,
         onGameData,
         onGamePlayerDisconnected,
     );
@@ -216,25 +220,25 @@ const GamePage: React.FC = () => {
     const isGamePlaying = currentGame?.status === "playing" && playerIndex !== undefined;
     useEffect(() => {
         {
-            if (isGamePlaying) {
+            if (isGamePlaying && gameInstanceApi) {
                 peerStatuses?.forEach((x, idx) => {
                     const latencies = peerLatencies?.[idx];
-                    // setPlayerStatus(
-                    //     idx,
-                    //     x === "connected",
-                    //     latencies?.minimumLatency ?? 0,
-                    //     latencies?.averageLatency ?? 0,
-                    // );
+                    gameInstanceApi.setPlayerStatus(
+                        idx,
+                        x === "connected",
+                        latencies?.minimumLatency ?? 0,
+                        latencies?.averageLatency ?? 0,
+                    );
                 });
             }
         }
-    }, [peerStatuses, peerLatencies, isGamePlaying]);
+    }, [peerStatuses, peerLatencies, isGamePlaying, gameInstanceApi]);
 
     useEffect(() => {
-        if (isGamePlaying && gameInstance) {
-            startGame(gameInstance, playerIndex);
+        if (isGamePlaying && gameInstanceApi) {
+            gameInstanceApi.startGame(playerIndex);
         }
-    }, [gameInstance, isGamePlaying, playerIndex]);
+    }, [gameInstanceApi, isGamePlaying, playerIndex]);
 
     if (!currentGame) {
         return <div>Game not found</div>;

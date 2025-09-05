@@ -111,8 +111,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
                                 640, 400);
     SDL_HideWindow(sdlWindow);                                                              // HIDDEN FOR NOW!
 #endif
+    #ifdef __EMSCRIPTEN__
+    auto windowTitle = "HoverRace Web";
+    #else
+    auto windowTitle = "GLHoverRace";
+    #endif
 
-    glWindow = SDL_CreateWindow("GLHoverRace",
+    glWindow = SDL_CreateWindow(windowTitle,
                                 640, 400,
                                 SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!glWindow) {

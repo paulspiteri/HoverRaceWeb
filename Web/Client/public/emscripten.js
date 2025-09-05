@@ -192,7 +192,3 @@ function receiveGameData(playerId, binaryData) {
     // Free the allocated memory
     Module._free(dataPtr);
 }
-
-function setPlayerStatus(playerId, isConnected, minLatency, avgLatency) {
-    Module._SetPeerStatus(playerId, isConnected, minLatency, avgLatency);
-}

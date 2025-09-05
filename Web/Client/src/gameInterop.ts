@@ -1,10 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 interface InteropInterface {
     _main: () => void;
     _Quit: () => void;
     _SetPlayerId: (playerId: number) => void;
     _SetPeerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
+}
+
+interface GameInstanceAPI {
+    startGame: (playerIndex: number) => void;
+    setPlayerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
 }
 
 declare global {
@@ -22,11 +27,6 @@ declare global {
 const webglContextLostEventHandler = (e: Event) => {
     alert("WebGL context lost. You will need to reload the page.");
     e.preventDefault();
-};
-
-export const startGame = async (gameInstance: InteropInterface, playerIndex: number) => {
-    gameInstance._SetPlayerId(playerIndex);
-    gameInstance._main();
 };
 
 export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
@@ -87,5 +87,19 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
         };
     }, [canvas]);
 
-    return { gameInstance, isLoading };
+    const gameInstanceApi = useMemo(() => {
+        if (gameInstance) {
+            return {
+                startGame: (playerIndex: number) => {
+                    gameInstance._SetPlayerId(playerIndex);
+                    gameInstance._main();
+                },
+                setPlayerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => {
+                    gameInstance._SetPeerStatus(playerId, isConnected, minLatency, avgLatency);
+                },
+            } satisfies GameInstanceAPI;
+        }
+    }, [gameInstance]);
+
+    return { gameInstanceApi, isLoading };
 };

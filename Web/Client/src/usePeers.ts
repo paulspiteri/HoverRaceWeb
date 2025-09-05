@@ -30,6 +30,7 @@ export const usePeers = (
     eventSource: EventSource | undefined,
     sendSignal: (gameId: string, targetConnectionId: string, gameToken: string, signalData: string) => Promise<void>,
     gameToken: string | undefined,
+    isLoadingGameData: boolean,
     onGameData: (playerIndex: number, data: unknown) => void,
     onGamePlayerPeerDisconnect: (playerIndex: number) => void,
 ) => {
@@ -84,6 +85,7 @@ export const usePeers = (
 
         const statusMessage: PeerConnectionStatusMessage = {
             type: "peerConnectionStatus",
+            isLoadingGameData,
             peers: game.players.reduce(
                 (acc, player, index) => {
                     if (player && player.connectionId !== connectionId) {
@@ -98,9 +100,9 @@ export const usePeers = (
         };
 
         sendJsonMessage(hostPeer, statusMessage);
-    }, [connectionId, game, peerStatuses, sendJsonMessage]);
+    }, [connectionId, game, isLoadingGameData, peerStatuses, sendJsonMessage]);
 
-    useEffect(() => sendStatusUpdateToHost(), [peerStatuses, sendStatusUpdateToHost]);
+    useEffect(() => sendStatusUpdateToHost(), [peerStatuses, sendStatusUpdateToHost, isLoadingGameData]);
 
     const gameStatus = game?.status;
     useEffect(() => {
