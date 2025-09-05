@@ -86,6 +86,7 @@ interface PlayerListProps {
     peersActualStatuses?: (PeerConnectionStatusMessage | undefined)[];
     peerLatencies?: (PeerConnectionLatency | undefined)[];
     isHost?: boolean;
+    isLoadingGameData: boolean;
 }
 
 export const PlayerList: React.FC<PlayerListProps> = ({
@@ -95,6 +96,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     peersActualStatuses,
     peerLatencies,
     isHost = false,
+    isLoadingGameData,
 }) => {
     return (
         <Flex h="100%" direction="column" style={{ minHeight: 0 }}>
@@ -174,6 +176,38 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                                                 gamePlayers={gamePlayers}
                                                 peerStatus={peersActualStatuses?.[index]}
                                             />
+                                        )}
+
+                                        {/* Game data loading status */}
+                                        {((isHost &&
+                                            player.connectionId !== currentConnectionId &&
+                                            peersActualStatuses?.[index]) ||
+                                            player.connectionId === currentConnectionId) && (
+                                            <Group gap="xs">
+                                                <Box
+                                                    w={8}
+                                                    h={8}
+                                                    bg={
+                                                        player.connectionId === currentConnectionId
+                                                            ? isLoadingGameData
+                                                                ? "red"
+                                                                : "green"
+                                                            : peersActualStatuses?.[index]?.isLoadingGameData
+                                                              ? "red"
+                                                              : "green"
+                                                    }
+                                                    style={{ borderRadius: "50%" }}
+                                                />
+                                                <Text size="sm" c="dimmed">
+                                                    {player.connectionId === currentConnectionId
+                                                        ? isLoadingGameData
+                                                            ? "Loading Game"
+                                                            : "Game Ready"
+                                                        : peersActualStatuses?.[index]?.isLoadingGameData
+                                                          ? "Loading Game"
+                                                          : "Game Ready"}
+                                                </Text>
+                                            </Group>
                                         )}
                                     </Stack>
                                 </Group>

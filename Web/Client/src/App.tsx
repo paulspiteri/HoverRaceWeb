@@ -160,7 +160,7 @@ const NoGame: React.FC = () => {
 const GamePage: React.FC = () => {
     const { gameId } = useParams();
     const { connectionId, games, commands, eventSource, gameToken, canvasRef } = useOutletContext<GameOutletContext>();
-    const { gameInstanceApi, isLoading } = useGameInstance(canvasRef.current);
+    const { gameInstanceApi, isLoadingGameData } = useGameInstance(canvasRef.current);
 
     const currentGame =
         gameId !== undefined
@@ -192,7 +192,7 @@ const GamePage: React.FC = () => {
         eventSource,
         commands.sendSignal,
         gameToken,
-        isLoading,
+        isLoadingGameData,
         onGameData,
         onGamePlayerDisconnected,
     );
@@ -254,6 +254,7 @@ const GamePage: React.FC = () => {
             onUpdatePlayer={handleUpdatePlayer}
             peersActualStatuses={peersActualStatuses}
             peerLatencies={peerLatencies}
+            isLoadingGameData={isLoadingGameData}
         />
     );
 };

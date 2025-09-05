@@ -17,6 +17,7 @@ interface ActiveGameProps {
     onUpdatePlayer: (name: string) => Promise<void>;
     peersActualStatuses?: (PeerConnectionStatusMessage | undefined)[];
     peerLatencies?: (PeerConnectionLatency | undefined)[];
+    isLoadingGameData: boolean;
 }
 
 export const ActiveGame: React.FC<ActiveGameProps> = ({
@@ -28,6 +29,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
     onUpdatePlayer,
     peersActualStatuses,
     peerLatencies,
+    isLoadingGameData,
 }) => {
     // Get current player info and determine if creator (index 0)
     const currentPlayerIndex = game.players.findIndex((p) => p?.connectionId === currentConnectionId);
@@ -67,6 +69,17 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
             return peerStatuses[index] === "connected";
         });
     }, [game.players, peerStatuses, currentConnectionId, isCreator, peersActualStatuses]);
+
+    // Check if all peers are done loading game data
+    const allPeersGameReady = useMemo(() => {
+        if (!peersActualStatuses || !isCreator) return true;
+
+        return game.players.every((player, index) => {
+            if (!player || player.connectionId === currentConnectionId) return true; // Skip empty slots and self
+            const peerStatus = peersActualStatuses[index];
+            return peerStatus ? !peerStatus.isLoadingGameData : false;
+        });
+    }, [game.players, currentConnectionId, isCreator, peersActualStatuses]);
     return (
         <Card
             withBorder
@@ -94,6 +107,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
                         peersActualStatuses={peersActualStatuses}
                         peerLatencies={peerLatencies}
                         isHost={isCreator}
+                        isLoadingGameData={isLoadingGameData}
                     />
                 </Box>
 
@@ -109,6 +123,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
                             disabled={
                                 game.players.filter((p) => p !== undefined).length < 2 ||
                                 !allPeersConnected ||
+                                !allPeersGameReady ||
                                 game.status === "playing"
                             }
                         >

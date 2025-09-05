@@ -31,7 +31,7 @@ const webglContextLostEventHandler = (e: Event) => {
 
 export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
     const [gameInstance, setGameInstance] = useState<InteropInterface>();
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoadingGameData, setIsLoadingGameData] = useState(false);
 
     useEffect(() => {
         if (!canvas) return;
@@ -40,7 +40,7 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
 
         console.log("Creating game instance...");
         const abortController = new AbortController();
-        setIsLoading(true);
+        setIsLoadingGameData(true);
 
         let instanceForDispose: InteropInterface | undefined;
         HoverRace({
@@ -52,7 +52,7 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
             locateFile: (path: string) => "/" + path,
             onRuntimeInitialized() {
                 console.log("Runtime initialized");
-                setIsLoading(false);
+                setIsLoadingGameData(false);
             },
         }).then((instance) => {
             if (!abortController.signal.aborted) {
@@ -79,7 +79,7 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
                 }
             }
             setGameInstance(undefined);
-            setIsLoading(false);
+            setIsLoadingGameData(false);
 
             if (canvas) {
                 canvas.removeEventListener("webglcontextlost", webglContextLostEventHandler);
@@ -101,5 +101,5 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
         }
     }, [gameInstance]);
 
-    return { gameInstanceApi, isLoading };
+    return { gameInstanceApi, isLoadingGameData };
 };
