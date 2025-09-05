@@ -193,7 +193,7 @@ BOOL MR_RecordFile::OpenForRead( const char* pFileName, BOOL pValidateChkSum )
    {
       mConstructionMode = FALSE;
       mCurrentRecord    = -1;
-
+      std::cout << "Opening file " << pFileName << std::endl;
       // Try to open the file
       mFile = new CFile();
       lReturnValue = mFile->OpenForRead(pFileName);

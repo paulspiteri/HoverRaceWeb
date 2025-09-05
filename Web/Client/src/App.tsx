@@ -3,7 +3,7 @@ import { GameList } from "@/GameList.tsx";
 import { Button, Container, Stack, Title, Group, Flex, Box, ActionIcon } from "@mantine/core";
 import { IconHome } from "@tabler/icons-react";
 import { useGameData } from "@/useGameData.ts";
-import { useCallback, useEffect, useRef } from "react";
+import { type RefObject, useCallback, useEffect, useRef } from "react";
 import { ActiveGame } from "@/ActiveGame.tsx";
 import type { Game, JoinedGame } from "./types";
 import { usePeers } from "@/usePeers.ts";
@@ -14,10 +14,11 @@ import {
     useParams,
     Outlet,
     useOutletContext,
+    useMatch,
 } from "react-router-dom";
 import type { Commands } from "@/commands.ts";
 import styles from "./App.module.css";
-import { startGame } from "@/gameInterop.ts";
+import { startGame, useGameInstance } from "@/gameInterop.ts";
 
 interface GameOutletContext {
     connectionId: string | undefined;
@@ -25,11 +26,14 @@ interface GameOutletContext {
     commands: Commands;
     eventSource: EventSource | undefined;
     gameToken: string | undefined;
+    canvasRef: RefObject<HTMLCanvasElement | null>;
 }
 
 function Root() {
     const navigate = useNavigate();
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const gameToken = useRef<string>(undefined);
+    const gameMatch = useMatch("/game/*");
 
     const setActiveGame = useCallback(
         (id: string | undefined, token?: string) => {
@@ -92,6 +96,7 @@ function Root() {
                                             commands,
                                             eventSource,
                                             gameToken: gameToken.current,
+                                            canvasRef,
                                         } satisfies GameOutletContext
                                     }
                                 />
@@ -114,12 +119,14 @@ function Root() {
             </Flex>
             <div className={styles["canvas-border"]}>
                 <canvas
+                    ref={canvasRef}
                     id="canvas"
                     tabIndex={-1}
                     className={styles["canvas-emscripten"]}
                     style={{
                         width: "350px",
                         height: "262px",
+                        display: !gameMatch ? "none" : undefined,
                     }}
                 />
             </div>
@@ -150,9 +157,10 @@ const NoGame: React.FC = () => {
     );
 };
 
-function GamePage() {
+const GamePage: React.FC = () => {
     const { gameId } = useParams();
-    const { connectionId, games, commands, eventSource, gameToken } = useOutletContext<GameOutletContext>();
+    const { connectionId, games, commands, eventSource, gameToken, canvasRef } = useOutletContext<GameOutletContext>();
+    const { gameInstance, isLoading } = useGameInstance(canvasRef.current);
 
     const currentGame =
         gameId !== undefined
@@ -223,13 +231,10 @@ function GamePage() {
     }, [peerStatuses, peerLatencies, isGamePlaying]);
 
     useEffect(() => {
-        if (isGamePlaying) {
-            const canvas = document.getElementById("canvas") as HTMLCanvasElement | null;
-            if (canvas) {
-                startGame(canvas, playerIndex);
-            }
+        if (isGamePlaying && gameInstance) {
+            startGame(gameInstance, playerIndex);
         }
-    }, [isGamePlaying, playerIndex]);
+    }, [gameInstance, isGamePlaying, playerIndex]);
 
     if (!currentGame) {
         return <div>Game not found</div>;
@@ -247,7 +252,7 @@ function GamePage() {
             peerLatencies={peerLatencies}
         />
     );
-}
+};
 
 const router = createBrowserRouter([
     {

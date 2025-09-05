@@ -36,7 +36,7 @@ MR_ResourceLib::MR_ResourceLib( const char* pResFile )
          NoMFC::CArchive lArchive( mRecordFile.File(), NoMFC::CArchive::load );
 
          lArchive >> lMagicNumber;
-
+         std::cout << "Resource magic number: " << lMagicNumber << std::endl;
          if( lMagicNumber == MR_RESOURCE_FILE_MAGIC )
          {
             // Load the Bitmaps

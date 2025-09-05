@@ -19,10 +19,20 @@ SDL_GLContext glContext = nullptr;
 MR_SDLGameApp *game = nullptr;
 int lControlState = 0;
 int gPlayerId = 0;
+bool gQuit = false;
 
 std::array<PeerStatus, WebPeerInterface::eMaxClient> gPeerStatus; // load here default values before game starts
 
 extern "C" {
+    void Quit()
+    {
+        std::cout << "Quit!" << std::endl;
+        gQuit = true;
+        SDL_Event quit_event;
+        quit_event.type = SDL_EVENT_QUIT;
+        SDL_PushEvent(&quit_event);
+    }
+
     void ChangeWindowSize(const int width, const int height) {
         std::cout << "ChangeWindowSize " << width << "x" << height << std::endl;
         SDL_SetWindowSize(glWindow, width, height);
@@ -232,6 +242,10 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate) {
+    if (gQuit)
+    {
+        return SDL_APP_SUCCESS;
+    }
     // necessary to re-set the control state on each frame because the existing code polled in the game loop
     game->SetControlState(lControlState);
     game->Simulate();
@@ -243,6 +257,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+    std::cout << "AppQuit" << std::endl;
+
     ImGui_ImplSDL3_Shutdown();
 
     delete game;

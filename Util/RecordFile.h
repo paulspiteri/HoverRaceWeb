@@ -59,7 +59,6 @@ namespace NoMFC
          this->Read(length);
          value.resize(length);
          stream.read(&value[0], length);
-         if (!stream) throw std::runtime_error("String read failed");
          return *this;
      }
 

@@ -46,7 +46,7 @@ app.get("/api/games/stream", (req, res) => {
 
     // Send connection ID and current games immediately (public data only)
     const games = gameManager.getAllGames();
-    const publicGames = games.map(toPublicGameData);
+    const publicGames = games.filter((x) => x.status === "waiting").map(toPublicGameData);
     const connectionIdMessage: ConnectionIdMessage = {
         type: "connectionId",
         connectionId,
