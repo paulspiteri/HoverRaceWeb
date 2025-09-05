@@ -67,7 +67,16 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
             abortController.abort();
             if (instanceForDispose) {
                 console.log("Quitting game instance...");
-                instanceForDispose._Quit();
+                try {
+                    instanceForDispose._Quit();
+                } catch (e: unknown) {
+                    if (typeof e === "object" && (e as { name: string }).name === "ExitStatus") {
+                        console.log("Program exited.");
+                    } else {
+                        console.error("Unexpected error:", e);
+                        throw e;
+                    }
+                }
             }
             setGameInstance(undefined);
             setIsLoading(false);
