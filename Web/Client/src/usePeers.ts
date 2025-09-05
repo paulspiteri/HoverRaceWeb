@@ -31,7 +31,7 @@ export const usePeers = (
     sendSignal: (gameId: string, targetConnectionId: string, gameToken: string, signalData: string) => Promise<void>,
     gameToken: string | undefined,
     isLoadingGameData: boolean,
-    onGameData: (playerIndex: number, data: unknown) => void,
+    onGameData: (playerIndex: number, data: Uint8Array) => void,
     onGamePlayerPeerDisconnect: (playerIndex: number) => void,
 ) => {
     const peers = useRef<(GamePeer | undefined)[] | undefined>(undefined);

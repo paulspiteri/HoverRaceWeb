@@ -1,29 +1,3 @@
-var canvasElement = document.getElementById("canvas");
-var outputElement = document.getElementById("output");
-if (outputElement) outputElement.value = ""; // clear browser cache
-
-var Module = (async () => {
-    Module = await HoverRace({
-        noInitialRun: true,
-        print(...args) {
-            console.log(...args);
-        },
-        canvas: canvasElement,
-        totalDependencies: 0,
-        monitorRunDependencies(left) {
-            this.totalDependencies = Math.max(this.totalDependencies, left);
-            // Module.setStatus(
-            //     left
-            //         ? "Preparing... (" + (this.totalDependencies - left) + "/" + this.totalDependencies + ")"
-            //         : "All downloads complete.",
-            // );
-        },
-    });
-})();
-window.onerror = () => {
-    console.error("[post-exception status] ");
-};
-
 function updateCanvasSize(evt) {
     const container = document.getElementById("fullscreen-container");
     const rect = container.getBoundingClientRect();
@@ -180,15 +154,3 @@ window.addEventListener("load", function () {
 window.addEventListener("resize", updateCanvasSize);
 window.addEventListener("orientationchange", updateCanvasSize);
 window.addEventListener("fullscreenchange", updateCanvasSize);
-
-function receiveGameData(playerId, binaryData) {
-    // Allocate memory in Emscripten heap
-    const dataPtr = Module._malloc(binaryData.length);
-    Module.HEAPU8.set(binaryData, dataPtr);
-
-    // Call C++ function
-    Module._ReceivePeerMessage(playerId, dataPtr, binaryData.length);
-
-    // Free the allocated memory
-    Module._free(dataPtr);
-}

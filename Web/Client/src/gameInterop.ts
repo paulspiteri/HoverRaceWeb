@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 
 interface InteropInterface {
+    _malloc: (size: number) => number;
+    _free: (dataPtr: number) => number;
+    HEAPU8: Uint8Array;
     _main: () => void;
     _Quit: () => void;
     _SetPlayerId: (playerId: number) => void;
     _SetPeerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
+    _ReceivePeerMessage: (playerId: number, dataPtr: number, size: number) => void;
 }
 
 interface GameInstanceAPI {
     startGame: (playerIndex: number) => void;
     setPlayerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
+    receiveGameData: (playerId: number, binaryData: Uint8Array) => void;
 }
 
 declare global {
@@ -96,6 +101,17 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
                 },
                 setPlayerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => {
                     gameInstance._SetPeerStatus(playerId, isConnected, minLatency, avgLatency);
+                },
+                receiveGameData: (playerId: number, binaryData: Uint8Array) => {
+                    // Allocate memory in Emscripten heap
+                    const dataPtr = gameInstance._malloc(binaryData.length);
+                    gameInstance.HEAPU8.set(binaryData, dataPtr);
+
+                    // Call C++ function
+                    gameInstance._ReceivePeerMessage(playerId, dataPtr, binaryData.length);
+
+                    // Free the allocated memory
+                    gameInstance._free(dataPtr);
                 },
             } satisfies GameInstanceAPI;
         }

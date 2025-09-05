@@ -168,18 +168,10 @@ const GamePage: React.FC = () => {
             : undefined;
     const playerIndex = currentGame?.players.findIndex((p) => p?.connectionId === connectionId);
 
-    const onGameData = useCallback((playerId: number, data: unknown) => {
-        let binaryData = null;
-        if (data instanceof Uint8Array) {
-            binaryData = data;
-        } else if (data instanceof ArrayBuffer) {
-            binaryData = new Uint8Array(data);
-        } else {
-            console.error(`[JS] Received unsupported data format:`, typeof data);
-            return;
-        }
-        receiveGameData(playerId, binaryData);
-    }, []);
+    const onGameData = useCallback(
+        (playerId: number, data: Uint8Array) => void gameInstanceApi?.receiveGameData(playerId, data),
+        [gameInstanceApi],
+    );
 
     const onGamePlayerDisconnected = useCallback(
         (playerId: number) => void gameInstanceApi?.setPlayerStatus(playerId, false, 0, 0),
