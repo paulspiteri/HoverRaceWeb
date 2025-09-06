@@ -6,12 +6,14 @@ interface InteropInterface {
     HEAPU8: Uint8Array;
     _main: () => void;
     _Quit: () => void;
+    _ChangeWindowSize: (width: number, height: number) => void;
     _SetPlayerId: (playerId: number) => void;
     _SetPeerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
     _ReceivePeerMessage: (playerId: number, dataPtr: number, size: number) => void;
 }
 
-interface GameInstanceAPI {
+export interface GameInstanceAPI {
+    setWindowSize: (width: number, height: number) => void;
     startGame: (playerIndex: number) => void;
     setPlayerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
     receiveGameData: (playerId: number, binaryData: Uint8Array) => void;
@@ -95,6 +97,9 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
     const gameInstanceApi = useMemo(() => {
         if (gameInstance) {
             return {
+                setWindowSize: (width: number, height: number) => {
+                    gameInstance._ChangeWindowSize(width, height);
+                },
                 startGame: (playerIndex: number) => {
                     gameInstance._SetPlayerId(playerIndex);
                     gameInstance._main();

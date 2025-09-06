@@ -1,23 +1,3 @@
-function updateCanvasSize(evt) {
-    const container = document.getElementById("fullscreen-container");
-    const rect = container.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    const w = rect.width * dpr;
-    const h = rect.height * dpr;
-    Module.ccall("ChangeWindowSize", null, ["number", "number"], [w, h]);
-
-    if (evt?.type !== "resize") {
-        window.dispatchEvent(new Event("resize"));
-    }
-
-    const isIOS = /iPad|iPhone/.test(navigator.userAgent);
-    if (isIOS) {
-        canvasElement.style.top = "85px";
-        document.getElementById("trackselection").style.top = "85px";
-        window.scrollTo(0, 85);
-    }
-}
-
 function initVirtualJoysticks() {
     const joystickZone = document.getElementById("joystick-zone");
     const movementManager = nipplejs.create({
@@ -150,7 +130,3 @@ function simulateKeyUp(key) {
 window.addEventListener("load", function () {
     initVirtualJoysticks();
 });
-
-window.addEventListener("resize", updateCanvasSize);
-window.addEventListener("orientationchange", updateCanvasSize);
-window.addEventListener("fullscreenchange", updateCanvasSize);

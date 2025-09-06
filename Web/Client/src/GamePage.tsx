@@ -6,13 +6,15 @@ import { JoinGameOffer } from "@/JoinGameOffer.tsx";
 import { GameNotFound } from "@/GameNotFound.tsx";
 import type { JoinedGame } from "./types";
 import { usePeers } from "@/usePeers.ts";
-import { useGameInstance } from "@/gameInterop.ts";
+import { useGameInstance } from "@/interop/gameInterop.ts";
 import type { GameOutletContext } from "./App";
+import { useGameWindowSize } from "@/interop/useGameWindowSize.ts";
 
 export const GamePage: React.FC = () => {
     const { gameId } = useParams();
     const { connectionId, games, commands, eventSource, gameToken, canvasRef } = useOutletContext<GameOutletContext>();
     const { gameInstanceApi, isLoadingGameData } = useGameInstance(canvasRef.current);
+    useGameWindowSize(gameInstanceApi, canvasRef.current);
 
     // Track if we're currently leaving the game to prevent flicker
     const [isLeaving, setIsLeaving] = useState(false);

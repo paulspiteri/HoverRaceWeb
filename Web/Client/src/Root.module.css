@@ -14,3 +14,14 @@
     border: 0 none;
     background-color: black;
 }
+
+.canvas-interactive {
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    width: 350px;
+    height: 262px;
+}
+
+.canvas-interactive:hover {
+    opacity: 0.8;
+}

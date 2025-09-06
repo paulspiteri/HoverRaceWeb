@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { Container, Stack, Title, Group, Flex, Box, ActionIcon } from "@mantine/core";
 import { IconHome } from "@tabler/icons-react";
 import { useGameData } from "@/useGameData.ts";
@@ -6,13 +6,20 @@ import { GameList } from "@/GameList.tsx";
 import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { useNavigate, Outlet, useMatch } from "react-router-dom";
 import type { GameOutletContext } from "./App";
-import styles from "./App.module.css";
+import styles from "./Root.module.css";
 
 export function Root() {
     const navigate = useNavigate();
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const gameToken = useRef<string>(undefined);
     const gameMatch = useMatch("/game/*");
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    useEffect(() => {
+        const handleFullscreenChange = () => void setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+        return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    }, []);
 
     const setActiveGame = useCallback(
         (id: string | undefined, token?: string) => {
@@ -97,17 +104,18 @@ export function Root() {
                     <GameList games={games} onJoinGame={handleJoinGame} />
                 </Flex>
             </Flex>
-            <div className={styles["canvas-border"]}>
+            <div
+                className={styles["canvas-border"]}
+                style={{
+                    display: !gameMatch ? "none" : undefined,
+                }}
+            >
                 <canvas
                     ref={canvasRef}
                     id="canvas"
                     tabIndex={-1}
-                    className={styles["canvas-emscripten"]}
-                    style={{
-                        width: "350px",
-                        height: "262px",
-                        display: !gameMatch ? "none" : undefined,
-                    }}
+                    className={`${styles["canvas-emscripten"]} ${!isFullscreen ? styles["canvas-interactive"] : ""}`}
+                    onClick={(evt) => evt.currentTarget.requestFullscreen()}
                 />
             </div>
         </Container>
