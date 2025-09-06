@@ -9,10 +9,16 @@ import { usePeers } from "@/usePeers.ts";
 import { useGameInstance } from "@/interop/gameInterop.ts";
 import type { GameOutletContext } from "./App";
 import { useGameWindowSize } from "@/interop/useGameWindowSize.ts";
+import { useAtomValue } from 'jotai';
+import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom } from '@/atoms.ts';
 
 export const GamePage: React.FC = () => {
     const { gameId } = useParams();
-    const { connectionId, games, commands, eventSource, gameToken, canvasRef } = useOutletContext<GameOutletContext>();
+    const { eventSource, canvasRef } = useOutletContext<GameOutletContext>();
+    const connectionId = useAtomValue(connectionIdAtom);
+    const gameToken = useAtomValue(gameTokenAtom);
+    const commands = useAtomValue(commandsAtom);
+    const games = useAtomValue(gamesAtom);
     const { gameInstanceApi, isLoadingGameData } = useGameInstance(canvasRef.current);
     useGameWindowSize(gameInstanceApi, canvasRef.current);
 
@@ -39,7 +45,7 @@ export const GamePage: React.FC = () => {
         connectionId,
         joinedGame,
         eventSource,
-        commands.sendSignal,
+        commands?.sendSignal,
         gameToken,
         isLoadingGameData,
         onGameData,
@@ -49,13 +55,13 @@ export const GamePage: React.FC = () => {
     useEffect(() => void (global.sendGameMessage = sendData), [sendData]);
 
     const handleJoinGame = () => {
-        if (!gameId || !connectionId) return;
+        if (!gameId || !connectionId || !commands) return;
         const savedName = localStorage.getItem("hoverrace-player-name");
         commands.joinGame(gameId, connectionId, savedName || undefined);
     };
 
     const handleLeaveGame = async () => {
-        if (joinedGame && gameToken) {
+        if (joinedGame && gameToken && commands) {
             setIsLeaving(true);
             try {
                 await commands.leaveGame(joinedGame.id, gameToken);
@@ -67,13 +73,13 @@ export const GamePage: React.FC = () => {
     };
 
     const handleStartGame = async () => {
-        if (joinedGame && gameToken) {
+        if (joinedGame && gameToken && commands) {
             await commands.startGame(joinedGame.id, gameToken);
         }
     };
 
     const handleUpdatePlayer = async (name: string) => {
-        if (joinedGame && gameToken) {
+        if (joinedGame && gameToken && commands) {
             await commands.updatePlayer(joinedGame.id, gameToken, name);
         }
     };
@@ -114,7 +120,6 @@ export const GamePage: React.FC = () => {
                 onClose={handleLeaveGame}
                 onStartGame={handleStartGame}
                 peerStatuses={peerStatuses}
-                currentConnectionId={connectionId}
                 onUpdatePlayer={handleUpdatePlayer}
                 peersActualStatuses={peersActualStatuses}
                 peerLatencies={peerLatencies}

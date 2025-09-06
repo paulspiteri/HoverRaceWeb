@@ -7,11 +7,12 @@ import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { useNavigate, Outlet, useMatch } from "react-router-dom";
 import type { GameOutletContext } from "./App";
 import styles from "./Root.module.css";
+import { useSetAtom } from "jotai";
+import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom } from "@/atoms.ts";
 
 export function Root() {
     const navigate = useNavigate();
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const gameToken = useRef<string>(undefined);
     const gameMatch = useMatch("/game/*");
     const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -21,17 +22,28 @@ export function Root() {
         return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
     }, []);
 
+    // Sync atoms setup
+    const setConnectionId = useSetAtom(connectionIdAtom);
+    const setGameToken = useSetAtom(gameTokenAtom);
+    const setCommands = useSetAtom(commandsAtom);
+    const setGames = useSetAtom(gamesAtom);
+
     const setActiveGame = useCallback(
         (id: string | undefined, token?: string) => {
             navigate(id !== undefined ? `/game/${id}` : "/");
-            gameToken.current = token;
+            setGameToken(token);
         },
-        [navigate],
+        [navigate, setGameToken],
     );
+
     const { connectionId, games, commands, eventSource } = useGameData(
         `${window.location.protocol}//${window.location.hostname}:3001/api`,
         setActiveGame,
     );
+
+    useEffect(() => setConnectionId(connectionId), [connectionId, setConnectionId]);
+    useEffect(() => setCommands(commands), [commands, setCommands]);
+    useEffect(() => setGames(games), [games, setGames]);
 
     const handleJoinGame = (id: string) => {
         if (connectionId) {
@@ -77,11 +89,7 @@ export function Root() {
                                 <Outlet
                                     context={
                                         {
-                                            connectionId,
-                                            games,
-                                            commands,
                                             eventSource,
-                                            gameToken: gameToken.current,
                                             canvasRef,
                                         } satisfies GameOutletContext
                                     }
@@ -100,7 +108,7 @@ export function Root() {
                         overflow: "hidden",
                     }}
                 >
-                    <ConnectionStatus connectionId={connectionId} />
+                    <ConnectionStatus />
                     <GameList games={games} onJoinGame={handleJoinGame} />
                 </Flex>
             </Flex>

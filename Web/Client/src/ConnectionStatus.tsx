@@ -1,8 +1,9 @@
 import { Text, Box, Group } from "@mantine/core";
+import { useAtomValue } from 'jotai';
+import { connectionIdAtom } from '@/atoms.ts';
 
-export const ConnectionStatus: React.FC<{
-    connectionId: string | undefined;
-}> = ({ connectionId }) => {
+export const ConnectionStatus: React.FC = () => {
+    const connectionId = useAtomValue(connectionIdAtom);
     return (
         <Box
             p="sm"

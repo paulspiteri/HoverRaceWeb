@@ -89,16 +89,10 @@ export function ElectroCar({ width = 90, height = 50, className }: ElectroCarPro
                     });
 
                     if (Array.isArray(child.material)) {
-                        console.log(
-                            `Mesh has ${child.material.length} materials:`,
-                            child.material.map((m) => m.name),
-                        );
-
                         // Apply textures to each material in the array
                         const newMaterials = child.material.map((mat) => {
                             if (mat.name && textureMap[mat.name as keyof typeof textureMap]) {
                                 const texturePath = textureMap[mat.name as keyof typeof textureMap];
-                                console.log(`Loading texture: ${texturePath} for material: ${mat.name}`);
 
                                 const texture = textureLoader.load(
                                     texturePath,

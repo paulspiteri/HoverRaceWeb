@@ -7,13 +7,14 @@ import { PlayerList } from "./PlayerList";
 import { PlayerNameInput } from "./PlayerNameInput";
 import type { PeerConnectionStatusMessage } from "@/peerTypes.ts";
 import type { PeerConnectionLatency } from "@/usePeers.ts";
+import { useAtomValue } from 'jotai';
+import { connectionIdAtom } from '@/atoms.ts';
 
 interface ActiveGameProps {
     game: JoinedGame;
     onClose: () => void;
     onStartGame: () => void;
     peerStatuses: ("connecting" | "connected" | "disconnected" | undefined)[] | undefined;
-    currentConnectionId: string | undefined;
     onUpdatePlayer: (name: string) => Promise<void>;
     peersActualStatuses?: (PeerConnectionStatusMessage | undefined)[];
     peerLatencies?: (PeerConnectionLatency | undefined)[];
@@ -25,12 +26,13 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
     onClose,
     onStartGame,
     peerStatuses,
-    currentConnectionId,
     onUpdatePlayer,
     peersActualStatuses,
     peerLatencies,
     isLoadingGameData,
 }) => {
+    const currentConnectionId = useAtomValue(connectionIdAtom);
+    
     // Get current player info and determine if creator (index 0)
     const currentPlayerIndex = game.players.findIndex((p) => p?.connectionId === currentConnectionId);
     const currentPlayer = currentPlayerIndex >= 0 ? game.players[currentPlayerIndex] : undefined;

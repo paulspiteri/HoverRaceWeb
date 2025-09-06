@@ -1,19 +1,20 @@
 import * as React from "react";
 import { Button, Stack, Group } from "@mantine/core";
-import { useOutletContext } from "react-router-dom";
-import type { GameOutletContext } from "./App";
+import { useAtomValue } from "jotai";
+import { connectionIdAtom, commandsAtom } from "@/atoms.ts";
 
 export const NoGame: React.FC = () => {
-    const { connectionId, commands } = useOutletContext<GameOutletContext>();
+    const connectionId = useAtomValue(connectionIdAtom);
+    const commands = useAtomValue(commandsAtom);
     return (
         <Stack gap="lg">
             <Group justify="center">
                 <Button
                     onClick={() => {
                         const savedName = localStorage.getItem("hoverrace-player-name");
-                        commands.createGame(connectionId!, savedName || undefined);
+                        commands?.createGame(connectionId!, savedName || undefined);
                     }}
-                    disabled={!connectionId}
+                    disabled={!connectionId || !commands}
                     size="lg"
                     px="xl"
                 >
