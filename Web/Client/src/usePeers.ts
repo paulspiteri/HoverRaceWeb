@@ -242,7 +242,7 @@ export const usePeers = (
     }, [eventSource, onSignalReceived]);
 
     useEffect(() => {
-        if (game) {
+        if (game && gameToken) {
             const myPlayerIndex = game.players.findIndex((x) => x?.connectionId === connectionId);
             if (myPlayerIndex === -1) {
                 throw new Error("Current connection not found in game players");
