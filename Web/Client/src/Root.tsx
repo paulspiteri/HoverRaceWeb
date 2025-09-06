@@ -1,9 +1,9 @@
-import * as React from "react";
 import { useCallback, useRef } from "react";
 import { Container, Stack, Title, Group, Flex, Box, ActionIcon } from "@mantine/core";
 import { IconHome } from "@tabler/icons-react";
 import { useGameData } from "@/useGameData.ts";
 import { GameList } from "@/GameList.tsx";
+import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { useNavigate, Outlet, useMatch } from "react-router-dom";
 import type { GameOutletContext } from "./App";
 import styles from "./App.module.css";
@@ -93,6 +93,7 @@ export function Root() {
                         overflow: "hidden",
                     }}
                 >
+                    <ConnectionStatus connectionId={connectionId} />
                     <GameList games={games} onJoinGame={handleJoinGame} />
                 </Flex>
             </Flex>

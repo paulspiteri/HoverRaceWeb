@@ -1,14 +1,12 @@
 import * as React from "react";
 import { Button, Stack, Group } from "@mantine/core";
 import { useOutletContext } from "react-router-dom";
-import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import type { GameOutletContext } from "./App";
 
 export const NoGame: React.FC = () => {
     const { connectionId, commands } = useOutletContext<GameOutletContext>();
     return (
         <Stack gap="lg">
-            <ConnectionStatus connectionId={connectionId} />
             <Group justify="center">
                 <Button
                     onClick={() => {
