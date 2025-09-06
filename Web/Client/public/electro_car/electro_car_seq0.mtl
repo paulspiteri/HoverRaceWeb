@@ -1,0 +1,59 @@
+# HoverRace Material Export
+# Exported textures for MR_ELECTRO_CAR
+
+newmtl material_24
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.1 0.1 0.1
+Ns 10.0
+d 1.0
+map_Kd ../textures/texture_24.png
+
+newmtl material_20
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.1 0.1 0.1
+Ns 10.0
+d 1.0
+map_Kd ../textures/texture_20.png
+
+newmtl material_22
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.1 0.1 0.1
+Ns 10.0
+d 1.0
+map_Kd ../textures/texture_22.png
+
+newmtl material_23
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.1 0.1 0.1
+Ns 10.0
+d 1.0
+map_Kd ../textures/texture_23.png
+
+newmtl material_21
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.1 0.1 0.1
+Ns 10.0
+d 1.0
+map_Kd ../textures/texture_21.png
+
+newmtl material_25
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.1 0.1 0.1
+Ns 10.0
+d 1.0
+map_Kd ../textures/texture_25.png
+
+newmtl material_26
+Ka 0.2 0.2 0.2
+Kd 0.8 0.8 0.8
+Ks 0.1 0.1 0.1
+Ns 10.0
+d 1.0
+map_Kd ../textures/texture_26.png
+
