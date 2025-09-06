@@ -17,7 +17,7 @@ export const NoGame: React.FC = () => {
                     size="lg"
                     px="xl"
                 >
-                    Create New Game
+                    New Game
                 </Button>
             </Group>
         </Stack>
