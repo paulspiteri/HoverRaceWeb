@@ -35,7 +35,7 @@ if (!process.env.PORT) {
 }
 
 const app = express();
-const port = process.env.PORT;
+const port = Number(process.env.PORT);
 const clientUrl = process.env.CLIENT_URL;
 
 app.use(
@@ -44,6 +44,14 @@ app.use(
     }),
 );
 app.use(express.json());
+
+app.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "OK",
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+    });
+});
 
 // Store SSE connections with associated creator IDs
 const sseClients = new Map<express.Response, string>();
@@ -456,6 +464,6 @@ gameManager.on("gameUpdated", (game: ServerGame) => {
     broadcastGameUpdate(game);
 });
 
-app.listen(port, () => {
+app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
 });
