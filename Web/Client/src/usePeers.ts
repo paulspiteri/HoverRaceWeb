@@ -28,7 +28,9 @@ export const usePeers = (
     connectionId: string | undefined,
     game: JoinedGame | undefined,
     eventSource: EventSource | undefined,
-    sendSignal: (gameId: string, targetConnectionId: string, gameToken: string, signalData: string) => Promise<void>,
+    sendSignal:
+        | ((gameId: string, targetConnectionId: string, gameToken: string, signalData: string) => Promise<void>)
+        | undefined,
     gameToken: string | undefined,
     isLoadingGameData: boolean,
     onGameData: (playerIndex: number, data: Uint8Array) => void,
@@ -298,8 +300,10 @@ export const usePeers = (
 
                     simplePeer.on("signal", (data: SimplePeer.SignalData) => {
                         console.log(`📤 Sending signal to ${playerConnectionId}`);
-                        if (game && gameToken) {
+                        if (game && gameToken && sendSignal) {
                             sendSignal(game.id, playerConnectionId, gameToken, JSON.stringify(data));
+                        } else {
+                            console.error(`❌ Cannot send signal, not in a ready game state.`);
                         }
                     });
 
