@@ -28,13 +28,13 @@ export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled, on
                     <Title order={4} size="lg" fw={600}>
                         {game.name}
                     </Title>
-                    <Text size="sm" c="dimmed">
+                    <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
                         Players: {game.playerCount}/{game.maxPlayers}
                     </Text>
-                    <Text size="xs" c="dimmed">
+                    <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
                         Created: {new Date(game.createdAt).toLocaleString()}
                     </Text>
-                    <Text size="xs" c="dimmed">
+                    <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         Game ID: {game.id}
                     </Text>
                 </Box>

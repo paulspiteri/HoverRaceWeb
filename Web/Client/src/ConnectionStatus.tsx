@@ -26,7 +26,11 @@ export const ConnectionStatus: React.FC = () => {
                     c="dimmed"
                     style={{
                         fontFamily: "monospace",
-                        wordBreak: "break-all",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        minWidth: 0,
+                        flex: 1,
                     }}
                 >
                     {connectionId ?? "Connecting..."}

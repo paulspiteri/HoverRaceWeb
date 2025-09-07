@@ -4,6 +4,7 @@ import type { PeerConnectionStatusMessage } from "@/peerTypes.ts";
 import type { PeerConnectionLatency } from "@/usePeers.ts";
 import { useMemo } from "react";
 import { Title, Stack, Group, Text, Badge, Box, Avatar, Flex } from "@mantine/core";
+import { ElectroCar } from "@/ElectroCar.tsx";
 
 interface ConnectionStatusProps {
     player: { connectionId: string };
@@ -22,7 +23,7 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
 }) => {
     if (player.connectionId === currentConnectionId) {
         return (
-            <Group gap="xs">
+            <Group gap="xs" wrap="nowrap">
                 <Box w={8} h={8} bg="blue" style={{ borderRadius: "50%" }} />
                 <Text size="sm" c="dimmed">
                     You
@@ -37,9 +38,9 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     const latency = peerLatencies?.[index]?.averageLatency;
 
     return (
-        <Group gap="xs">
+        <Group gap="xs" wrap="nowrap">
             <Box w={8} h={8} bg={statusColor} style={{ borderRadius: "50%" }} />
-            <Text size="sm" c="dimmed">
+            <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
                 {statusText}
                 {status === "connected" && latency && ` • ${latency}ms`}
             </Text>
@@ -70,9 +71,9 @@ const MeshStatus: React.FC<MeshStatusProps> = ({ index, gamePlayers, peerStatus 
     const statusText = !peerStatus ? "No Report" : isFullyConnected ? "Mesh Ready" : "Mesh Not Ready";
 
     return (
-        <Group gap="xs">
+        <Group gap="xs" wrap="nowrap">
             <Box w={8} h={8} bg={statusColor} style={{ borderRadius: "50%" }} />
-            <Text size="sm" c="dimmed">
+            <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
                 {statusText}
             </Text>
         </Group>
@@ -117,9 +118,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                                         opacity: 0.5,
                                     }}
                                 >
-                                    <Group justify="space-between">
+                                    <Group justify="space-between" wrap="nowrap">
                                         <Group gap="md">
-                                            <Avatar size="sm" bg="gray.1" c="gray.6">
+                                            <Avatar size="sm" bg="gray.1" c="gray.6" style={{ width: 36, height: 20 }}>
                                                 {index + 1}
                                             </Avatar>
                                             <Text fw={500} c="dimmed">
@@ -143,19 +144,29 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                                 p="md"
                                 style={{ border: "1px solid var(--mantine-color-gray-3)", borderRadius: 8 }}
                             >
-                                <Group justify="space-between">
-                                    <Group gap="md">
-                                        <Avatar size="sm">{index + 1}</Avatar>
-                                        <Box>
-                                            <Group gap="xs">
+                                <Group justify="space-between" wrap="nowrap">
+                                    <Group gap="md" wrap="nowrap" style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
+                                        <ElectroCar width={36} height={20} />
+                                        <Box style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
+                                            <Group gap="xs" wrap="nowrap">
                                                 <Text fw={500}>{player.name || `Player ${index + 1}`}</Text>
                                                 {index === 0 && (
-                                                    <Badge size="xs" variant="light">
+                                                    <Badge size="xs" variant="light" style={{ flexShrink: 0 }}>
                                                         Host
                                                     </Badge>
                                                 )}
                                             </Group>
-                                            <Text size="sm" c="dimmed">
+                                            <Text
+                                                size="sm"
+                                                c="dimmed"
+                                                style={{
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
+                                                    width: "0",
+                                                    minWidth: "100%",
+                                                }}
+                                            >
                                                 ID: {player.connectionId}
                                             </Text>
                                         </Box>
@@ -183,7 +194,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                                             player.connectionId !== currentConnectionId &&
                                             peersActualStatuses?.[index]) ||
                                             player.connectionId === currentConnectionId) && (
-                                            <Group gap="xs">
+                                            <Group gap="xs" wrap="nowrap">
                                                 <Box
                                                     w={8}
                                                     h={8}
@@ -198,7 +209,7 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                                                     }
                                                     style={{ borderRadius: "50%" }}
                                                 />
-                                                <Text size="sm" c="dimmed">
+                                                <Text size="sm" c="dimmed" style={{ whiteSpace: "nowrap" }}>
                                                     {player.connectionId === currentConnectionId
                                                         ? isLoadingGameData
                                                             ? "Loading Game"
