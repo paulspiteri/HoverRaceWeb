@@ -37,7 +37,7 @@ export function Root() {
     );
 
     const { connectionId, games, commands, eventSource } = useGameData(
-        `${window.location.protocol}//${window.location.hostname}:3001/api`,
+        `${import.meta.env.VITE_SERVER_URL}/api`,
         setActiveGame,
     );
 

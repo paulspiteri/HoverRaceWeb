@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
 import { v4 as uuidv4 } from "uuid";
 import { gameManager } from "./gameManager.ts";
 import type {
@@ -22,10 +23,22 @@ import type {
     ServerMessage,
 } from "./types";
 
+dotenv.config({ path: ".env" });
+
+if (!process.env.CLIENT_URL) {
+    console.error("❌ FATAL: CLIENT_URL environment variable is not set");
+    process.exit(1);
+}
+
 const app = express();
 const port = 3001;
+const clientUrl = process.env.CLIENT_URL;
 
-app.use(cors());
+app.use(
+    cors({
+        origin: clientUrl,
+    }),
+);
 app.use(express.json());
 
 // Store SSE connections with associated creator IDs
@@ -37,7 +50,7 @@ app.get("/api/games/stream", (req, res) => {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": clientUrl,
     });
 
     // Generate unique connection ID for this client
