@@ -29,9 +29,13 @@ if (!process.env.CLIENT_URL) {
     console.error("❌ FATAL: CLIENT_URL environment variable is not set");
     process.exit(1);
 }
+if (!process.env.PORT) {
+    console.error("❌ FATAL: PORT environment variable is not set");
+    process.exit(1);
+}
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT;
 const clientUrl = process.env.CLIENT_URL;
 
 app.use(
