@@ -153,16 +153,19 @@ void MR_Observer::RenderGLHUDWeapon(const GLRenderer* glRenderer, const MR_MainC
 
 void DrawTextWithEffect(ImVec2 pos, const char* text) {
     ImDrawList* draw_list = ImGui::GetForegroundDrawList();
+    ImGuiIO& io = ImGui::GetIO();
+    
+    float shadowOffset = 2.0f * io.FontGlobalScale;
 
     // Shadow (dark offset)
     draw_list->AddText(
-        ImVec2(pos.x - 2.0f, pos.y + 2.0f),
+        ImVec2(pos.x - shadowOffset, pos.y + shadowOffset),
         IM_COL32(35, 35, 35, 192),
         text);
 
     // Highlight (light offset)
     draw_list->AddText(
-        ImVec2(pos.x + 2.0f, pos.y - 2.0f),
+        ImVec2(pos.x + shadowOffset, pos.y - shadowOffset),
         IM_COL32(218, 218, 218, 128),
         text);
 

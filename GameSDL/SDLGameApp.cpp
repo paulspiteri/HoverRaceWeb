@@ -284,8 +284,7 @@ void MR_SDLGameApp::SetResolution(int width, int height)
 
 void MR_SDLGameApp::SetOpenGLResolution(int width, int height)
 {
-   mGLRenderer->state.swapchain.width = width;
-   mGLRenderer->state.swapchain.height = height;
+   mGLRenderer->ChangeResolution(width, height);
 }
 
 void MR_SDLGameApp::DisconnectPlayer(int playerId)

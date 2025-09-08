@@ -135,6 +135,7 @@ class GLRenderer
     uint32_t* ConvertSpriteToRGBA8(const MR_Sprite* sprite);
     unsigned long LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF);
     std::tuple<sg_image, std::array<glm::vec4, 32>> BindTexturesInternal(std::vector<TextureData>& collection);
+    float CalculateFontScale(int height);
 
 
 public:
@@ -164,4 +165,5 @@ public:
     void RenderMiniMap(glm::ivec4 size);
     void BeginImguiFrame() const;
     void EndImguiFrame() const;
+    void ChangeResolution(int width, int height);
 };

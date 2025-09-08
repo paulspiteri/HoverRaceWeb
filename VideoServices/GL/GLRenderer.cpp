@@ -21,6 +21,9 @@
 GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer)
     : glWindow(glWindow), glContext(glContext), videoBuffer(videoBuffer)
 {
+    int width, height;
+    SDL_GetWindowSize(glWindow, &width, &height);
+
     sg_logger logger = {
         .func = slog_func
     };
@@ -169,8 +172,8 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     state.bkg_bindings.samplers[0] = state.edge_sampler;
 
     state.swapchain = {
-        .width = 640,
-        .height = 400,
+        .width = width,
+        .height = height,
         .sample_count = 16,
         .color_format = SG_PIXELFORMAT_RGBA8,
         .depth_format = SG_PIXELFORMAT_DEPTH,
@@ -184,6 +187,8 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     config.SizePixels = 57.0f;
     ImFont* font = io.Fonts->AddFontFromFileTTF("Roboto-MediumItalic.ttf", 57.0f, &config);
     io.FontDefault = font;
+    
+    io.FontGlobalScale = CalculateFontScale(height);
 }
 
 GLRenderer::~GLRenderer()
@@ -370,6 +375,21 @@ void GLRenderer::BeginImguiFrame() const
 void GLRenderer::EndImguiFrame() const
 {
     simgui_render();
+}
+
+void GLRenderer::ChangeResolution(int width, int height)
+{
+    state.swapchain.width = width;
+    state.swapchain.height = height;
+    
+    ImGuiIO& io = ImGui::GetIO();
+    io.FontGlobalScale = CalculateFontScale(height);
+}
+
+float GLRenderer::CalculateFontScale(int height)
+{
+    const float targetScale = static_cast<float>(height) / 1000.0f;
+    return std::max(0.3f, std::min(3.0f, targetScale));
 }
 
 std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal(std::vector<TextureData>& collection)

@@ -3,7 +3,7 @@ import type { GameInstanceAPI } from "@/interop/gameInterop.ts";
 
 export const useGameWindowSize = (gameInstance: GameInstanceAPI | undefined, canvas: HTMLCanvasElement | null) => {
     useEffect(() => {
-        function updateCanvasSize(evt: Event) {
+        function updateCanvasSize(evt: Event | undefined) {
             const rect = canvas!.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
             const w = rect.width * dpr;
@@ -24,6 +24,8 @@ export const useGameWindowSize = (gameInstance: GameInstanceAPI | undefined, can
         }
 
         if (!gameInstance || !canvas) return;
+
+        updateCanvasSize(undefined);
 
         window.addEventListener("resize", updateCanvasSize);
         window.addEventListener("orientationchange", updateCanvasSize);

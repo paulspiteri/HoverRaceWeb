@@ -23,6 +23,8 @@ SDL_GLContext glContext = nullptr;
 MR_SDLGameApp *game = nullptr;
 int lControlState = 0;
 int gPlayerId = 0;
+int gWindowWidth = 640;
+int gWindowHeight = 400;
 
 std::array<PeerStatus, WebPeerInterface::eMaxClient> gPeerStatus; // load here default values before game starts
 
@@ -36,7 +38,15 @@ extern "C" {
 
     void ChangeWindowSize(const int width, const int height) {
         std::cout << "ChangeWindowSize " << width << "x" << height << std::endl;
-        SDL_SetWindowSize(glWindow, width, height);
+        if (glWindow == nullptr)
+        {
+            std::cout << "ChangeWindowSize: no window - storing value" << std::endl;
+            gWindowWidth = width;
+            gWindowHeight = height;
+        } else
+        {
+            SDL_SetWindowSize(glWindow, width, height);
+        }
     }
 
     void SetPlayerId(int playerId) {
@@ -93,13 +103,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
 #ifndef __EMSCRIPTEN__
     sdlWindow = SDL_CreateWindow("HoverRace SDL",
-                                 640, 400,
+                                 gWindowWidth, gWindowHeight,
                                  SDL_WINDOW_RESIZABLE);
     if (!sdlWindow) {
         SDL_Log("Couldn't create window =: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    SDL_SetWindowMinimumSize(sdlWindow, 640, 400);
+    SDL_SetWindowMinimumSize(sdlWindow, gWindowWidth, gWindowHeight);
     renderer = SDL_CreateRenderer(sdlWindow, NULL);
     if (!renderer) {
         SDL_Log("Couldn't create renderer =: %s", SDL_GetError());
@@ -108,7 +118,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     texture = SDL_CreateTexture(renderer,
                                 SDL_PIXELFORMAT_ARGB8888,
                                 SDL_TEXTUREACCESS_STREAMING,
-                                640, 400);
+                                gWindowWidth, gWindowHeight);
     SDL_HideWindow(sdlWindow);                                                              // HIDDEN FOR NOW!
 #endif
     #ifdef __EMSCRIPTEN__
@@ -118,13 +128,13 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     #endif
 
     glWindow = SDL_CreateWindow(windowTitle,
-                                640, 400,
+                                gWindowWidth, gWindowHeight,
                                 SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!glWindow) {
         SDL_Log("Couldn't create gl window =: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-    SDL_SetWindowMinimumSize(glWindow, 640, 400);
+    SDL_SetWindowMinimumSize(glWindow, gWindowWidth, gWindowHeight);
     std::cout << "Created Windows and Renderer" << std::endl;
 
 #ifdef __EMSCRIPTEN__
