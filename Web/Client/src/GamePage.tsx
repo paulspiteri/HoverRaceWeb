@@ -9,8 +9,8 @@ import { usePeers } from "@/usePeers.ts";
 import { useGameInstance } from "@/interop/gameInterop.ts";
 import type { GameOutletContext } from "./App";
 import { useGameWindowSize } from "@/interop/useGameWindowSize.ts";
-import { useAtomValue } from 'jotai';
-import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom } from '@/atoms.ts';
+import { useAtomValue } from "jotai";
+import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom } from "@/atoms.ts";
 
 export const GamePage: React.FC = () => {
     const { gameId } = useParams();
@@ -32,7 +32,8 @@ export const GamePage: React.FC = () => {
     const isInGame = joinedGame && playerIndex !== undefined && playerIndex >= 0;
 
     const onGameData = useCallback(
-        (playerId: number, data: Uint8Array) => void gameInstanceApi?.receiveGameData(playerId, data),
+        (playerId: number, data: Uint8Array, reliable: boolean) =>
+            void gameInstanceApi?.receiveGameData(playerId, data, reliable),
         [gameInstanceApi],
     );
 

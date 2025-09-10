@@ -67,7 +67,11 @@ extern "C" {
         }
         else
         {
-            game->DisconnectPlayer(playerId);
+            if (!isConnected)
+            {
+                std::cout << "Disconnect player " << playerId << std::endl;
+                game->DisconnectPlayer(playerId);
+            }
         }
     }
 }

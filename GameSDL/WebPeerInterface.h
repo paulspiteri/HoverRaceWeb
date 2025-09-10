@@ -5,13 +5,12 @@
 
 #include "../Util/MR_Types.h"
 
-#define MR_DEFAULT_NET_PORT  9530
 #define MR_MAX_NET_MESSAGE_LEN 255
 
 #define MR_NET_REQUIRED         1
 #define MR_NET_TRY              2
 #define MR_NOT_REQUIRED         0
-#define MR_NET_DATAGRAM        -1
+#define MR_NET_DATAGRAM        (-1)
 
 class MR_NetMessageBuffer
 {
@@ -30,8 +29,13 @@ struct PeerStatus {
     int minLatency;
     int avgLatency;
     std::string name;
+    std::uint8_t lastSentDatagramNumber;
+    std::uint8_t lastRecievedDatagramNumber;
 
-    PeerStatus() : isConnected(false), minLatency(0), avgLatency(0), name("Unknown Player") {}
+    PeerStatus() : isConnected(false), minLatency(0), avgLatency(0), name("Unknown Player"), lastSentDatagramNumber(0),
+                   lastRecievedDatagramNumber(0)
+    {
+    }
 };
 
 class WebPeerInterface
@@ -48,8 +52,7 @@ private:
     std::array<PeerStatus, eMaxClient> mPeers;
 
 public:
-    WebPeerInterface(int playerId, std::array<PeerStatus, eMaxClient> peers);
-    ~WebPeerInterface();
+    WebPeerInterface(int playerId, const std::array<PeerStatus, eMaxClient>& peers);
 
     void  SetPlayerName( const char* pPlayerName );
     const char* GetPlayerName()const;
@@ -64,9 +67,9 @@ public:
     int  GetAvgLag( int pClient )const;
     int  GetMinLag( int pClient )const;
 
-    bool UDPSend( int pClient, MR_NetMessageBuffer* pMessage, bool pLongPort, bool pResendLast = false ); // return TRUE if queue not full
+    bool UDPSend( int pClient, MR_NetMessageBuffer* pMessage, bool pResendLast = false ); // return TRUE if queue not full
+    bool ReqSend( int pClient, MR_NetMessageBuffer* pMessage);
     bool BroadcastMessage( MR_NetMessageBuffer* pMessage, int pReqLevel );
-    // BOOL BroadcastMessage( DWORD  pTimeStamp, int  pMessageType, int pMessageLen, const MR_UInt8* pMessage );
     bool FetchMessage( int& pMessageType, int& pMessageLen, const MR_UInt8*& pMessage, int& pClientId, MR_NetMessageBuffer& pBuffer ); // Caller provides buffer
 
     const char* GetPlayerName( int pIndex )const;

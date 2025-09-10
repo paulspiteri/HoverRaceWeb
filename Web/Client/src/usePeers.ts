@@ -8,6 +8,7 @@ export interface GamePeer {
     peer: SimplePeer.Instance;
     connectionId: string;
     unreliableChannel?: RTCDataChannel;
+    reliableChannel?: RTCDataChannel;
 }
 
 export interface PeerConnectionLatency {
@@ -33,7 +34,7 @@ export const usePeers = (
         | undefined,
     gameToken: string | undefined,
     isLoadingGameData: boolean,
-    onGameData: (playerIndex: number, data: Uint8Array) => void,
+    onGameData: (playerIndex: number, data: Uint8Array, reliable: boolean) => void,
     onGamePlayerPeerDisconnect: (playerIndex: number) => void,
 ) => {
     const peers = useRef<(GamePeer | undefined)[] | undefined>(undefined);
@@ -49,7 +50,12 @@ export const usePeers = (
         }
 
         if (reliable) {
-            // Reliable channel is always available via SimplePeer default
+            if (peer.reliableChannel?.readyState !== "open") {
+                console.warn(
+                    `❌ Cannot send ${message.type} to ${peer.connectionId}: reliable channel not open (state: ${peer.reliableChannel?.readyState})`,
+                );
+                return false;
+            }
         } else {
             if (peer.unreliableChannel?.readyState !== "open") {
                 console.warn(
@@ -63,7 +69,7 @@ export const usePeers = (
             const envelope = createJsonEnvelope(message);
 
             if (reliable) {
-                peer.peer.send(envelope);
+                peer.reliableChannel!.send(new Uint8Array(envelope));
             } else {
                 peer.unreliableChannel!.send(new Uint8Array(envelope));
             }
@@ -155,13 +161,13 @@ export const usePeers = (
     }, []);
 
     const handleChannelMessage = useCallback(
-        (data: Uint8Array, playerConnectionId: string, playerIndex: number) => {
+        (data: Uint8Array, playerConnectionId: string, playerIndex: number, reliable: boolean) => {
             if (data.length >= 4) {
                 try {
                     const { messageType, data: payload } = parseEnvelope(data);
 
                     if (messageType === MESSAGE_TYPES.GAME_BINARY) {
-                        onGameData(playerIndex, payload);
+                        onGameData(playerIndex, payload, reliable);
                     } else if (messageType === MESSAGE_TYPES.JSON) {
                         const message = JSON.parse(new TextDecoder().decode(payload)) as PeerMessage;
                         if (message.type === "peerConnectionStatus") {
@@ -307,20 +313,41 @@ export const usePeers = (
                         }
                     });
 
+                    const onChannelOpen = () => {
+                        {
+                            if (
+                                newPeer.unreliableChannel?.readyState === "open" &&
+                                newPeer.reliableChannel?.readyState === "open"
+                            ) {
+                                updatePeerStatus("connected");
+                            }
+                        }
+                    };
+
                     if (!isInitiator) {
                         const pc = getPeerConnection(simplePeer);
+
                         pc.addEventListener("datachannel", (event) => {
                             const channel = event.channel;
-                            if (channel.label === "unreliable") {
-                                console.log(`📡 Received data channel: ${channel.label} from ${playerConnectionId}`);
+                            console.log(`📡 Received data channel: ${channel.label} from ${playerConnectionId}`);
 
+                            if (channel.label === "unreliable") {
                                 newPeer.unreliableChannel = channel;
 
                                 channel.onmessage = (event) =>
-                                    handleDataChannelMessage(event.data, playerConnectionId, i);
+                                    handleDataChannelMessage(event.data, playerConnectionId, i, false);
                                 channel.onopen = () => {
                                     console.log(`📡 Unreliable channel open to ${playerConnectionId}`);
-                                    updatePeerStatus("connected");
+                                    onChannelOpen();
+                                };
+                            } else if (channel.label === "reliable") {
+                                newPeer.reliableChannel = channel;
+
+                                channel.onmessage = (event) =>
+                                    handleDataChannelMessage(event.data, playerConnectionId, i, true);
+                                channel.onopen = () => {
+                                    console.log(`📡 Reliable channel open to ${playerConnectionId}`);
+                                    onChannelOpen();
                                 };
                             }
                         });
@@ -348,9 +375,10 @@ export const usePeers = (
                         data: unknown,
                         playerConnectionId: string,
                         playerIndex: number,
+                        reliable: boolean,
                     ) => {
                         const uint8Data = new Uint8Array(data as ArrayBuffer);
-                        handleChannelMessage(uint8Data, playerConnectionId, playerIndex);
+                        handleChannelMessage(uint8Data, playerConnectionId, playerIndex, reliable);
                     };
 
                     simplePeer.on("connect", () => {
@@ -363,10 +391,23 @@ export const usePeers = (
                                 maxRetransmits: 0,
                             });
                             console.log(`📡 Created unreliable channel for ${playerConnectionId}`);
-
                             newPeer.unreliableChannel.onmessage = (event) =>
-                                handleDataChannelMessage(event.data, playerConnectionId, i);
-                            newPeer.unreliableChannel.onopen = () => updatePeerStatus("connected");
+                                handleDataChannelMessage(event.data, playerConnectionId, i, false);
+                            newPeer.unreliableChannel.onopen = () => {
+                                console.log(`📡 Unreliable channel open to ${playerConnectionId}`);
+                                onChannelOpen();
+                            };
+
+                            newPeer.reliableChannel = pc.createDataChannel("reliable", {
+                                ordered: true,
+                            });
+                            console.log(`📡 Created reliable channel for ${playerConnectionId}`);
+                            newPeer.reliableChannel.onmessage = (event) =>
+                                handleDataChannelMessage(event.data, playerConnectionId, i, true);
+                            newPeer.reliableChannel.onopen = () => {
+                                console.log(`📡 Reliable channel open to ${playerConnectionId}`);
+                                onChannelOpen();
+                            };
                         }
                     });
 
@@ -378,10 +419,6 @@ export const usePeers = (
                     simplePeer.on("error", (err: Error) => {
                         console.error(`❌ Peer error with ${playerConnectionId}:`, err);
                         updatePeerStatus("disconnected");
-                    });
-
-                    simplePeer.on("data", (data: ArrayBuffer) => {
-                        handleDataChannelMessage(data, playerConnectionId, i);
                     });
                 }
             }
@@ -401,16 +438,7 @@ export const usePeers = (
                 setPeerLatencies(undefined);
             }
         }
-    }, [
-        game,
-        connectionId,
-        sendSignal,
-        gameToken,
-        onGameData,
-        handleChannelMessage,
-        sendJsonMessage,
-        onGamePlayerPeerDisconnect,
-    ]);
+    }, [game, connectionId, sendSignal, gameToken, handleChannelMessage, sendJsonMessage, onGamePlayerPeerDisconnect]);
 
     const sendData = useCallback((playerIndex: number, data: Uint8Array, reliable: boolean = true): boolean => {
         if (!peers.current) {
@@ -430,7 +458,12 @@ export const usePeers = (
         }
 
         if (reliable) {
-            // Reliable channel is always available via SimplePeer default
+            if (peer.reliableChannel?.readyState !== "open") {
+                console.warn(
+                    `❌ Cannot send data to player ${playerIndex}: reliable channel not open (state: ${peer.reliableChannel?.readyState}) (${peer.connectionId})`,
+                );
+                return false;
+            }
         } else {
             if (peer.unreliableChannel?.readyState !== "open") {
                 console.warn(
@@ -442,9 +475,8 @@ export const usePeers = (
 
         try {
             const envelope = createEnvelope(MESSAGE_TYPES.GAME_BINARY, data);
-
             if (reliable) {
-                peer.peer.send(envelope);
+                peer.reliableChannel!.send(new Uint8Array(envelope));
             } else {
                 peer.unreliableChannel!.send(new Uint8Array(envelope));
             }

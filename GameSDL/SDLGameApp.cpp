@@ -171,7 +171,7 @@ void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
    }
 }
 
-void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, std::array<PeerStatus, WebPeerInterface::eMaxClient> peers)
+void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, const std::array<PeerStatus, WebPeerInterface::eMaxClient>& peers)
 {
    BOOL lSuccess = TRUE;
 

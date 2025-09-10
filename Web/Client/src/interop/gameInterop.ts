@@ -9,14 +9,14 @@ interface InteropInterface {
     _ChangeWindowSize: (width: number, height: number) => void;
     _SetPlayerId: (playerId: number) => void;
     _SetPeerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
-    _ReceivePeerMessage: (playerId: number, dataPtr: number, size: number) => void;
+    _ReceivePeerMessage: (playerId: number, dataPtr: number, size: number, reliable: boolean) => void;
 }
 
 export interface GameInstanceAPI {
     setWindowSize: (width: number, height: number) => void;
     startGame: (playerIndex: number) => void;
     setPlayerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
-    receiveGameData: (playerId: number, binaryData: Uint8Array) => void;
+    receiveGameData: (playerId: number, binaryData: Uint8Array, reliable: boolean) => void;
 }
 
 declare global {
@@ -107,13 +107,13 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
                 setPlayerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => {
                     gameInstance._SetPeerStatus(playerId, isConnected, minLatency, avgLatency);
                 },
-                receiveGameData: (playerId: number, binaryData: Uint8Array) => {
+                receiveGameData: (playerId: number, binaryData: Uint8Array, reliable: boolean) => {
                     // Allocate memory in Emscripten heap
                     const dataPtr = gameInstance._malloc(binaryData.length);
                     gameInstance.HEAPU8.set(binaryData, dataPtr);
 
                     // Call C++ function
-                    gameInstance._ReceivePeerMessage(playerId, dataPtr, binaryData.length);
+                    gameInstance._ReceivePeerMessage(playerId, dataPtr, binaryData.length, reliable);
 
                     // Free the allocated memory
                     gameInstance._free(dataPtr);

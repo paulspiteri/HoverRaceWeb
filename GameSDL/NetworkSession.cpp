@@ -58,7 +58,7 @@ uint32_t timeGetTime() {
    return static_cast<uint32_t>(elapsed.count());
 }
 
-MR_NetworkSession::MR_NetworkSession(int playerId,  std::array<PeerStatus, WebPeerInterface::eMaxClient> peers)
+MR_NetworkSession::MR_NetworkSession(int playerId, const std::array<PeerStatus, WebPeerInterface::eMaxClient>& peers)
                   :MR_ClientSession(), mNetInterface(playerId, peers)
 {
    mMasterMode = playerId == 0;
@@ -704,7 +704,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
-         if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE, FALSE ) )
+         if( mNetInterface.UDPSend( lCounter, &lMessage, FALSE ) )
          {
             //TRACE( "SendUDPA:%d\n", lCounter );
          }
@@ -721,7 +721,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
    {
       if( lPriorityLevel[ lCounter ] < 5 )
       {
-         if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE, FALSE ) )
+         if( mNetInterface.UDPSend( lCounter, &lMessage, FALSE ) )
          {
             TRACE( "SendUDPB:%d\n", lCounter );
          }
@@ -732,23 +732,21 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
       }
    }
 
-// I have removed the below code because it was causing missiles to collide with themselves. i think i removed some separate code which checks for duplicate messages. -- paul
-
-   // // Now to near clients( the second broadcast bring security)
-   // for(int lCounter = 0; lCounter < ENetInterface::eMaxClient; lCounter++ )
-   // {
-   //    if( lPriorityLevel[ lCounter ] >= 5 )
-   //    {
-   //       if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE, TRUE ) )
-   //       {
-   //          TRACE( "SendUDPC:%d\n", lCounter );
-   //       }
-   //       else
-   //       {
-   //          TRACE( "Buffer FullC:%d\n", lCounter );
-   //       }
-   //    }
-   // }
+   // Now to near clients( the second broadcast bring security)
+   for(int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
+   {
+      if( lPriorityLevel[ lCounter ] >= 5 )
+      {
+         if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE ) )
+         {
+            TRACE( "SendUDPC:%d\n", lCounter );
+         }
+         else
+         {
+            TRACE( "Buffer FullC:%d\n", lCounter );
+         }
+      }
+   }
 }
 
 void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_ElementNetState& pState, int pRoom )
@@ -803,7 +801,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
-         if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE, FALSE ) )
+         if( mNetInterface.UDPSend( lCounter, &lMessage, FALSE ) )
          {
             TRACE( "SendUDPA:%d\n", lCounter );
          }
@@ -820,7 +818,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
    {
       if( lPriorityLevel[ lCounter ] < 5 )
       {
-         if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE, FALSE ) )
+         if( mNetInterface.UDPSend( lCounter, &lMessage, FALSE ) )
          {
             TRACE( "SendUDPB:%d\n", lCounter );
          }
@@ -836,7 +834,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
-         if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE, TRUE ) )
+         if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE ) )
          {
             TRACE( "SendUDPC:%d\n", lCounter );
          }
@@ -863,7 +861,7 @@ void MR_NetworkSession::BroadcastTime( )
 
    for( int lCounter = 0; lCounter < WebPeerInterface::eMaxClient; lCounter++ )
    {
-      mNetInterface.UDPSend( lCounter, &lMessage, TRUE, FALSE );
+      mNetInterface.UDPSend( lCounter, &lMessage, FALSE );
    }
 }
 
