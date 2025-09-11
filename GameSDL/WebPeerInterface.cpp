@@ -42,6 +42,10 @@ extern "C" void ReceivePeerMessage(int playerId, const char* data, int length, b
         ReceivedMessage msg(playerId, reinterpret_cast<const MR_UInt8*>(data), length, reliable);
         g_messageQueue.push(msg);
     }
+    else
+    {
+        TRACE("Received invalid sized peer message from player %d (%s)\n", playerId, reliable ? "reliable" : "unreliable");
+    }
 }
 
 #endif

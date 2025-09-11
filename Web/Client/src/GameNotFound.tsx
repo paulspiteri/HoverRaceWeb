@@ -1,10 +1,12 @@
 import * as React from "react";
 import { Button, Container, Stack, Card, Alert } from "@mantine/core";
-import { useNavigate } from "react-router-dom";
+import { useAtomValue } from "jotai";
+import { connectionIdAtom, commandsAtom } from "@/atoms.ts";
 
 export const GameNotFound: React.FC = () => {
-    const navigate = useNavigate();
-    
+    const connectionId = useAtomValue(connectionIdAtom);
+    const commands = useAtomValue(commandsAtom);
+
     return (
         <Container size="sm" mt="xl">
             <Card withBorder shadow="sm" radius="md" p="lg">
@@ -12,8 +14,16 @@ export const GameNotFound: React.FC = () => {
                     <Alert color="yellow" title="Game not found">
                         The game you&apos;re looking for doesn&apos;t exist or is no longer available.
                     </Alert>
-                    <Button onClick={() => navigate("/")}>
-                        Back to Home
+                    <Button
+                        onClick={() => {
+                            const savedName = localStorage.getItem("hoverrace-player-name");
+                            commands?.createGame(connectionId!, savedName || undefined);
+                        }}
+                        disabled={!connectionId || !commands}
+                        variant="filled"
+                        color="blue"
+                    >
+                        New Game
                     </Button>
                 </Stack>
             </Card>
