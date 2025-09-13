@@ -56,7 +56,7 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
                 console.log(...args);
             },
             canvas,
-            locateFile: (path: string) => "/" + path,
+            locateFile: (path: string) => import.meta.env.VITE_GAME_URL + "/" + path,
             onRuntimeInitialized() {
                 console.log("Runtime initialized");
                 setIsLoadingGameData(false);
