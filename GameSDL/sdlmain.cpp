@@ -69,7 +69,6 @@ extern "C" {
         {
             if (!isConnected)
             {
-                std::cout << "Disconnect player " << playerId << std::endl;
                 game->DisconnectPlayer(playerId);
             }
         }

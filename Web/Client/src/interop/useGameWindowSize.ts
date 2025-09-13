@@ -14,13 +14,13 @@ export const useGameWindowSize = (gameInstance: GameInstanceAPI | undefined, can
                 window.dispatchEvent(new Event("resize"));
             }
 
-            const isIOS = /iPad|iPhone/.test(navigator.userAgent);
-            if (isIOS) {
-                canvas!.style.top = "85px";
-                // old iphone 'fullscreen' fix
-                //document.getElementById("trackselection").style.top = "85px";
-                //window.scrollTo(0, 85);
-            }
+            // old iphone 'fullscreen' fix
+            //const isIOS = /iPad|iPhone/.test(navigator.userAgent);
+            //if (isIOS) {
+            //    canvas!.style.top = "85px";
+            //document.getElementById("trackselection").style.top = "85px";
+            //window.scrollTo(0, 85);
+            //}
         }
 
         if (!gameInstance || !canvas) return;

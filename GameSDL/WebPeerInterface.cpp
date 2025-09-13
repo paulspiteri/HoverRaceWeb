@@ -76,7 +76,11 @@ void WebPeerInterface::Disconnect()
 
 void WebPeerInterface::DisconnectPlayer(int pIndex)
 {
-    mPeers[pIndex].isConnected = false;
+    if (mPeers[pIndex].isConnected)
+    {
+        std::cout << "Disconnecting player " << pIndex << std::endl;
+        mPeers[pIndex].isConnected = false;
+    }
 }
 
 int WebPeerInterface::GetClientCount() const

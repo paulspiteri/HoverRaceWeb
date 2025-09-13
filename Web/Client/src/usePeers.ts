@@ -43,6 +43,15 @@ export const usePeers = (
     const [peersActualStatuses, setPeersActualStatuses] = useState<PeerConnectionStatusMessage[]>();
     const [peerLatencies, setPeerLatencies] = useState<PeerConnectionLatency[]>();
 
+    // these refs are required because the underlying GameAPI can be created AFTER the peers are created
+    const onGameDataRef = useRef(onGameData);
+    const onGamePlayerPeerDisconnectRef = useRef(onGamePlayerPeerDisconnect);
+    useEffect(() => void (onGameDataRef.current = onGameData), [onGameData]);
+    useEffect(
+        () => void (onGamePlayerPeerDisconnectRef.current = onGamePlayerPeerDisconnect),
+        [onGamePlayerPeerDisconnect],
+    );
+
     const sendJsonMessage = useCallback((peer: GamePeer, message: PeerMessage, reliable: boolean = true): boolean => {
         if (!peer.peer.connected) {
             console.warn(`❌ Cannot send ${message.type}: peer not connected (${peer.connectionId})`);
@@ -167,7 +176,7 @@ export const usePeers = (
                     const { messageType, data: payload } = parseEnvelope(data);
 
                     if (messageType === MESSAGE_TYPES.GAME_BINARY) {
-                        onGameData(playerIndex, payload, reliable);
+                        onGameDataRef.current(playerIndex, payload, reliable);
                     } else if (messageType === MESSAGE_TYPES.JSON) {
                         const message = JSON.parse(new TextDecoder().decode(payload)) as PeerMessage;
                         if (message.type === "peerConnectionStatus") {
@@ -231,7 +240,7 @@ export const usePeers = (
                 console.error(`❌ Unexpected short message from ${playerConnectionId}`);
             }
         },
-        [onGameData, sendJsonMessage],
+        [sendJsonMessage],
     );
 
     useEffect(() => {
@@ -367,7 +376,7 @@ export const usePeers = (
                         });
 
                         if (status === "disconnected" && game.status === "playing") {
-                            onGamePlayerPeerDisconnect(i);
+                            onGamePlayerPeerDisconnectRef.current(i);
                         }
                     };
 
@@ -438,7 +447,7 @@ export const usePeers = (
                 setPeerLatencies(undefined);
             }
         }
-    }, [game, connectionId, sendSignal, gameToken, handleChannelMessage, sendJsonMessage, onGamePlayerPeerDisconnect]);
+    }, [game, connectionId, sendSignal, gameToken, handleChannelMessage, sendJsonMessage]);
 
     const sendData = useCallback((playerIndex: number, data: Uint8Array, reliable: boolean = true): boolean => {
         if (!peers.current) {
@@ -476,6 +485,7 @@ export const usePeers = (
         try {
             const envelope = createEnvelope(MESSAGE_TYPES.GAME_BINARY, data);
             if (reliable) {
+                console.log("sending reliable data to player " + playerIndex);
                 peer.reliableChannel!.send(new Uint8Array(envelope));
             } else {
                 peer.unreliableChannel!.send(new Uint8Array(envelope));
