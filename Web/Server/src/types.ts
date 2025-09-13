@@ -50,6 +50,20 @@ export type StartGameRequest = {
     creatorToken: string;
 };
 
+export type SendChatMessageRequest = {
+    message: string;
+    gameToken: string;
+};
+
+export type ChatMessage = {
+    id: string;
+    message: string;
+    senderId: string;
+    senderName?: string;
+    timestamp: Date;
+    gameId: string;
+};
+
 export type AvailableGame = {
     id: string;
     name: string;
@@ -94,10 +108,16 @@ export type SignalMessage = {
     signalData: string;
 };
 
+export type ChatMessageServerMessage = {
+    type: "chatMessage";
+    chatMessage: ChatMessage;
+};
+
 export type ServerMessage =
     | ConnectionIdMessage
     | GameListMessage
     | GameUpdatedMessage
     | GameUpdatedFullMessage
     | GameDeletedMessage
-    | SignalMessage;
+    | SignalMessage
+    | ChatMessageServerMessage;

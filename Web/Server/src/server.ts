@@ -11,6 +11,8 @@ import type {
     SignalRequest,
     UpdatePlayerRequest,
     StartGameRequest,
+    SendChatMessageRequest,
+    ChatMessage,
     AvailableGame,
     ServerGame,
     JoinedGame,
@@ -20,6 +22,7 @@ import type {
     GameUpdatedFullMessage,
     GameDeletedMessage,
     SignalMessage,
+    ChatMessageServerMessage,
     ServerMessage,
 } from "./types";
 
@@ -363,6 +366,55 @@ app.post("/api/games/:id/start", (req, res) => {
     }
 });
 
+// REST endpoint to send chat message to a game
+app.post("/api/games/:id/chat", (req, res) => {
+    console.log("💬 POST /api/games/:id/chat - Send chat message request");
+    try {
+        const { id } = req.params;
+        const { message, gameToken }: SendChatMessageRequest = req.body;
+        console.log(`🎯 Sending chat message to game ${id}`);
+
+        if (!message || !gameToken) {
+            console.log("❌ Missing required fields");
+            return res.status(400).json({ error: "Missing required fields: message, gameToken" });
+        }
+
+        const game = gameManager.getGame(id);
+        if (!game) {
+            console.log(`❌ Game ${id} not found`);
+            return res.status(404).json({ error: "Game not found" });
+        }
+
+        // Find sender by gameToken
+        const sender = game.players.find((p) => p?.gameToken === gameToken);
+        if (!sender) {
+            console.log("❌ Invalid gameToken or sender not in game");
+            return res.status(403).json({
+                error: "Invalid gameToken or not a member of this game",
+            });
+        }
+
+        // Create chat message
+        const chatMessage: ChatMessage = {
+            id: uuidv4(),
+            message,
+            senderId: sender.connectionId,
+            senderName: sender.name,
+            timestamp: new Date(),
+            gameId: id,
+        };
+
+        // Broadcast to all players in the game
+        broadcastChatMessage(game, chatMessage);
+
+        console.log(`✅ Chat message sent to game ${id} by ${sender.name || sender.connectionId}`);
+        res.status(200).json({ message: "Chat message sent successfully" });
+    } catch (error) {
+        console.log("💥 Error sending chat message:", error);
+        res.status(500).json({ error: "Failed to send chat message" });
+    }
+});
+
 // Convert Game to PublicGameData
 function toPublicGameData(game: ServerGame): AvailableGame {
     return {
@@ -419,6 +471,15 @@ function broadcastPrivateUpdate(game: ServerGame, data: ServerMessage) {
             }
         }
     });
+}
+
+// Broadcast chat message only to participants of the game
+function broadcastChatMessage(game: ServerGame, chatMessage: ChatMessage) {
+    const chatMessageServerMessage: ChatMessageServerMessage = {
+        type: "chatMessage",
+        chatMessage,
+    };
+    broadcastPrivateUpdate(game, chatMessageServerMessage);
 }
 
 // Shared function to broadcast game updates
