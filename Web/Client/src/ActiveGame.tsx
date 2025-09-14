@@ -1,14 +1,14 @@
 import * as React from "react";
-
 import { Button, Card, Text, Title, Stack, Group, Box } from "@mantine/core";
 import type { JoinedGame } from "./types";
 import { useMemo } from "react";
 import { PlayerList } from "./PlayerList";
 import { PlayerNameInput } from "./PlayerNameInput";
+import { GameChat } from "./GameChat";
 import type { PeerConnectionStatusMessage } from "@/peerTypes.ts";
 import type { PeerConnectionLatency } from "@/usePeers.ts";
-import { useAtomValue } from 'jotai';
-import { connectionIdAtom } from '@/atoms.ts';
+import { useAtomValue } from "jotai";
+import { connectionIdAtom } from "@/atoms.ts";
 
 interface ActiveGameProps {
     game: JoinedGame;
@@ -32,7 +32,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
     isLoadingGameData,
 }) => {
     const currentConnectionId = useAtomValue(connectionIdAtom);
-    
+
     // Get current player info and determine if creator (index 0)
     const currentPlayerIndex = game.players.findIndex((p) => p?.connectionId === currentConnectionId);
     const currentPlayer = currentPlayerIndex >= 0 ? game.players[currentPlayerIndex] : undefined;
@@ -101,7 +101,16 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
             <Stack gap="lg" mt="md" h="100%" style={{ minHeight: 0 }}>
                 <PlayerNameInput currentPlayerName={currentPlayerName} onUpdatePlayer={onUpdatePlayer} />
 
-                <Box flex={1} style={{ minHeight: 0 }}>
+                <Box
+                    flex={1}
+                    style={{
+                        minHeight: 0,
+                        display: "grid",
+                        gridTemplateColumns: "3fr 2fr",
+                        gap: "var(--mantine-spacing-lg)",
+                    }}
+                >
+                    <GameChat />
                     <PlayerList
                         gamePlayers={game.players}
                         peerStatuses={peerStatuses}

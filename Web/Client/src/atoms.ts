@@ -6,3 +6,4 @@ export const connectionIdAtom = atom<string | undefined>(undefined);
 export const gameTokenAtom = atom<string | undefined>(undefined);
 export const commandsAtom = atom<Commands | undefined>(undefined);
 export const gamesAtom = atom<Game[]>([]);
+export const eventSourceAtom = atom<EventSource | undefined>(undefined);

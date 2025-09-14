@@ -8,7 +8,7 @@ import { useNavigate, Outlet, useMatch } from "react-router-dom";
 import type { GameOutletContext } from "./App";
 import styles from "./Root.module.css";
 import { useSetAtom } from "jotai";
-import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom } from "@/atoms.ts";
+import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom, eventSourceAtom } from "@/atoms.ts";
 
 export function Root() {
     const navigate = useNavigate();
@@ -27,6 +27,7 @@ export function Root() {
     const setGameToken = useSetAtom(gameTokenAtom);
     const setCommands = useSetAtom(commandsAtom);
     const setGames = useSetAtom(gamesAtom);
+    const setEventSource = useSetAtom(eventSourceAtom);
 
     const setActiveGame = useCallback(
         (id: string | undefined, token?: string) => {
@@ -44,6 +45,7 @@ export function Root() {
     useEffect(() => setConnectionId(connectionId), [connectionId, setConnectionId]);
     useEffect(() => setCommands(commands), [commands, setCommands]);
     useEffect(() => setGames(games), [games, setGames]);
+    useEffect(() => setEventSource(eventSource), [eventSource, setEventSource]);
 
     const handleJoinGame = (id: string) => {
         if (connectionId) {

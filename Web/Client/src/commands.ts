@@ -4,6 +4,7 @@ import type {
     JoinGameRequest,
     UpdatePlayerRequest,
     StartGameRequest,
+    SendChatMessageRequest,
 } from "@/types.ts";
 
 export const createCommands = (baseUrl: string, setActiveGame: (id: string | undefined, token?: string) => void) => {
@@ -164,6 +165,30 @@ export const createCommands = (baseUrl: string, setActiveGame: (id: string | und
         }
     };
 
+    const sendChatMessage = async (gameId: string, gameToken: string, message: string) => {
+        try {
+            const response = await fetch(`${baseUrl}/games/${gameId}/chat`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    message,
+                    gameToken,
+                } satisfies SendChatMessageRequest),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to send chat message");
+            }
+
+            const result = await response.json();
+            console.log("Chat message sent successfully:", result);
+        } catch (error) {
+            console.error("Error sending chat message:", error);
+        }
+    };
+
     return {
         createGame,
         joinGame,
@@ -171,6 +196,7 @@ export const createCommands = (baseUrl: string, setActiveGame: (id: string | und
         sendSignal,
         updatePlayer,
         startGame,
+        sendChatMessage,
     };
 };
 

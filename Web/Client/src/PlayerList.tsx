@@ -100,12 +100,21 @@ export const PlayerList: React.FC<PlayerListProps> = ({
     isLoadingGameData,
 }) => {
     return (
-        <Flex h="100%" direction="column" style={{ minHeight: 0 }}>
-            <Title order={3} size="lg" mb="md">
-                Players
-            </Title>
-            <Box flex={1} style={{ overflowY: "auto", minHeight: 0 }}>
-                <Stack gap="sm">
+        <Box
+            h="100%"
+            p="sm"
+            style={{
+                border: "1px solid var(--mantine-color-gray-3)",
+                borderRadius: "var(--mantine-radius-md)",
+                minHeight: 0,
+            }}
+        >
+            <Flex h="100%" direction="column" style={{ minHeight: 0 }}>
+                <Title order={3} size="lg" mb="md">
+                    Players
+                </Title>
+                <Box flex={1} style={{ overflowY: "auto", minHeight: 0 }}>
+                    <Stack gap="sm">
                     {gamePlayers.map((player, index) => {
                         if (!player) {
                             return (
@@ -225,8 +234,9 @@ export const PlayerList: React.FC<PlayerListProps> = ({
                             </Box>
                         );
                     })}
-                </Stack>
-            </Box>
-        </Flex>
+                    </Stack>
+                </Box>
+            </Flex>
+        </Box>
     );
 };

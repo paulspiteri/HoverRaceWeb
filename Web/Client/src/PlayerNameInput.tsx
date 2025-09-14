@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Button, TextInput, Group, Box } from "@mantine/core";
+import { Button, TextInput, Group } from "@mantine/core";
 import { useState, useEffect } from "react";
 
 interface PlayerNameInputProps {
@@ -40,33 +40,29 @@ export const PlayerNameInput: React.FC<PlayerNameInputProps> = ({
     };
 
     return (
-        <Box>
-            <Group gap="xs">
-                <TextInput
-                    label="Your Name"
-                    placeholder="Enter your name..."
-                    value={playerName}
-                    onChange={(e) => setPlayerName(e.currentTarget.value)}
-                    onBlur={handleUpdateName}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            handleUpdateName();
-                            e.currentTarget.blur();
-                        }
-                    }}
-                    disabled={isUpdatingName || disabled}
-                    style={{ flex: 1 }}
-                />
-                <Button
-                    onClick={handleUpdateName}
-                    disabled={!playerName.trim() || playerName === currentPlayerName || isUpdatingName || disabled}
-                    variant="outline"
-                    size="sm"
-                    mt="xl"
-                >
-                    {isUpdatingName ? "Updating..." : "Update"}
-                </Button>
-            </Group>
-        </Box>
+        <Group gap="xs">
+            <TextInput
+                placeholder="Enter your name..."
+                value={playerName}
+                onChange={(e) => setPlayerName(e.currentTarget.value)}
+                onBlur={handleUpdateName}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        handleUpdateName();
+                        e.currentTarget.blur();
+                    }
+                }}
+                disabled={isUpdatingName || disabled}
+                style={{ flex: 1 }}
+            />
+            <Button
+                onClick={handleUpdateName}
+                disabled={!playerName.trim() || playerName === currentPlayerName || isUpdatingName || disabled}
+                variant="outline"
+                size="sm"
+            >
+                {isUpdatingName ? "Updating..." : "Update"}
+            </Button>
+        </Group>
     );
 };
