@@ -41,6 +41,11 @@ const app = express();
 const port = Number(process.env.PORT);
 const clientUrl = process.env.CLIENT_URL;
 
+console.log(`🔧 Server configuration:`);
+console.log(`   PORT: ${port}`);
+console.log(`   CLIENT_URL: ${clientUrl}`);
+console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
+
 app.use(
     cors({
         origin: clientUrl,
@@ -66,6 +71,8 @@ app.get("/api/games/stream", (req, res) => {
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
         "Access-Control-Allow-Origin": clientUrl,
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Headers": "Cache-Control",
     });
 
     // Generate unique connection ID for this client
