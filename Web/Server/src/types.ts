@@ -13,6 +13,7 @@ export type ServerGame = {
     maxPlayers: number;
     createdAt: Date;
     status: "waiting" | "playing";
+    chatMessages: ChatMessage[];
 };
 
 export type CreateGameRequest = {
@@ -27,32 +28,24 @@ export type JoinGameRequest = {
     name?: string;
 };
 
-export type LeaveGameRequest = {
-    gameToken: string;
-};
+export type LeaveGameRequest = {};
 
-export type DeleteGameRequest = {
-    creatorToken: string;
-};
+export type DeleteGameRequest = {};
 
 export type SignalRequest = {
     targetConnectionId: string;
-    gameToken: string;
     signalData: string;
 };
 
 export type UpdatePlayerRequest = {
-    gameToken: string;
     name: string;
 };
 
-export type StartGameRequest = {
-    creatorToken: string;
-};
+export type StartGameRequest = {};
 
 export type SendChatMessageRequest = {
     message: string;
-    gameToken: string;
+    // gameToken is now passed via Authorization: Bearer header
 };
 
 export type ChatMessage = {
@@ -113,6 +106,11 @@ export type ChatMessageServerMessage = {
     chatMessage: ChatMessage;
 };
 
+export type ChatHistoryMessage = {
+    type: "chatHistory";
+    messages: ChatMessage[];
+};
+
 export type ServerMessage =
     | ConnectionIdMessage
     | GameListMessage
@@ -120,4 +118,5 @@ export type ServerMessage =
     | GameUpdatedFullMessage
     | GameDeletedMessage
     | SignalMessage
-    | ChatMessageServerMessage;
+    | ChatMessageServerMessage
+    | ChatHistoryMessage;

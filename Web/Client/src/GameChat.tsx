@@ -14,6 +14,22 @@ export const GameChat: React.FC = () => {
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
     useEffect(() => {
+        const loadChatHistory = async () => {
+            if (gameId && gameToken && commands) {
+                const messages = await commands.getChatHistory(gameId, gameToken);
+                setChatMessages((prev) => {
+                    // Merge history with any new messages that arrived while loading
+                    const historyIds = new Set(messages.map((m) => m.id));
+                    const newMessages = prev.filter((m) => !historyIds.has(m.id));
+                    return [...messages, ...newMessages];
+                });
+            }
+        };
+
+        loadChatHistory();
+    }, [gameId, gameToken, commands]);
+
+    useEffect(() => {
         if (!eventSource) return;
 
         const handleMessage = (event: MessageEvent) => {

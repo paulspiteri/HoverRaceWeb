@@ -55,6 +55,7 @@ export const useGameData = (baseUrl: string, setActiveGame: (id: string | undefi
 
                     case "signal":
                     case "chatMessage":
+                    case "chatHistory":
                         // These are handled by components that listen to the eventSource directly
                         break;
 

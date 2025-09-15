@@ -56,18 +56,27 @@ export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage }) => {
     const getPlayerColor = (senderId: string) => {
         // If it's the current user, use blue
         if (senderId === currentConnectionId) {
-            return "blue.0";
+            return { bg: "blue.6", text: "white" };
         }
 
         // Generate a consistent color based on the senderId
-        const colors = ["green.0", "red.0", "yellow.0", "purple.0", "orange.0", "pink.0", "indigo.0", "teal.0"];
+        const colorPairs = [
+            { bg: "green.6", text: "white" },
+            { bg: "red.6", text: "white" },
+            { bg: "yellow.4", text: "dark" },
+            { bg: "purple.6", text: "white" },
+            { bg: "orange.6", text: "white" },
+            { bg: "pink.6", text: "white" },
+            { bg: "indigo.6", text: "white" },
+            { bg: "teal.6", text: "white" },
+        ];
 
         // Use a simple hash to get consistent color for same senderId
         let hash = 0;
         for (let i = 0; i < senderId.length; i++) {
             hash = ((hash << 5) - hash + senderId.charCodeAt(i)) & 0xffffffff;
         }
-        return colors[Math.abs(hash) % colors.length];
+        return colorPairs[Math.abs(hash) % colorPairs.length];
     };
 
     return (
@@ -103,35 +112,38 @@ export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage }) => {
                         </Text>
                     ) : (
                         <Stack gap="xs" p="xs">
-                            {messages.map((message) => (
-                                <Paper
-                                    key={message.id}
-                                    p="xs"
-                                    radius="sm"
-                                    bg={getPlayerColor(message.senderId)}
-                                    styles={{
-                                        root: {
-                                            alignSelf:
-                                                message.senderId === currentConnectionId ? "flex-end" : "flex-start",
-                                            maxWidth: "80%",
-                                        },
-                                    }}
-                                >
-                                    <Group gap="xs" justify="space-between">
-                                        <Text size="xs" c="dimmed" fw={500}>
-                                            {message.senderId === currentConnectionId
-                                                ? "You"
-                                                : message.senderName || message.senderId}
+                            {messages.map((message) => {
+                                const colors = getPlayerColor(message.senderId);
+                                return (
+                                    <Paper
+                                        key={message.id}
+                                        p="xs"
+                                        radius="sm"
+                                        bg={colors.bg}
+                                        styles={{
+                                            root: {
+                                                alignSelf:
+                                                    message.senderId === currentConnectionId ? "flex-end" : "flex-start",
+                                                maxWidth: "80%",
+                                            },
+                                        }}
+                                    >
+                                        <Group gap="xs" justify="space-between">
+                                            <Text size="xs" c={colors.text} fw={500} opacity={0.8}>
+                                                {message.senderId === currentConnectionId
+                                                    ? "You"
+                                                    : message.senderName || message.senderId}
+                                            </Text>
+                                            <Text size="xs" c={colors.text} opacity={0.6}>
+                                                {formatTimestamp(message.timestamp)}
+                                            </Text>
+                                        </Group>
+                                        <Text size="sm" mt="2px" c={colors.text}>
+                                            {message.message}
                                         </Text>
-                                        <Text size="xs" c="dimmed">
-                                            {formatTimestamp(message.timestamp)}
-                                        </Text>
-                                    </Group>
-                                    <Text size="sm" mt="2px">
-                                        {message.message}
-                                    </Text>
-                                </Paper>
-                            ))}
+                                    </Paper>
+                                );
+                            })}
                         </Stack>
                     )}
                 </ScrollArea>

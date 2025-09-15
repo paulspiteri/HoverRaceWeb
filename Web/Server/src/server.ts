@@ -6,12 +6,6 @@ import { gameManager } from "./gameManager.ts";
 import type {
     CreateGameRequest,
     JoinGameRequest,
-    LeaveGameRequest,
-    DeleteGameRequest,
-    SignalRequest,
-    UpdatePlayerRequest,
-    StartGameRequest,
-    SendChatMessageRequest,
     ChatMessage,
     AvailableGame,
     ServerGame,
@@ -184,12 +178,12 @@ app.post("/api/games/:id/leave", (req, res) => {
     console.log("🚪 POST /api/games/:id/leave - Leave game request");
     try {
         const { id } = req.params;
-        const { gameToken }: LeaveGameRequest = req.body;
+        const gameToken = req.headers.authorization?.replace("Bearer ", "");
         console.log(`🎯 Leaving game ${id} with token`);
 
         if (!gameToken) {
-            console.log("❌ Missing gameToken");
-            return res.status(400).json({ error: "Missing gameToken" });
+            console.log("❌ Missing gameToken in Authorization header");
+            return res.status(400).json({ error: "Missing gameToken in Authorization header" });
         }
 
         const left = gameManager.leaveGame(id, gameToken);
@@ -214,12 +208,12 @@ app.delete("/api/games/:id", (req, res) => {
     console.log("🗑️ DELETE /api/games/:id - Delete game request");
     try {
         const { id } = req.params;
-        const { creatorToken }: DeleteGameRequest = req.body;
+        const creatorToken = req.headers.authorization?.replace("Bearer ", "");
         console.log(`🎯 Deleting game ${id} with creator token`);
 
         if (!creatorToken) {
-            console.log("❌ Missing creatorToken");
-            return res.status(400).json({ error: "Missing creatorToken" });
+            console.log("❌ Missing creatorToken in Authorization header");
+            return res.status(400).json({ error: "Missing creatorToken in Authorization header" });
         }
 
         const deleted = gameManager.deleteGameByToken(id, creatorToken);
@@ -244,13 +238,14 @@ app.post("/api/games/:id/signal", (req, res) => {
     console.log("📡 POST /api/games/:id/signal - Send signal request");
     try {
         const { id } = req.params;
-        const { targetConnectionId, gameToken, signalData }: SignalRequest = req.body;
+        const gameToken = req.headers.authorization?.replace("Bearer ", "");
+        const { targetConnectionId, signalData } = req.body;
         console.log(`🎯 Sending signal in game ${id} to ${targetConnectionId}`);
 
         if (!targetConnectionId || !gameToken || !signalData) {
             console.log("❌ Missing required fields");
             return res.status(400).json({
-                error: "Missing required fields: targetConnectionId, gameToken, signalData",
+                error: "Missing required fields: targetConnectionId, gameToken (Authorization header), signalData",
             });
         }
 
@@ -318,12 +313,13 @@ app.put("/api/games/:id/player", (req, res) => {
     console.log("✏️ PUT /api/games/:id/player - Update player request");
     try {
         const { id } = req.params;
-        const { gameToken, name }: UpdatePlayerRequest = req.body;
+        const gameToken = req.headers.authorization?.replace("Bearer ", "");
+        const { name } = req.body;
         console.log(`🎯 Updating player in game ${id} with name: ${name}`);
 
         if (!gameToken || !name) {
             console.log("❌ Missing required fields");
-            return res.status(400).json({ error: "Missing required fields: gameToken, name" });
+            return res.status(400).json({ error: "Missing required fields: gameToken (Authorization header), name" });
         }
 
         const updated = gameManager.updatePlayer(id, gameToken, name);
@@ -348,12 +344,12 @@ app.post("/api/games/:id/start", (req, res) => {
     console.log("🚀 POST /api/games/:id/start - Start game request");
     try {
         const { id } = req.params;
-        const { creatorToken }: StartGameRequest = req.body;
+        const creatorToken = req.headers.authorization?.replace("Bearer ", "");
         console.log(`🎯 Starting game ${id} with creator token`);
 
         if (!creatorToken) {
-            console.log("❌ Missing creatorToken");
-            return res.status(400).json({ error: "Missing creatorToken" });
+            console.log("❌ Missing creatorToken in Authorization header");
+            return res.status(400).json({ error: "Missing creatorToken in Authorization header" });
         }
 
         const started = gameManager.startGame(id, creatorToken);
@@ -373,17 +369,50 @@ app.post("/api/games/:id/start", (req, res) => {
     }
 });
 
+// REST endpoint to get chat history for a game
+app.get("/api/games/:id/chat-history", (req, res) => {
+    console.log("📜 GET /api/games/:id/chat-history - Get chat history request");
+    try {
+        const { id } = req.params;
+        const gameToken = req.headers.authorization?.replace("Bearer ", "");
+        console.log(`🎯 Getting chat history for game ${id}`);
+
+        if (!gameToken) {
+            console.log("❌ Missing gameToken in Authorization header");
+            return res.status(400).json({ error: "Missing gameToken in Authorization header" });
+        }
+
+        const game = gameManager.getGame(id);
+
+        // Find player by gameToken to verify they're in the game
+        const player = game.players.find((p) => p?.gameToken === gameToken);
+        if (!player) {
+            console.log("❌ Invalid gameToken or player not in game");
+            return res.status(403).json({
+                error: "Invalid gameToken or not a member of this game",
+            });
+        }
+
+        console.log(`✅ Sending ${game.chatMessages.length} chat messages to ${player.name || player.connectionId}`);
+        res.status(200).json({ messages: game.chatMessages });
+    } catch (error) {
+        console.log("💥 Error getting chat history:", error);
+        res.status(500).json({ error: "Failed to get chat history" });
+    }
+});
+
 // REST endpoint to send chat message to a game
 app.post("/api/games/:id/chat", (req, res) => {
     console.log("💬 POST /api/games/:id/chat - Send chat message request");
     try {
         const { id } = req.params;
-        const { message, gameToken }: SendChatMessageRequest = req.body;
+        const gameToken = req.headers.authorization?.replace("Bearer ", "");
+        const { message } = req.body;
         console.log(`🎯 Sending chat message to game ${id}`);
 
         if (!message || !gameToken) {
             console.log("❌ Missing required fields");
-            return res.status(400).json({ error: "Missing required fields: message, gameToken" });
+            return res.status(400).json({ error: "Missing required fields: message, gameToken (Authorization header)" });
         }
 
         const game = gameManager.getGame(id);
@@ -410,6 +439,9 @@ app.post("/api/games/:id/chat", (req, res) => {
             timestamp: new Date(),
             gameId: id,
         };
+
+        // Store the message in the game
+        game.chatMessages.push(chatMessage);
 
         // Broadcast to all players in the game
         broadcastChatMessage(game, chatMessage);

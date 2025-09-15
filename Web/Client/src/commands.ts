@@ -5,6 +5,7 @@ import type {
     UpdatePlayerRequest,
     StartGameRequest,
     SendChatMessageRequest,
+    ChatMessage,
 } from "@/types.ts";
 
 export const createCommands = (baseUrl: string, setActiveGame: (id: string | undefined, token?: string) => void) => {
@@ -74,10 +75,9 @@ export const createCommands = (baseUrl: string, setActiveGame: (id: string | und
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${gameToken}`,
                 },
-                body: JSON.stringify({
-                    gameToken: gameToken,
-                }),
+                body: JSON.stringify({}),
             });
 
             if (!response.ok) {
@@ -99,10 +99,10 @@ export const createCommands = (baseUrl: string, setActiveGame: (id: string | und
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${gameToken}`,
                 },
                 body: JSON.stringify({
                     targetConnectionId,
-                    gameToken,
                     signalData,
                 } satisfies SignalRequest),
             });
@@ -124,9 +124,9 @@ export const createCommands = (baseUrl: string, setActiveGame: (id: string | und
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${gameToken}`,
                 },
                 body: JSON.stringify({
-                    gameToken,
                     name,
                 } satisfies UpdatePlayerRequest),
             });
@@ -148,10 +148,9 @@ export const createCommands = (baseUrl: string, setActiveGame: (id: string | und
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${creatorToken}`,
                 },
-                body: JSON.stringify({
-                    creatorToken,
-                } satisfies StartGameRequest),
+                body: JSON.stringify({} satisfies StartGameRequest),
             });
 
             if (!response.ok) {
@@ -171,10 +170,10 @@ export const createCommands = (baseUrl: string, setActiveGame: (id: string | und
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${gameToken}`,
                 },
                 body: JSON.stringify({
                     message,
-                    gameToken,
                 } satisfies SendChatMessageRequest),
             });
 
@@ -189,6 +188,28 @@ export const createCommands = (baseUrl: string, setActiveGame: (id: string | und
         }
     };
 
+    const getChatHistory = async (gameId: string, gameToken: string): Promise<ChatMessage[]> => {
+        try {
+            const response = await fetch(`${baseUrl}/games/${gameId}/chat-history`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${gameToken}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to get chat history");
+            }
+
+            const result = await response.json();
+            console.log("Chat history retrieved successfully:", result);
+            return result.messages;
+        } catch (error) {
+            console.error("Error getting chat history:", error);
+            return [];
+        }
+    };
+
     return {
         createGame,
         joinGame,
@@ -197,6 +218,7 @@ export const createCommands = (baseUrl: string, setActiveGame: (id: string | und
         updatePlayer,
         startGame,
         sendChatMessage,
+        getChatHistory,
     };
 };
 

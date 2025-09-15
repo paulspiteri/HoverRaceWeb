@@ -25,6 +25,7 @@ export class GameManager extends EventEmitter {
             maxPlayers: gameData.maxPlayers,
             createdAt: new Date(),
             status: "waiting",
+            chatMessages: [],
         };
 
         this.games.set(game.id, game);
@@ -55,8 +56,12 @@ export class GameManager extends EventEmitter {
         return true;
     }
 
-    getGame(id: string): ServerGame | undefined {
-        return this.games.get(id);
+    getGame(id: string): ServerGame {
+        const game = this.games.get(id);
+        if (!game) {
+            throw new Error(`Game with id ${id} not found`);
+        }
+        return game;
     }
 
     getAllGames(): ServerGame[] {
