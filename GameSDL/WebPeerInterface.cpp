@@ -180,22 +180,23 @@ bool WebPeerInterface::FetchMessage(int& pMessageType, int& pMessageLen, const M
 
         if (!mPeers[clientId].isConnected)
         {
-            TRACE("Received message from now disconnected clientId %d\n", clientId);
             continue;
         }
 
         if (!receivedMsg.reliable)
         {
-            // Eliminate double and late datagram
-            if( (MR_Int8)((MR_Int8)(MR_UInt8)receivedMsg.buffer.mDatagramNumber-(MR_Int8)mPeers[clientId].lastRecievedDatagramNumber)>0 )
+            auto datagramDelta = (MR_Int8)((MR_Int8)(MR_UInt8)receivedMsg.buffer.mDatagramNumber-(MR_Int8)mPeers[clientId].lastRecievedDatagramNumber);
+            if (datagramDelta == 0)
             {
-                mPeers[clientId].lastRecievedDatagramNumber = receivedMsg.buffer.mDatagramNumber;
-            }
-            else
+                // duplicate - discard
+                continue;
+            } else if (datagramDelta < 0)
             {
-                TRACE( "Late UDP %d %d\n", (MR_Int8)(MR_UInt8)receivedMsg.buffer.mDatagramNumber, (MR_Int8)mPeers[clientId].lastRecievedDatagramNumber );
+                // out of order (late) datagram - discard
+                TRACE( "Out of sequence UDP. Ignoring. %d %d\n", (MR_Int8)(MR_UInt8)receivedMsg.buffer.mDatagramNumber, (MR_Int8)mPeers[clientId].lastRecievedDatagramNumber );
                 continue;
             }
+            mPeers[clientId].lastRecievedDatagramNumber = receivedMsg.buffer.mDatagramNumber;
         }
 
         // Copy the message to the caller's buffer

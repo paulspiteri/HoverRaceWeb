@@ -704,14 +704,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
-         if( mNetInterface.UDPSend( lCounter, &lMessage, FALSE ) )
-         {
-            //TRACE( "SendUDPA:%d\n", lCounter );
-         }
-         else
-         {
-            TRACE( "Buffer FullA:%d\n", lCounter );
-         }
+          mNetInterface.UDPSend( lCounter, &lMessage, FALSE );
       }
    }
 
@@ -721,14 +714,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
    {
       if( lPriorityLevel[ lCounter ] < 5 )
       {
-         if( mNetInterface.UDPSend( lCounter, &lMessage, FALSE ) )
-         {
-            TRACE( "SendUDPB:%d\n", lCounter );
-         }
-         else
-         {
-            TRACE( "Buffer FullB:%d\n", lCounter );
-         }
+         mNetInterface.UDPSend( lCounter, &lMessage, FALSE );
       }
    }
 
@@ -737,14 +723,7 @@ void MR_NetworkSession::BroadcastAutoElementCreation( const MR_ObjectFromFactory
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
-         if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE ) )
-         {
-            TRACE( "SendUDPC:%d\n", lCounter );
-         }
-         else
-         {
-            TRACE( "Buffer FullC:%d\n", lCounter );
-         }
+         mNetInterface.UDPSend( lCounter, &lMessage, TRUE );
       }
    }
 }
@@ -801,14 +780,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
-         if( mNetInterface.UDPSend( lCounter, &lMessage, FALSE ) )
-         {
-            TRACE( "SendUDPA:%d\n", lCounter );
-         }
-         else
-         {
-            TRACE( "Buffer FullA:%d\n", lCounter );
-         }
+         mNetInterface.UDPSend( lCounter, &lMessage, FALSE );
       }
    }
 
@@ -818,14 +790,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
    {
       if( lPriorityLevel[ lCounter ] < 5 )
       {
-         if( mNetInterface.UDPSend( lCounter, &lMessage, FALSE ) )
-         {
-            TRACE( "SendUDPB:%d\n", lCounter );
-         }
-         else
-         {
-            TRACE( "Buffer FullB:%d\n", lCounter );
-         }
+         mNetInterface.UDPSend( lCounter, &lMessage, FALSE );
       }
    }
    
@@ -834,14 +799,7 @@ void MR_NetworkSession::BroadcastPermElementState( int pPermId, const MR_Element
    {
       if( lPriorityLevel[ lCounter ] >= 5 )
       {
-         if( mNetInterface.UDPSend( lCounter, &lMessage, TRUE ) )
-         {
-            TRACE( "SendUDPC:%d\n", lCounter );
-         }
-         else
-         {
-            TRACE( "Buffer FullC:%d\n", lCounter );
-         }
+         mNetInterface.UDPSend( lCounter, &lMessage, TRUE );
       }
    }
 }
@@ -1020,9 +978,6 @@ void MR_NetworkSession::BroadcastMainElementState( const MR_ElementNetState& pSt
          }
          else
          {
-            TRACE( "Buffer Full:%d %d\n", lSelectedClient, lBestPriority );
-
-            // Sending buffer full.. continue next time
             break;
          }
       }

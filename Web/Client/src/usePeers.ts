@@ -485,7 +485,6 @@ export const usePeers = (
         try {
             const envelope = createEnvelope(MESSAGE_TYPES.GAME_BINARY, data);
             if (reliable) {
-                console.log("sending reliable data to player " + playerIndex);
                 peer.reliableChannel!.send(new Uint8Array(envelope));
             } else {
                 peer.unreliableChannel!.send(new Uint8Array(envelope));
