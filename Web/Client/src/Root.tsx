@@ -5,10 +5,9 @@ import { useGameData } from "@/useGameData.ts";
 import { GameList } from "@/GameList.tsx";
 import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { useNavigate, Outlet, useMatch } from "react-router-dom";
-import type { GameOutletContext } from "./App";
 import styles from "./Root.module.css";
 import { useSetAtom } from "jotai";
-import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom, eventSourceAtom } from "@/atoms.ts";
+import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom, eventSourceAtom, canvasAtom } from "@/atoms.ts";
 
 export function Root() {
     const navigate = useNavigate();
@@ -28,6 +27,7 @@ export function Root() {
     const setCommands = useSetAtom(commandsAtom);
     const setGames = useSetAtom(gamesAtom);
     const setEventSource = useSetAtom(eventSourceAtom);
+    const setCanvasAtom = useSetAtom(canvasAtom);
 
     const setActiveGame = useCallback(
         (id: string | undefined, token?: string) => {
@@ -46,6 +46,7 @@ export function Root() {
     useEffect(() => setCommands(commands), [commands, setCommands]);
     useEffect(() => setGames(games), [games, setGames]);
     useEffect(() => setEventSource(eventSource), [eventSource, setEventSource]);
+    useEffect(() => setCanvasAtom(canvasRef), [canvasRef, setCanvasAtom]);
 
     const handleJoinGame = (id: string) => {
         if (connectionId) {
@@ -88,14 +89,7 @@ export function Root() {
                                     </Group>
                                 </Group>
 
-                                <Outlet
-                                    context={
-                                        {
-                                            eventSource,
-                                            canvasRef,
-                                        } satisfies GameOutletContext
-                                    }
-                                />
+                                <Outlet />
                             </Stack>
                         </Container>
                     </Flex>

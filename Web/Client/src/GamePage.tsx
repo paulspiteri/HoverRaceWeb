@@ -1,26 +1,26 @@
 import * as React from "react";
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useOutletContext } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ActiveGame } from "@/ActiveGame.tsx";
 import { JoinGameOffer } from "@/JoinGameOffer.tsx";
 import { GameNotFound } from "@/GameNotFound.tsx";
 import type { JoinedGame } from "./types";
 import { usePeers } from "@/usePeers.ts";
 import { useGameInstance } from "@/interop/gameInterop.ts";
-import type { GameOutletContext } from "./App";
 import { useGameWindowSize } from "@/interop/useGameWindowSize.ts";
 import { useAtomValue } from "jotai";
-import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom } from "@/atoms.ts";
+import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom, eventSourceAtom, canvasAtom } from "@/atoms.ts";
 
 export const GamePage: React.FC = () => {
     const { gameId } = useParams();
-    const { eventSource, canvasRef } = useOutletContext<GameOutletContext>();
     const connectionId = useAtomValue(connectionIdAtom);
     const gameToken = useAtomValue(gameTokenAtom);
     const commands = useAtomValue(commandsAtom);
+    const eventSource = useAtomValue(eventSourceAtom);
+    const canvasRef = useAtomValue(canvasAtom);
     const games = useAtomValue(gamesAtom);
-    const { gameInstanceApi, isLoadingGameData } = useGameInstance(canvasRef.current);
-    useGameWindowSize(gameInstanceApi, canvasRef.current);
+    const { gameInstanceApi, isLoadingGameData } = useGameInstance(canvasRef?.current ?? null);
+    useGameWindowSize(gameInstanceApi, canvasRef?.current ?? null);
 
     // Track if we're currently leaving the game to prevent flicker
     const [isLeaving, setIsLeaving] = useState(false);

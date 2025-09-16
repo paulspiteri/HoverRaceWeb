@@ -102,7 +102,6 @@ std::optional<std::string> GetTrack() {
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     MR_SoundServer::Init();
-    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
 #ifndef __EMSCRIPTEN__
     sdlWindow = SDL_CreateWindow("HoverRace SDL",
