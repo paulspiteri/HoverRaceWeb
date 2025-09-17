@@ -13,6 +13,7 @@ export function Root() {
     const navigate = useNavigate();
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const gameMatch = useMatch("/game/*");
+    const [isMaximized, setIsMaximized] = useState(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     useEffect(() => {
@@ -109,7 +110,7 @@ export function Root() {
                 </Flex>
             </Flex>
             <div
-                className={styles["canvas-border"]}
+                className={`${styles["canvas-border"]} ${isMaximized ? styles["canvas-border-maximized"] : ""}`}
                 style={{
                     display: !gameMatch ? "none" : undefined,
                 }}
@@ -118,8 +119,11 @@ export function Root() {
                     ref={canvasRef}
                     id="canvas"
                     tabIndex={-1}
-                    className={`${styles["canvas-emscripten"]} ${!isFullscreen ? styles["canvas-interactive"] : ""}`}
-                    onClick={(evt) => evt.currentTarget.requestFullscreen()}
+                    className={`${styles["canvas-emscripten"]} ${!isFullscreen && !isMaximized ? styles["canvas-interactive"] : ""}`}
+                    onClick={() => {
+                        setIsMaximized((val) => !val);
+                        // evt.currentTarget.requestFullscreen()
+                    }}
                 />
             </div>
         </Container>

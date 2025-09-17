@@ -3,34 +3,30 @@ import type { GameInstanceAPI } from "@/interop/gameInterop.ts";
 
 export const useGameWindowSize = (gameInstance: GameInstanceAPI | undefined, canvas: HTMLCanvasElement | null) => {
     useEffect(() => {
-        function updateCanvasSize(evt: Event | undefined) {
-            const rect = canvas!.getBoundingClientRect();
+        function updateCanvasSize() {
+            if (!canvas || !gameInstance) return;
+
+            const rect = canvas.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
             const w = rect.width * dpr;
             const h = rect.height * dpr;
-            gameInstance!.setWindowSize(w, h);
-
-            if (evt?.type !== "resize") {
-                window.dispatchEvent(new Event("resize"));
-            }
-
-            // old iphone 'fullscreen' fix
-            //const isIOS = /iPad|iPhone/.test(navigator.userAgent);
-            //if (isIOS) {
-            //    canvas!.style.top = "85px";
-            //document.getElementById("trackselection").style.top = "85px";
-            //window.scrollTo(0, 85);
-            //}
+            gameInstance.setWindowSize(w, h);
         }
 
         if (!gameInstance || !canvas) return;
 
-        updateCanvasSize(undefined);
+        let resizeObserver: ResizeObserver | null = null;
+        if (typeof ResizeObserver !== "undefined") {
+            resizeObserver = new ResizeObserver(() => updateCanvasSize());
+            resizeObserver.observe(canvas);
+        }
 
         window.addEventListener("resize", updateCanvasSize);
         window.addEventListener("orientationchange", updateCanvasSize);
         window.addEventListener("fullscreenchange", updateCanvasSize);
+
         return () => {
+            resizeObserver?.disconnect();
             window.removeEventListener("resize", updateCanvasSize);
             window.removeEventListener("orientationchange", updateCanvasSize);
             window.removeEventListener("fullscreenchange", updateCanvasSize);
