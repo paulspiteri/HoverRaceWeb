@@ -2,8 +2,9 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { useAtomValue } from "jotai";
 import { useParams } from "react-router-dom";
-import { eventSourceAtom, gameTokenAtom, commandsAtom } from "./atoms";
+import { eventSourceAtom, gameTokenAtom, commandsAtom, gameScreenModeAtom } from "./atoms";
 import { Chat } from "./Chat";
+import { FloatingChat } from "./FloatingChat";
 import type { ServerMessage, ChatMessage } from "./types";
 
 export const GameChat: React.FC = () => {
@@ -11,6 +12,7 @@ export const GameChat: React.FC = () => {
     const eventSource = useAtomValue(eventSourceAtom);
     const gameToken = useAtomValue(gameTokenAtom);
     const commands = useAtomValue(commandsAtom);
+    const gameScreenMode = useAtomValue(gameScreenModeAtom);
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
     useEffect(() => {
@@ -52,6 +54,11 @@ export const GameChat: React.FC = () => {
             await commands.sendChatMessage(gameId, gameToken, message);
         }
     };
+
+    // Render floating chat if maximized, otherwise normal chat
+    if (gameScreenMode === "maximized") {
+        return <FloatingChat messages={chatMessages} onSendMessage={handleSendChatMessage} />;
+    }
 
     return <Chat messages={chatMessages} onSendMessage={handleSendChatMessage} />;
 };

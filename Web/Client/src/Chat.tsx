@@ -4,6 +4,7 @@ import { TextInput, ActionIcon, ScrollArea, Text, Group, Stack, Paper, Box } fro
 import { IconSend } from "@tabler/icons-react";
 import { useAtomValue } from "jotai";
 import { connectionIdAtom } from "./atoms";
+import { getPlayerColor, formatTimestamp } from "./utils/chatColors";
 import type { ChatMessage } from "./types";
 
 interface ChatProps {
@@ -46,38 +47,6 @@ export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage }) => {
         }
     };
 
-    const formatTimestamp = (timestamp: Date) => {
-        return new Date(timestamp).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-        });
-    };
-
-    const getPlayerColor = (senderId: string) => {
-        // If it's the current user, use blue
-        if (senderId === currentConnectionId) {
-            return { bg: "blue.6", text: "white" };
-        }
-
-        // Generate a consistent color based on the senderId
-        const colorPairs = [
-            { bg: "green.6", text: "white" },
-            { bg: "red.6", text: "white" },
-            { bg: "yellow.4", text: "dark" },
-            { bg: "purple.6", text: "white" },
-            { bg: "orange.6", text: "white" },
-            { bg: "pink.6", text: "white" },
-            { bg: "indigo.6", text: "white" },
-            { bg: "teal.6", text: "white" },
-        ];
-
-        // Use a simple hash to get consistent color for same senderId
-        let hash = 0;
-        for (let i = 0; i < senderId.length; i++) {
-            hash = ((hash << 5) - hash + senderId.charCodeAt(i)) & 0xffffffff;
-        }
-        return colorPairs[Math.abs(hash) % colorPairs.length];
-    };
 
     return (
         <Box
@@ -113,13 +82,13 @@ export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage }) => {
                     ) : (
                         <Stack gap="xs" p="xs">
                             {messages.map((message) => {
-                                const colors = getPlayerColor(message.senderId);
+                                const colors = getPlayerColor(message.senderId, currentConnectionId);
                                 return (
                                     <Paper
                                         key={message.id}
                                         p="xs"
                                         radius="sm"
-                                        bg={colors.bg}
+                                        bg={colors.color}
                                         styles={{
                                             root: {
                                                 alignSelf:

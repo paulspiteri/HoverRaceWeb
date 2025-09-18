@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState, useEffect } from "react";
+import { useCallback, useRef, useEffect } from "react";
 import { Container, Stack, Title, Group, Flex, Box, ActionIcon } from "@mantine/core";
 import { IconHome } from "@tabler/icons-react";
 import { useGameData } from "@/useGameData.ts";
@@ -6,21 +6,29 @@ import { GameList } from "@/GameList.tsx";
 import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { useNavigate, Outlet, useMatch } from "react-router-dom";
 import styles from "./Root.module.css";
-import { useSetAtom } from "jotai";
-import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom, eventSourceAtom, canvasAtom } from "@/atoms.ts";
+import { useSetAtom, useAtom } from "jotai";
+import {
+    connectionIdAtom,
+    gameTokenAtom,
+    commandsAtom,
+    gamesAtom,
+    eventSourceAtom,
+    canvasAtom,
+    gameScreenModeAtom,
+} from "@/atoms.ts";
 
 export function Root() {
     const navigate = useNavigate();
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const gameMatch = useMatch("/game/*");
-    const [isMaximized, setIsMaximized] = useState(false);
-    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [gameScreenMode, setGameScreenMode] = useAtom(gameScreenModeAtom);
 
     useEffect(() => {
-        const handleFullscreenChange = () => void setIsFullscreen(!!document.fullscreenElement);
+        const handleFullscreenChange = () =>
+            void setGameScreenMode(document.fullscreenElement ? "fullscreen" : "maximized");
         document.addEventListener("fullscreenchange", handleFullscreenChange);
         return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-    }, []);
+    }, [setGameScreenMode]);
 
     // Sync atoms setup
     const setConnectionId = useSetAtom(connectionIdAtom);
@@ -110,7 +118,7 @@ export function Root() {
                 </Flex>
             </Flex>
             <div
-                className={`${styles["canvas-border"]} ${isMaximized ? styles["canvas-border-maximized"] : ""}`}
+                className={`${styles["canvas-border"]} ${gameScreenMode === "maximized" ? styles["canvas-border-maximized"] : ""}`}
                 style={{
                     display: !gameMatch ? "none" : undefined,
                 }}
@@ -119,9 +127,9 @@ export function Root() {
                     ref={canvasRef}
                     id="canvas"
                     tabIndex={-1}
-                    className={`${styles["canvas-emscripten"]} ${!isFullscreen && !isMaximized ? styles["canvas-interactive"] : ""}`}
+                    className={`${styles["canvas-emscripten"]} ${gameScreenMode === "default" ? styles["canvas-interactive"] : ""}`}
                     onClick={() => {
-                        setIsMaximized((val) => !val);
+                        setGameScreenMode((val) => (val === "default" ? "maximized" : "default"));
                         // evt.currentTarget.requestFullscreen()
                     }}
                 />
