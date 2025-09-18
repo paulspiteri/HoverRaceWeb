@@ -1,6 +1,6 @@
 import { useCallback, useRef, useEffect } from "react";
 import { Container, Stack, Title, Group, Flex, Box, ActionIcon } from "@mantine/core";
-import { IconHome } from "@tabler/icons-react";
+import { IconHome, IconMaximize } from "@tabler/icons-react";
 import { useGameData } from "@/useGameData.ts";
 import { GameList } from "@/GameList.tsx";
 import { ConnectionStatus } from "@/ConnectionStatus.tsx";
@@ -61,6 +61,17 @@ export function Root() {
         if (connectionId) {
             const savedName = localStorage.getItem("hoverrace-player-name");
             commands.joinGame(id, connectionId, savedName || undefined);
+        }
+    };
+
+    const handleCanvasClick = () => {
+        if (gameScreenMode === "fullscreen") {
+            document.exitFullscreen();
+            setGameScreenMode("maximized");
+        } else if (gameScreenMode === "mini") {
+            setGameScreenMode("maximized");
+        } else {
+            setGameScreenMode("mini");
         }
     };
 
@@ -127,12 +138,26 @@ export function Root() {
                     ref={canvasRef}
                     id="canvas"
                     tabIndex={-1}
-                    className={`${styles["canvas-emscripten"]} ${gameScreenMode === "default" ? styles["canvas-interactive"] : ""}`}
-                    onClick={() => {
-                        setGameScreenMode((val) => (val === "default" ? "maximized" : "default"));
-                        // evt.currentTarget.requestFullscreen()
-                    }}
+                    className={`${styles["canvas-emscripten"]} ${gameScreenMode === "mini" ? styles["canvas-interactive"] : ""}`}
+                    onClick={handleCanvasClick}
                 />
+
+                {gameScreenMode === "maximized" && (
+                    <ActionIcon
+                        size="lg"
+                        variant="filled"
+                        color="blue"
+                        onClick={() => canvasRef.current?.requestFullscreen()}
+                        style={{
+                            position: "absolute",
+                            top: 10,
+                            right: 10,
+                        }}
+                        title="Enter fullscreen"
+                    >
+                        <IconMaximize size={20} />
+                    </ActionIcon>
+                )}
             </div>
         </Container>
     );

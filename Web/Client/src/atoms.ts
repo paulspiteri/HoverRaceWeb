@@ -9,4 +9,4 @@ export const commandsAtom = atom<Commands | undefined>(undefined);
 export const gamesAtom = atom<Game[]>([]);
 export const eventSourceAtom = atom<EventSource | undefined>(undefined);
 export const canvasAtom = atom<RefObject<HTMLCanvasElement | null> | undefined>(undefined);
-export const gameScreenModeAtom = atom<"default" | "maximized" | "fullscreen">("default");
+export const gameScreenModeAtom = atom<"mini" | "maximized" | "fullscreen">("mini");
