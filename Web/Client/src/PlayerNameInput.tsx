@@ -2,6 +2,7 @@ import * as React from "react";
 import { Button, TextInput, Group } from "@mantine/core";
 import { useState, useEffect } from "react";
 import { useUpdatePlayer } from "@/hooks/useUpdatePlayer";
+import { notifications } from "@mantine/notifications";
 
 interface PlayerNameInputProps {
     currentPlayerName: string;
@@ -34,6 +35,11 @@ export const PlayerNameInput: React.FC<PlayerNameInputProps> = ({
             await updatePlayerMutation.mutateAsync(playerName.trim());
         } catch (error) {
             console.error("Failed to update player name:", error);
+            notifications.show({
+                title: "Failed to update name",
+                message: "Unable to update your player name. Please try again.",
+                color: "red",
+            });
         }
     };
 

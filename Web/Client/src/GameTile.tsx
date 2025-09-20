@@ -2,6 +2,7 @@ import * as React from "react";
 import { Button, Box, Text, Title, Stack } from "@mantine/core";
 import type { Game } from "@/types.ts";
 import { useJoinGame } from "@/hooks/useJoinGame";
+import { notifications } from "@mantine/notifications";
 
 interface GameTileProps {
     game: Game;
@@ -16,7 +17,19 @@ export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled }) 
 
     const handleJoinGame = () => {
         const savedName = localStorage.getItem("hoverrace-player-name");
-        joinGameMutation.mutate({ gameId: game.id, name: savedName || undefined });
+        joinGameMutation.mutate(
+            { gameId: game.id, name: savedName || undefined },
+            {
+                onError: (error) => {
+                    console.error("Failed to join game:", error);
+                    notifications.show({
+                        title: "Failed to join game",
+                        message: "Unable to join the game. Please try again.",
+                        color: "red",
+                    });
+                },
+            }
+        );
     };
     return (
         <Box

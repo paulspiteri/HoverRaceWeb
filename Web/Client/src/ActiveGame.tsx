@@ -11,6 +11,7 @@ import { useAtomValue } from "jotai";
 import { connectionIdAtom, gameTokenAtom } from "@/atoms.ts";
 import { useLeaveGame } from "@/hooks/useLeaveGame";
 import { useStartGame } from "@/hooks/useStartGame";
+import { notifications } from "@mantine/notifications";
 
 interface ActiveGameProps {
     game: JoinedGame;
@@ -38,6 +39,11 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
                 await leaveGameMutation.mutateAsync({ gameId: game.id, gameToken });
             } catch (error) {
                 console.error("Failed to leave game:", error);
+                notifications.show({
+                    title: "Failed to leave game",
+                    message: "Unable to leave the game. Please try again.",
+                    color: "red",
+                });
             }
         }
     };
@@ -47,6 +53,11 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
             await startGameMutation.mutateAsync();
         } catch (error) {
             console.error("Failed to start game:", error);
+            notifications.show({
+                title: "Failed to start game",
+                message: "Unable to start the game. Please try again.",
+                color: "red",
+            });
         }
     };
 

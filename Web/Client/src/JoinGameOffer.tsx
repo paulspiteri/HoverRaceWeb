@@ -3,6 +3,7 @@ import { Button, Container, Stack, Title, Group, Card, Text } from "@mantine/cor
 import { useNavigate, useParams } from "react-router-dom";
 import type { Game } from "./types";
 import { useJoinGame } from "@/hooks/useJoinGame";
+import { notifications } from "@mantine/notifications";
 
 interface JoinGameInterfaceProps {
     gameInfo: Game;
@@ -16,7 +17,19 @@ export const JoinGameOffer: React.FC<JoinGameInterfaceProps> = ({ gameInfo }) =>
     const handleJoinGame = () => {
         if (!gameId) return;
         const savedName = localStorage.getItem("hoverrace-player-name");
-        joinGameMutation.mutate({ gameId, name: savedName || undefined });
+        joinGameMutation.mutate(
+            { gameId, name: savedName || undefined },
+            {
+                onError: (error) => {
+                    console.error("Failed to join game:", error);
+                    notifications.show({
+                        title: "Failed to join game",
+                        message: "Unable to join the game. Please try again.",
+                        color: "red",
+                    });
+                },
+            }
+        );
     };
 
     return (
