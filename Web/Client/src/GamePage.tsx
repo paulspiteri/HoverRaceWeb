@@ -8,8 +8,16 @@ import type { JoinedGame } from "./types";
 import { usePeers } from "@/usePeers.ts";
 import { useGameInstance } from "@/interop/gameInterop.ts";
 import { useGameWindowSize } from "@/interop/useGameWindowSize.ts";
-import { useAtomValue } from "jotai";
-import { connectionIdAtom, gameTokenAtom, commandsAtom, gamesAtom, eventSourceAtom, canvasAtom } from "@/atoms.ts";
+import { useAtomValue, useSetAtom } from "jotai";
+import {
+    connectionIdAtom,
+    gameTokenAtom,
+    commandsAtom,
+    gamesAtom,
+    eventSourceAtom,
+    canvasAtom,
+    gameScreenModeAtom,
+} from "@/atoms.ts";
 
 export const GamePage: React.FC = () => {
     const { gameId } = useParams();
@@ -19,6 +27,7 @@ export const GamePage: React.FC = () => {
     const eventSource = useAtomValue(eventSourceAtom);
     const canvasRef = useAtomValue(canvasAtom);
     const games = useAtomValue(gamesAtom);
+    const setGameScreenMode = useSetAtom(gameScreenModeAtom);
     const { gameInstanceApi, isLoadingGameData } = useGameInstance(canvasRef?.current ?? null);
     useGameWindowSize(gameInstanceApi, canvasRef?.current ?? null);
 
@@ -52,12 +61,11 @@ export const GamePage: React.FC = () => {
 
     useEffect(() => void (global.sendGameMessage = sendData), [sendData]);
 
-
-
     const isGamePlaying = joinedGame?.status === "playing" && playerIndex !== undefined;
     useEffect(() => {
         {
             if (isGamePlaying && gameInstanceApi) {
+                setGameScreenMode("mini");
                 peerStatuses?.forEach((x, idx) => {
                     const latencies = peerLatencies?.[idx];
                     gameInstanceApi.setPlayerStatus(
@@ -69,7 +77,7 @@ export const GamePage: React.FC = () => {
                 });
             }
         }
-    }, [peerStatuses, peerLatencies, isGamePlaying, gameInstanceApi]);
+    }, [peerStatuses, peerLatencies, isGamePlaying, gameInstanceApi, setGameScreenMode]);
 
     useEffect(() => {
         if (isGamePlaying && gameInstanceApi) {

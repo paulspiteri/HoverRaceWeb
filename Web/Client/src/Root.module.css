@@ -16,6 +16,10 @@
     left: 20px;
 }
 
+.canvas-border-hidden {
+    visibility: hidden;
+}
+
 .canvas-emscripten {
     display: block;
     border: 0 none;

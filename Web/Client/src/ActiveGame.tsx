@@ -7,8 +7,8 @@ import { PlayerNameInput } from "./PlayerNameInput";
 import { GameChat } from "./GameChat";
 import type { PeerConnectionStatusMessage } from "@/peerTypes.ts";
 import type { PeerConnectionLatency } from "@/usePeers.ts";
-import { useAtomValue } from "jotai";
-import { connectionIdAtom, gameTokenAtom } from "@/atoms.ts";
+import { useAtomValue, useSetAtom } from "jotai";
+import { connectionIdAtom, gameScreenModeAtom, gameTokenAtom } from "@/atoms.ts";
 import { useLeaveGame } from "@/hooks/useLeaveGame";
 import { useStartGame } from "@/hooks/useStartGame";
 import { notifications } from "@mantine/notifications";
@@ -30,6 +30,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
 }) => {
     const currentConnectionId = useAtomValue(connectionIdAtom);
     const gameToken = useAtomValue(gameTokenAtom);
+    const setGameScreenMode = useSetAtom(gameScreenModeAtom);
     const leaveGameMutation = useLeaveGame();
     const startGameMutation = useStartGame(game.id);
 
@@ -37,6 +38,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
         if (gameToken) {
             try {
                 await leaveGameMutation.mutateAsync({ gameId: game.id, gameToken });
+                setGameScreenMode("hidden");
             } catch (error) {
                 console.error("Failed to leave game:", error);
                 notifications.show({

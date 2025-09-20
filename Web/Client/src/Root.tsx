@@ -5,7 +5,7 @@ import { useGameData } from "@/useGameData.ts";
 import { GameList } from "@/GameList.tsx";
 import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { Header } from "@/Header.tsx";
-import { useNavigate, Outlet, useMatch } from "react-router-dom";
+import { useNavigate, Outlet } from "react-router-dom";
 import styles from "./Root.module.css";
 import { useSetAtom, useAtom } from "jotai";
 import {
@@ -21,7 +21,6 @@ import {
 export function Root() {
     const navigate = useNavigate();
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const gameMatch = useMatch("/game/*");
     const [gameScreenMode, setGameScreenMode] = useAtom(gameScreenModeAtom);
     useEffect(() => {
         const handleFullscreenChange = () =>
@@ -118,10 +117,7 @@ export function Root() {
                 </Flex>
             </Flex>
             <div
-                className={`${styles["canvas-border"]} ${gameScreenMode === "maximized" ? styles["canvas-border-maximized"] : ""}`}
-                style={{
-                    display: !gameMatch ? "none" : undefined,
-                }}
+                className={`${styles["canvas-border"]} ${gameScreenMode === "maximized" ? styles["canvas-border-maximized"] : ""} ${gameScreenMode === "hidden" ? styles["canvas-border-hidden"] : ""}`}
             >
                 <canvas
                     ref={canvasRef}
