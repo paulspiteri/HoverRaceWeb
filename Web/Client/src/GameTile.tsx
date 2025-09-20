@@ -1,17 +1,23 @@
 import * as React from "react";
 import { Button, Box, Text, Title, Stack } from "@mantine/core";
 import type { Game } from "@/types.ts";
+import { useJoinGame } from "@/hooks/useJoinGame";
 
 interface GameTileProps {
     game: Game;
     isJoined: boolean;
     disabled?: boolean;
-    onJoinGame?: (gameId: string) => void;
 }
 
-export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled, onJoinGame }) => {
+export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled }) => {
     const isGameFull = game.playerCount >= game.maxPlayers;
     const isGameStarted = game.status === "playing";
+    const joinGameMutation = useJoinGame();
+
+    const handleJoinGame = () => {
+        const savedName = localStorage.getItem("hoverrace-player-name");
+        joinGameMutation.mutate({ gameId: game.id, name: savedName || undefined });
+    };
     return (
         <Box
             p="md"
@@ -42,8 +48,8 @@ export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled, on
                 <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onJoinGame?.(game.id)}
-                    disabled={isJoined || isGameFull || isGameStarted || disabled}
+                    onClick={handleJoinGame}
+                    disabled={isJoined || isGameFull || isGameStarted || disabled || joinGameMutation.isPending}
                     fullWidth={true}
                 >
                     {isGameStarted ? "Game Started" : isGameFull ? "Game Full" : "Join Game"}

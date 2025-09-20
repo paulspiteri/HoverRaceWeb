@@ -8,14 +8,13 @@ import { GameChat } from "./GameChat";
 import type { PeerConnectionStatusMessage } from "@/peerTypes.ts";
 import type { PeerConnectionLatency } from "@/usePeers.ts";
 import { useAtomValue } from "jotai";
-import { connectionIdAtom } from "@/atoms.ts";
+import { connectionIdAtom, gameTokenAtom } from "@/atoms.ts";
+import { useLeaveGame } from "@/hooks/useLeaveGame";
+import { useStartGame } from "@/hooks/useStartGame";
 
 interface ActiveGameProps {
     game: JoinedGame;
-    onClose: () => void;
-    onStartGame: () => void;
     peerStatuses: ("connecting" | "connected" | "disconnected" | undefined)[] | undefined;
-    onUpdatePlayer: (name: string) => Promise<void>;
     peersActualStatuses?: (PeerConnectionStatusMessage | undefined)[];
     peerLatencies?: (PeerConnectionLatency | undefined)[];
     isLoadingGameData: boolean;
@@ -23,15 +22,33 @@ interface ActiveGameProps {
 
 export const ActiveGame: React.FC<ActiveGameProps> = ({
     game,
-    onClose,
-    onStartGame,
     peerStatuses,
-    onUpdatePlayer,
     peersActualStatuses,
     peerLatencies,
     isLoadingGameData,
 }) => {
     const currentConnectionId = useAtomValue(connectionIdAtom);
+    const gameToken = useAtomValue(gameTokenAtom);
+    const leaveGameMutation = useLeaveGame();
+    const startGameMutation = useStartGame(game.id);
+
+    const handleLeaveGame = async () => {
+        if (gameToken) {
+            try {
+                await leaveGameMutation.mutateAsync({ gameId: game.id, gameToken });
+            } catch (error) {
+                console.error("Failed to leave game:", error);
+            }
+        }
+    };
+
+    const handleStartGame = async () => {
+        try {
+            await startGameMutation.mutateAsync();
+        } catch (error) {
+            console.error("Failed to start game:", error);
+        }
+    };
 
     // Get current player info and determine if creator (index 0)
     const currentPlayerIndex = game.players.findIndex((p) => p?.connectionId === currentConnectionId);
@@ -99,7 +116,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
             </Card.Section>
 
             <Stack gap="lg" mt="md" h="100%" style={{ minHeight: 0 }}>
-                <PlayerNameInput currentPlayerName={currentPlayerName} onUpdatePlayer={onUpdatePlayer} />
+                <PlayerNameInput currentPlayerName={currentPlayerName} gameId={game.id} />
 
                 <Box
                     flex={1}
@@ -124,18 +141,19 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
 
                 {/* Action Buttons */}
                 <Group justify="space-between" pt="md">
-                    <Button variant="outline" onClick={onClose}>
+                    <Button variant="outline" onClick={handleLeaveGame} disabled={leaveGameMutation.isPending}>
                         {isCreator ? "Cancel Game" : "Leave Game"}
                     </Button>
 
                     {isCreator && (
                         <Button
-                            onClick={onStartGame}
+                            onClick={handleStartGame}
                             disabled={
                                 game.players.filter((p) => p !== undefined).length < 2 ||
                                 !allPeersConnected ||
                                 !allPeersGameReady ||
-                                game.status === "playing"
+                                game.status === "playing" ||
+                                startGameMutation.isPending
                             }
                         >
                             {game.status === "playing" ? "Game Started" : "Start Game"}

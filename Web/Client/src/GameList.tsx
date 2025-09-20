@@ -5,10 +5,9 @@ import { Title, Stack, Text, Box, Flex } from "@mantine/core";
 
 interface GameListProps {
     games: Game[];
-    onJoinGame: (gameId: string) => void;
 }
 
-export const GameList: React.FC<GameListProps> = ({ games, onJoinGame }) => {
+export const GameList: React.FC<GameListProps> = ({ games }) => {
     return (
         <Flex h="100%" direction="column" style={{ minHeight: 0 }}>
             <Title order={3} mb="md">
@@ -22,7 +21,7 @@ export const GameList: React.FC<GameListProps> = ({ games, onJoinGame }) => {
                         </Text>
                     ) : (
                         games.map((game) => (
-                            <GameTile key={game.id} game={game} isJoined={"players" in game} onJoinGame={onJoinGame} />
+                            <GameTile key={game.id} game={game} isJoined={"players" in game} />
                         ))
                     )}
                 </Stack>

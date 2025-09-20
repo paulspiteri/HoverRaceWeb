@@ -1,15 +1,23 @@
 import * as React from "react";
 import { Button, Container, Stack, Title, Group, Card, Text } from "@mantine/core";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import type { Game } from "./types";
+import { useJoinGame } from "@/hooks/useJoinGame";
 
 interface JoinGameInterfaceProps {
     gameInfo: Game;
-    onJoinGame: () => void;
 }
 
-export const JoinGameOffer: React.FC<JoinGameInterfaceProps> = ({ gameInfo, onJoinGame }) => {
+export const JoinGameOffer: React.FC<JoinGameInterfaceProps> = ({ gameInfo }) => {
     const navigate = useNavigate();
+    const { gameId } = useParams();
+    const joinGameMutation = useJoinGame();
+
+    const handleJoinGame = () => {
+        if (!gameId) return;
+        const savedName = localStorage.getItem("hoverrace-player-name");
+        joinGameMutation.mutate({ gameId, name: savedName || undefined });
+    };
 
     return (
         <Container size="sm" mt="xl">
@@ -29,8 +37,8 @@ export const JoinGameOffer: React.FC<JoinGameInterfaceProps> = ({ gameInfo, onJo
                             Back to Home
                         </Button>
                         <Button
-                            onClick={onJoinGame}
-                            disabled={gameInfo.status === "playing" || gameInfo.playerCount >= gameInfo.maxPlayers}
+                            onClick={handleJoinGame}
+                            disabled={gameInfo.status === "playing" || gameInfo.playerCount >= gameInfo.maxPlayers || joinGameMutation.isPending}
                         >
                             Join Game
                         </Button>

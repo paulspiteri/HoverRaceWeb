@@ -22,7 +22,6 @@ export function Root() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const gameMatch = useMatch("/game/*");
     const [gameScreenMode, setGameScreenMode] = useAtom(gameScreenModeAtom);
-
     useEffect(() => {
         const handleFullscreenChange = () =>
             void setGameScreenMode(document.fullscreenElement ? "fullscreen" : "maximized");
@@ -56,13 +55,6 @@ export function Root() {
     useEffect(() => setGames(games), [games, setGames]);
     useEffect(() => setEventSource(eventSource), [eventSource, setEventSource]);
     useEffect(() => setCanvasAtom(canvasRef), [canvasRef, setCanvasAtom]);
-
-    const handleJoinGame = (id: string) => {
-        if (connectionId) {
-            const savedName = localStorage.getItem("hoverrace-player-name");
-            commands.joinGame(id, connectionId, savedName || undefined);
-        }
-    };
 
     const handleCanvasClick = () => {
         if (gameScreenMode === "fullscreen") {
@@ -125,7 +117,7 @@ export function Root() {
                     }}
                 >
                     <ConnectionStatus />
-                    <GameList games={games} onJoinGame={handleJoinGame} />
+                    <GameList games={games} />
                 </Flex>
             </Flex>
             <div

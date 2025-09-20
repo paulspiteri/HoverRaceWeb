@@ -1,21 +1,22 @@
 import * as React from "react";
 import { Button, TextInput, Group } from "@mantine/core";
 import { useState, useEffect } from "react";
+import { useUpdatePlayer } from "@/hooks/useUpdatePlayer";
 
 interface PlayerNameInputProps {
     currentPlayerName: string;
-    onUpdatePlayer: (name: string) => Promise<void>;
+    gameId: string;
     disabled?: boolean;
 }
 
 export const PlayerNameInput: React.FC<PlayerNameInputProps> = ({
     currentPlayerName,
-    onUpdatePlayer,
+    gameId,
     disabled = false,
 }) => {
     // Player name state and localStorage persistence
     const [playerName, setPlayerName] = useState(() => localStorage.getItem("hoverrace-player-name") ?? "");
-    const [isUpdatingName, setIsUpdatingName] = useState(false);
+    const updatePlayerMutation = useUpdatePlayer(gameId);
 
     useEffect(() => {
         if (playerName) {
@@ -25,17 +26,14 @@ export const PlayerNameInput: React.FC<PlayerNameInputProps> = ({
 
     // Update server when name changes and is different from current
     const handleUpdateName = async () => {
-        if (!playerName.trim() || playerName === currentPlayerName || isUpdatingName || disabled) {
+        if (!playerName.trim() || playerName === currentPlayerName || updatePlayerMutation.isPending || disabled) {
             return;
         }
 
-        setIsUpdatingName(true);
         try {
-            await onUpdatePlayer(playerName.trim());
+            await updatePlayerMutation.mutateAsync(playerName.trim());
         } catch (error) {
             console.error("Failed to update player name:", error);
-        } finally {
-            setIsUpdatingName(false);
         }
     };
 
@@ -52,16 +50,16 @@ export const PlayerNameInput: React.FC<PlayerNameInputProps> = ({
                         e.currentTarget.blur();
                     }
                 }}
-                disabled={isUpdatingName || disabled}
+                disabled={updatePlayerMutation.isPending || disabled}
                 style={{ flex: 1 }}
             />
             <Button
                 onClick={handleUpdateName}
-                disabled={!playerName.trim() || playerName === currentPlayerName || isUpdatingName || disabled}
+                disabled={!playerName.trim() || playerName === currentPlayerName || updatePlayerMutation.isPending || disabled}
                 variant="outline"
                 size="sm"
             >
-                {isUpdatingName ? "Updating..." : "Update"}
+                {updatePlayerMutation.isPending ? "Updating..." : "Update"}
             </Button>
         </Group>
     );

@@ -1,11 +1,9 @@
 import * as React from "react";
 import { Button, Container, Stack, Card, Alert } from "@mantine/core";
-import { useAtomValue } from "jotai";
-import { connectionIdAtom, commandsAtom } from "@/atoms.ts";
+import { useCreateGame } from "@/hooks/useCreateGame";
 
 export const GameNotFound: React.FC = () => {
-    const connectionId = useAtomValue(connectionIdAtom);
-    const commands = useAtomValue(commandsAtom);
+    const createGameMutation = useCreateGame();
 
     return (
         <Container size="sm" mt="xl">
@@ -17,9 +15,9 @@ export const GameNotFound: React.FC = () => {
                     <Button
                         onClick={() => {
                             const savedName = localStorage.getItem("hoverrace-player-name");
-                            commands?.createGame(connectionId!, savedName || undefined);
+                            createGameMutation.mutate(savedName || undefined);
                         }}
-                        disabled={!connectionId || !commands}
+                        disabled={createGameMutation.isPending}
                         variant="filled"
                         color="blue"
                     >
