@@ -1,0 +1,35 @@
+.container {
+    padding: var(--mantine-spacing-xs);
+}
+
+.statusIcon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.statusText {
+    font-family: monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+}
+
+@media (min-width: 768px) {
+    .container {
+        padding: var(--mantine-spacing-sm);
+        margin-bottom: var(--mantine-spacing-md);
+        border: 1px solid var(--mantine-color-gray-3);
+        border-radius: 8px;
+        background-color: var(--mantine-color-gray-0);
+    }
+}
+
+@media (max-width: 768px) {
+    .statusText {
+        display: none;
+    }
+}

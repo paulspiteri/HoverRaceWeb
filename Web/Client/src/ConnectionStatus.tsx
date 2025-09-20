@@ -1,37 +1,22 @@
 import { Text, Box, Group } from "@mantine/core";
 import { useAtomValue } from 'jotai';
 import { connectionIdAtom } from '@/atoms.ts';
+import styles from './ConnectionStatus.module.css';
 
 export const ConnectionStatus: React.FC = () => {
     const connectionId = useAtomValue(connectionIdAtom);
     return (
-        <Box
-            p="sm"
-            mb="md"
-            style={{
-                border: "1px solid var(--mantine-color-gray-3)",
-                borderRadius: 8,
-                backgroundColor: "var(--mantine-color-gray-0)",
-            }}
-        >
+        <Box className={styles.container}>
             <Group gap="xs" align="center">
                 <Box
-                    w={8}
-                    h={8}
                     bg={connectionId ? "green" : "yellow"}
-                    style={{ borderRadius: "50%", flexShrink: 0 }}
+                    className={styles.statusIcon}
+                    title={connectionId ? "Connected" : "Connecting..."}
                 />
                 <Text
                     size="xs"
                     c="dimmed"
-                    style={{
-                        fontFamily: "monospace",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        minWidth: 0,
-                        flex: 1,
-                    }}
+                    className={styles.statusText}
                 >
                     {connectionId ?? "Connecting..."}
                 </Text>

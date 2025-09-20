@@ -3,6 +3,7 @@ import { Button, Box, Text, Title, Stack } from "@mantine/core";
 import type { Game } from "@/types.ts";
 import { useJoinGame } from "@/hooks/useJoinGame";
 import { notifications } from "@mantine/notifications";
+import styles from "./GameTile.module.css";
 
 interface GameTileProps {
     game: Game;
@@ -32,38 +33,33 @@ export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled }) 
         );
     };
     return (
-        <Box
-            p="md"
-            className="game-tile-hover"
-            style={{
-                border: "2px solid var(--mantine-color-gray-3)",
-                borderRadius: 8,
-                transition: "border-color 0.2s ease",
-                cursor: "pointer",
-            }}
-        >
-            <Stack gap="md">
+        <Box className={styles.gameTile}>
+            <Stack className={styles.gameTileContent}>
                 <Box>
-                    <Title order={4} size="lg" fw={600}>
+                    <Title order={4} size="lg" fw={600} className={styles.gameTitle}>
                         {game.name}
                     </Title>
-                    <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+                    <Text size="sm" c="dimmed" className={styles.gameInfo}>
                         Players: {game.playerCount}/{game.maxPlayers}
                     </Text>
-                    <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
-                        Created: {new Date(game.createdAt).toLocaleString()}
+                    <Text size="xs" c="dimmed" className={styles.gameInfo}>
+                        Created: {new Date(game.createdAt).toLocaleDateString()}
                     </Text>
-                    <Text size="xs" c="dimmed" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <Text size="xs" c="dimmed" className={styles.gameIdShort}>
+                        ID: {game.id.slice(0, 8)}...
+                    </Text>
+                    <Text size="xs" c="dimmed" className={styles.gameIdFull}>
                         Game ID: {game.id}
                     </Text>
                 </Box>
 
                 <Button
                     variant="outline"
-                    size="sm"
+                    size="md"
                     onClick={handleJoinGame}
                     disabled={isJoined || isGameFull || isGameStarted || disabled || joinGameMutation.isPending}
                     fullWidth={true}
+                    className={styles.joinButton}
                 >
                     {isGameStarted ? "Game Started" : isGameFull ? "Game Full" : "Join Game"}
                 </Button>

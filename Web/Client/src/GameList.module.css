@@ -1,0 +1,19 @@
+.gameStack {
+    gap: var(--mantine-spacing-sm);
+}
+
+@media (min-width: 768px) {
+    .gameStack {
+        gap: var(--mantine-spacing-md);
+    }
+}
+
+.emptyText {
+    padding: var(--mantine-spacing-md);
+}
+
+@media (min-width: 768px) {
+    .emptyText {
+        padding: var(--mantine-spacing-xl);
+    }
+}

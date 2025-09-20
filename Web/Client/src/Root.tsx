@@ -1,9 +1,10 @@
 import { useCallback, useRef, useEffect } from "react";
-import { Container, Stack, Title, Group, Flex, Box, ActionIcon } from "@mantine/core";
-import { IconHome, IconMaximize } from "@tabler/icons-react";
+import { Container, Stack, Flex, Box, ActionIcon } from "@mantine/core";
+import { IconMaximize } from "@tabler/icons-react";
 import { useGameData } from "@/useGameData.ts";
 import { GameList } from "@/GameList.tsx";
 import { ConnectionStatus } from "@/ConnectionStatus.tsx";
+import { Header } from "@/Header.tsx";
 import { useNavigate, Outlet, useMatch } from "react-router-dom";
 import styles from "./Root.module.css";
 import { useSetAtom, useAtom } from "jotai";
@@ -69,38 +70,34 @@ export function Root() {
 
     return (
         <Container fluid h="100vh" style={{ overflow: "hidden" }} p={0}>
-            <Flex h="100%">
+            {/* Mobile Layout */}
+            <Flex h="100%" hiddenFrom="sm">
+                <Stack h="100%" w="100%" gap={0}>
+                    {/* Mobile Header */}
+                    <Box p="sm" style={{ borderBottom: "1px solid var(--mantine-color-gray-3)" }}>
+                        <Header isMobile />
+                    </Box>
+
+                    {/* Mobile Games List */}
+                    <Box flex={1} p="md" style={{ overflow: "auto" }}>
+                        <GameList games={games} />
+                    </Box>
+
+                    {/* Mobile New Game Button */}
+                    <Box p="md" pt="sm">
+                        <Outlet />
+                    </Box>
+                </Stack>
+            </Flex>
+
+            {/* Desktop Layout */}
+            <Flex h="100%" visibleFrom="sm">
                 {/* Main content area */}
                 <Box flex={1} p="xl">
                     <Flex direction="column" align="center" h="100%">
                         <Container size="xl" w="100%" h="100%">
                             <Stack gap="xl" h="100%">
-                                <Group justify="center">
-                                    <Group gap="sm" align="center">
-                                        <ActionIcon
-                                            variant="subtle"
-                                            onClick={() => navigate("/")}
-                                            size="xl"
-                                            title="Go to Home"
-                                        >
-                                            <IconHome size={24} />
-                                        </ActionIcon>
-                                        <Title
-                                            order={1}
-                                            size="h1"
-                                            style={{
-                                                background: "linear-gradient(45deg, #1976d2, #9c27b0)",
-                                                WebkitBackgroundClip: "text",
-                                                WebkitTextFillColor: "transparent",
-                                                cursor: "pointer",
-                                            }}
-                                            onClick={() => navigate("/")}
-                                        >
-                                            HoverRace
-                                        </Title>
-                                    </Group>
-                                </Group>
-
+                                <Header />
                                 <Outlet />
                             </Stack>
                         </Container>

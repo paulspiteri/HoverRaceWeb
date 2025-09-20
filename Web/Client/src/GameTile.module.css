@@ -1,0 +1,44 @@
+.gameTile {
+    border: 2px solid var(--mantine-color-gray-3);
+    border-radius: 8px;
+    transition: border-color 0.2s ease;
+    cursor: pointer;
+    padding: var(--mantine-spacing-sm);
+}
+
+.gameInfo {
+    white-space: nowrap;
+}
+
+.gameIdShort {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.gameIdFull {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.joinButton {
+    min-height: 44px;
+}
+
+/* Desktop styles */
+@media (min-width: 768px) {
+    .gameTile {
+        padding: var(--mantine-spacing-md);
+    }
+
+    .gameIdShort {
+        display: none;
+    }
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    .gameIdFull {
+        display: none;
+    }
+}
