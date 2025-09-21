@@ -5,7 +5,7 @@ import { useGameData } from "@/useGameData.ts";
 import { GameList } from "@/GameList.tsx";
 import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { Header } from "@/Header.tsx";
-import { useNavigate, Outlet } from "react-router-dom";
+import { useNavigate, Outlet, useMatch } from "react-router-dom";
 import styles from "./Root.module.css";
 import { useSetAtom, useAtom } from "jotai";
 import {
@@ -21,6 +21,7 @@ import {
 export function Root() {
     const navigate = useNavigate();
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const gameMatch = useMatch("/game/*");
     const [gameScreenMode, setGameScreenMode] = useAtom(gameScreenModeAtom);
     useEffect(() => {
         const handleFullscreenChange = () =>
@@ -77,13 +78,15 @@ export function Root() {
                         <Header isMobile />
                     </Box>
 
-                    {/* Mobile Games List */}
-                    <Box flex={1} p="md" style={{ overflow: "auto" }}>
-                        <GameList games={games} />
-                    </Box>
+                    {/* Mobile Games List - hide when in a game */}
+                    {!gameMatch && (
+                        <Box flex={1} p="md" style={{ overflow: "auto" }}>
+                            <GameList games={games} />
+                        </Box>
+                    )}
 
-                    {/* Mobile New Game Button */}
-                    <Box p="md" pt="sm">
+                    {/* Mobile Content Area */}
+                    <Box flex={gameMatch ? 1 : 0} p="md" pt={gameMatch ? "md" : "sm"} style={{ overflow: gameMatch ? "auto" : "visible" }}>
                         <Outlet />
                     </Box>
                 </Stack>

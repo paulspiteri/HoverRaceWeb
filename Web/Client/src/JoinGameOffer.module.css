@@ -1,0 +1,46 @@
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--mantine-spacing-md);
+    max-width: 400px;
+    width: 100%;
+}
+
+.joinButton {
+    min-height: 44px;
+    font-size: 16px;
+    width: 300px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        padding: var(--mantine-spacing-md);
+    }
+
+    .content {
+        flex: 1;
+        justify-content: center;
+        position: relative;
+    }
+
+    .gameInfo {
+        align-self: center;
+    }
+
+    .joinButton {
+        width: 100%;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+    }
+}
