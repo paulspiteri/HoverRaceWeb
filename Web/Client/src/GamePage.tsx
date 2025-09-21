@@ -65,7 +65,8 @@ export const GamePage: React.FC = () => {
     useEffect(() => {
         {
             if (isGamePlaying && gameInstanceApi) {
-                setGameScreenMode("mini");
+                const isMobile = window.matchMedia("(pointer: coarse)").matches;
+                setGameScreenMode(isMobile ? "maximized" : "mini");
                 peerStatuses?.forEach((x, idx) => {
                     const latencies = peerLatencies?.[idx];
                     gameInstanceApi.setPlayerStatus(

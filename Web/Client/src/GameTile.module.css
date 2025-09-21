@@ -26,7 +26,7 @@
 }
 
 /* Desktop styles */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (pointer: fine) {
     .gameTile {
         padding: var(--mantine-spacing-md);
     }

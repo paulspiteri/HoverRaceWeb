@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Button, Card, Text, Title, Stack, Group, Box } from "@mantine/core";
+import { Button, Card, Text, Title, Group, Box, Tabs, ActionIcon } from "@mantine/core";
 import type { JoinedGame } from "./types";
 import { useMemo } from "react";
 import { PlayerList } from "./PlayerList";
@@ -12,6 +12,8 @@ import { connectionIdAtom, gameScreenModeAtom, gameTokenAtom } from "@/atoms.ts"
 import { useLeaveGame } from "@/hooks/useLeaveGame";
 import { useStartGame } from "@/hooks/useStartGame";
 import { notifications } from "@mantine/notifications";
+import { IconArrowLeft } from "@tabler/icons-react";
+import styles from "./ActiveGame.module.css";
 
 interface ActiveGameProps {
     game: JoinedGame;
@@ -114,50 +116,36 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
     }, [game.players, currentConnectionId, isCreator, peersActualStatuses]);
     return (
         <Card
-            withBorder
-            shadow="sm"
-            radius="md"
-            mt="xl"
-            mb="xl"
-            style={{ display: "flex", flexDirection: "column", flex: 1 }}
+            className={styles.card}
         >
             <Card.Section withBorder inheritPadding py="xs">
-                <Title order={2}>{game.name}</Title>
-                <Text size="sm" c="dimmed">
-                    Game • {game.playerCount}/{game.maxPlayers} Players • ID: {game.id}
-                </Text>
+                <Group justify="space-between" align="center">
+                    <Group gap="sm" align="center">
+                        <ActionIcon
+                            variant="subtle"
+                            onClick={handleLeaveGame}
+                            disabled={leaveGameMutation.isPending}
+                            size="lg"
+                            title={isCreator ? "Cancel Game" : "Leave Game"}
+                        >
+                            <IconArrowLeft size={20} />
+                        </ActionIcon>
+                        <Box>
+                            <Title order={2}>{game.name}</Title>
+                            <Text size="sm" c="dimmed">
+                                Game • {game.playerCount}/{game.maxPlayers} Players • ID: {game.id}
+                            </Text>
+                        </Box>
+                    </Group>
+
+                </Group>
             </Card.Section>
 
-            <Stack gap="lg" mt="md" h="100%" style={{ minHeight: 0 }}>
-                <PlayerNameInput currentPlayerName={currentPlayerName} gameId={game.id} />
-
-                <Box
-                    flex={1}
-                    style={{
-                        minHeight: 0,
-                        display: "grid",
-                        gridTemplateColumns: "3fr 2fr",
-                        gap: "var(--mantine-spacing-lg)",
-                    }}
-                >
-                    <GameChat />
-                    <PlayerList
-                        gamePlayers={game.players}
-                        peerStatuses={peerStatuses}
-                        currentConnectionId={currentConnectionId}
-                        peersActualStatuses={peersActualStatuses}
-                        peerLatencies={peerLatencies}
-                        isHost={isCreator}
-                        isLoadingGameData={isLoadingGameData}
-                    />
-                </Box>
-
-                {/* Action Buttons */}
-                <Group justify="space-between" pt="md">
-                    <Button variant="outline" onClick={handleLeaveGame} disabled={leaveGameMutation.isPending}>
-                        {isCreator ? "Cancel Game" : "Leave Game"}
-                    </Button>
-
+            <Box className={styles.content}>
+                <Group gap="xs" align="end">
+                    <Box flex={1}>
+                        <PlayerNameInput currentPlayerName={currentPlayerName} gameId={game.id} />
+                    </Box>
                     {isCreator && (
                         <Button
                             onClick={handleStartGame}
@@ -168,12 +156,56 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
                                 game.status === "playing" ||
                                 startGameMutation.isPending
                             }
+                            size="sm"
                         >
-                            {game.status === "playing" ? "Game Started" : "Start Game"}
+                            {game.status === "playing" ? "Started" : "Start"}
                         </Button>
                     )}
                 </Group>
-            </Stack>
+
+                <Box className={styles.gameArea}>
+                    {/* Mobile: Tabbed Layout */}
+                    <Box className={styles.tabsContainer}>
+                        <Tabs defaultValue="chat" className={styles.tabs}>
+                            <Tabs.List>
+                                <Tabs.Tab value="chat">Chat</Tabs.Tab>
+                                <Tabs.Tab value="players">Players ({game.players.filter(p => p).length})</Tabs.Tab>
+                            </Tabs.List>
+
+                            <Tabs.Panel value="chat" className={styles.tabPanel}>
+                                <GameChat />
+                            </Tabs.Panel>
+
+                            <Tabs.Panel value="players" className={styles.tabPanel}>
+                                <PlayerList
+                                    gamePlayers={game.players}
+                                    peerStatuses={peerStatuses}
+                                    currentConnectionId={currentConnectionId}
+                                    peersActualStatuses={peersActualStatuses}
+                                    peerLatencies={peerLatencies}
+                                    isHost={isCreator}
+                                    isLoadingGameData={isLoadingGameData}
+                                />
+                            </Tabs.Panel>
+                        </Tabs>
+                    </Box>
+
+                    {/* Desktop: Grid Layout */}
+                    <Box className={styles.gridContainer}>
+                        <GameChat />
+                        <PlayerList
+                            gamePlayers={game.players}
+                            peerStatuses={peerStatuses}
+                            currentConnectionId={currentConnectionId}
+                            peersActualStatuses={peersActualStatuses}
+                            peerLatencies={peerLatencies}
+                            isHost={isCreator}
+                            isLoadingGameData={isLoadingGameData}
+                        />
+                    </Box>
+                </Box>
+
+            </Box>
         </Card>
     );
 };

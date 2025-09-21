@@ -1,0 +1,45 @@
+.container {
+    border: 1px solid var(--mantine-color-gray-3);
+    border-radius: var(--mantine-radius-md);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    padding: var(--mantine-spacing-sm);
+}
+
+.messagesArea {
+    flex: 1;
+    min-height: 0;
+}
+
+
+.emptyMessages {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.messagesStack {
+    padding: var(--mantine-spacing-xs);
+}
+
+.message {
+    max-width: 80%;
+}
+
+.messageOwn {
+    align-self: flex-end;
+}
+
+.messageOther {
+    align-self: flex-start;
+}
+
+.inputGroup {
+    margin-top: var(--mantine-spacing-xs);
+}
+
+.textInput {
+    flex: 1;
+}

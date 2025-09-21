@@ -18,7 +18,7 @@
     flex: 1;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (pointer: fine) {
     .container {
         padding: var(--mantine-spacing-sm);
         margin-bottom: var(--mantine-spacing-md);

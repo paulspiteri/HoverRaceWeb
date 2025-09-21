@@ -2,7 +2,7 @@
     gap: var(--mantine-spacing-sm);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (pointer: fine) {
     .gameStack {
         gap: var(--mantine-spacing-md);
     }
@@ -12,7 +12,7 @@
     padding: var(--mantine-spacing-md);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (pointer: fine) {
     .emptyText {
         padding: var(--mantine-spacing-xl);
     }

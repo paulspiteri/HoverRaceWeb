@@ -22,10 +22,9 @@
     grid-template-columns: 1fr;
 }
 
-/* Desktop Layout - always show sidebar */
-@media (min-width: 768px) {
-    .rootHome,
-    .rootInGame {
+/* Desktop Layout - home shows sidebar, in-game full width */
+@media (min-width: 768px) and (pointer: fine) {
+    .rootHome {
         grid-template-areas:
             "header games"
             "content games";
@@ -41,7 +40,7 @@
 }
 
 /* Desktop header styling */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (pointer: fine) {
     .header {
         padding: var(--mantine-spacing-xl);
         border-bottom: none;
@@ -50,13 +49,14 @@
 
 .content {
     grid-area: content;
-    padding: var(--mantine-spacing-md);
     overflow: auto;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Desktop content styling */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (pointer: fine) {
     .content {
         padding: 0 var(--mantine-spacing-xl) var(--mantine-spacing-xl);
         display: flex;
@@ -76,7 +76,7 @@
 }
 
 /* Desktop games list styling */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (pointer: fine) {
     .gamesList {
         padding: var(--mantine-spacing-xl);
         border-left: 1px solid var(--mantine-color-gray-3);
@@ -88,7 +88,7 @@
 }
 
 /* Desktop: always show games list */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (pointer: fine) {
     .gamesListHidden {
         display: flex;
         flex-direction: column;
@@ -100,7 +100,7 @@
 }
 
 /* Desktop: show connection status in games list */
-@media (min-width: 768px) {
+@media (min-width: 768px) and (pointer: fine) {
     .desktopConnectionStatus {
         display: block;
     }
@@ -118,10 +118,11 @@
 }
 
 .canvas-border-maximized {
-    bottom: 20px;
-    right: 20px;
-    top: 20px;
-    left: 20px;
+    border: 0 none;
+    bottom: 0;
+    right: 0;
+    top: 0;
+    left:0;
 }
 
 .canvas-border-hidden {

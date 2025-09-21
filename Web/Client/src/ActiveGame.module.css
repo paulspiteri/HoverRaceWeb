@@ -1,0 +1,82 @@
+/* Mobile-first layout */
+.card {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    align-self: stretch;
+}
+
+/* Desktop: add border and margins back */
+@media (min-width: 768px) and (pointer: fine) {
+    .card {
+        margin-top: var(--mantine-spacing-xl);
+        margin-bottom: var(--mantine-spacing-xl);
+        border: 1px solid var(--mantine-color-gray-3);
+        border-radius: var(--mantine-radius-md);
+        box-shadow: var(--mantine-shadow-sm);
+    }
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mantine-spacing-lg);
+    margin-top: var(--mantine-spacing-md);
+    height: 100%;
+    min-height: 0;
+}
+
+.gameArea {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Mobile: Tabbed layout */
+.tabsContainer {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.tabs {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+.tabPanel {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding-top: var(--mantine-spacing-md);
+}
+
+/* Desktop: Grid layout */
+.gridContainer {
+    display: none;
+}
+
+/* Desktop styles */
+@media (min-width: 768px) and (pointer: fine) {
+    .gameArea {
+        flex-direction: row;
+    }
+
+    .tabsContainer {
+        display: none;
+    }
+
+    .gridContainer {
+        display: grid;
+        grid-template-columns: 3fr 2fr;
+        gap: var(--mantine-spacing-lg);
+        flex: 1;
+        min-height: 0;
+    }
+}
