@@ -50,9 +50,10 @@
 
 .content {
     grid-area: content;
-    padding: var(--mantine-spacing-md);
     overflow: auto;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Desktop content styling */

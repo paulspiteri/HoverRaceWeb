@@ -6,6 +6,7 @@ import { useAtomValue } from "jotai";
 import { connectionIdAtom } from "./atoms";
 import { getPlayerColor, formatTimestamp } from "./utils/chatColors";
 import type { ChatMessage } from "./types";
+import styles from "./Chat.module.css";
 
 interface ChatProps {
     messages: ChatMessage[];
@@ -49,89 +50,76 @@ export const Chat: React.FC<ChatProps> = ({ messages, onSendMessage }) => {
 
 
     return (
-        <Box
-            h="100%"
-            p="sm"
-            style={{
-                border: "1px solid var(--mantine-color-gray-3)",
-                borderRadius: "var(--mantine-radius-md)",
-                minHeight: 0,
-            }}
-        >
-            <Stack gap="xs" h="100%" style={{ minHeight: 0 }}>
-                {/* Messages area */}
-                <ScrollArea
-                    flex={1}
-                    viewportRef={scrollAreaRef}
-                    style={{ minHeight: 0, maxHeight: "100%" }}
-                    type="auto"
-                    styles={{
-                        viewport: {
-                            paddingBottom: 0,
-                            paddingRight: "8px",
-                            display: messages.length === 0 ? "flex" : "block",
-                            alignItems: messages.length === 0 ? "center" : "unset",
-                            justifyContent: messages.length === 0 ? "center" : "unset",
-                        },
-                    }}
-                >
-                    {messages.length === 0 ? (
-                        <Text size="sm" c="dimmed" ta="center">
-                            No messages
-                        </Text>
-                    ) : (
-                        <Stack gap="xs" p="xs">
-                            {messages.map((message) => {
-                                const colors = getPlayerColor(message.senderId, currentConnectionId);
-                                return (
-                                    <Paper
-                                        key={message.id}
-                                        p="xs"
-                                        radius="sm"
-                                        bg={colors.color}
-                                        styles={{
-                                            root: {
-                                                alignSelf:
-                                                    message.senderId === currentConnectionId ? "flex-end" : "flex-start",
-                                                maxWidth: "80%",
-                                            },
-                                        }}
-                                    >
-                                        <Group gap="xs" justify="space-between">
-                                            <Text size="xs" c={colors.text} fw={500} opacity={0.8}>
-                                                {message.senderId === currentConnectionId
-                                                    ? "You"
-                                                    : message.senderName || message.senderId}
-                                            </Text>
-                                            <Text size="xs" c={colors.text} opacity={0.6}>
-                                                {formatTimestamp(message.timestamp)}
-                                            </Text>
-                                        </Group>
-                                        <Text size="sm" mt="2px" c={colors.text}>
-                                            {message.message}
+        <Box className={styles.container}>
+            {/* Messages area */}
+            <ScrollArea
+                className={styles.messagesArea}
+                viewportRef={scrollAreaRef}
+                type="auto"
+                styles={{
+                    viewport: {
+                        paddingBottom: 0,
+                        paddingRight: "8px",
+                        ...(messages.length === 0 && {
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }),
+                    },
+                }}
+            >
+                {messages.length === 0 ? (
+                    <Text size="sm" c="dimmed" ta="center">
+                        No messages
+                    </Text>
+                ) : (
+                    <Stack gap="xs" className={styles.messagesStack}>
+                        {messages.map((message) => {
+                            const colors = getPlayerColor(message.senderId, currentConnectionId);
+                            return (
+                                <Paper
+                                    key={message.id}
+                                    p="xs"
+                                    radius="sm"
+                                    bg={colors.color}
+                                    className={`${styles.message} ${
+                                        message.senderId === currentConnectionId ? styles.messageOwn : styles.messageOther
+                                    }`}
+                                >
+                                    <Group gap="xs" justify="space-between">
+                                        <Text size="xs" c={colors.text} fw={500} opacity={0.8}>
+                                            {message.senderId === currentConnectionId
+                                                ? "You"
+                                                : message.senderName || message.senderId}
                                         </Text>
-                                    </Paper>
-                                );
-                            })}
-                        </Stack>
-                    )}
-                </ScrollArea>
+                                        <Text size="xs" c={colors.text} opacity={0.6}>
+                                            {formatTimestamp(message.timestamp)}
+                                        </Text>
+                                    </Group>
+                                    <Text size="sm" mt="2px" c={colors.text}>
+                                        {message.message}
+                                    </Text>
+                                </Paper>
+                            );
+                        })}
+                    </Stack>
+                )}
+            </ScrollArea>
 
-                {/* Message input */}
-                <Group gap="xs">
-                    <TextInput
-                        flex={1}
-                        placeholder="Type a message..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyDown={handleKeyPress}
-                        size="sm"
-                    />
-                    <ActionIcon onClick={handleSendMessage} disabled={!newMessage.trim()} size="lg" variant="filled">
-                        <IconSend size={16} />
-                    </ActionIcon>
-                </Group>
-            </Stack>
+            {/* Message input - fixed at bottom */}
+            <Group gap="xs" className={styles.inputGroup}>
+                <TextInput
+                    className={styles.textInput}
+                    placeholder="Type a message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    size="sm"
+                />
+                <ActionIcon onClick={handleSendMessage} disabled={!newMessage.trim()} size="lg" variant="filled">
+                    <IconSend size={16} />
+                </ActionIcon>
+            </Group>
         </Box>
     );
 };
