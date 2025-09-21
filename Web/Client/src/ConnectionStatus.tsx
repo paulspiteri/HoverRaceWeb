@@ -3,10 +3,14 @@ import { useAtomValue } from 'jotai';
 import { connectionIdAtom } from '@/atoms.ts';
 import styles from './ConnectionStatus.module.css';
 
-export const ConnectionStatus: React.FC = () => {
+interface ConnectionStatusProps {
+    className?: string;
+}
+
+export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className }) => {
     const connectionId = useAtomValue(connectionIdAtom);
     return (
-        <Box className={styles.container}>
+        <Box className={`${styles.container} ${className || ""}`}>
             <Group gap="xs" align="center">
                 <Box
                     bg={connectionId ? "green" : "yellow"}

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useEffect } from "react";
-import { Container, Stack, Flex, Box, ActionIcon } from "@mantine/core";
+import { Container, Box, ActionIcon } from "@mantine/core";
 import { IconMaximize } from "@tabler/icons-react";
 import { useGameData } from "@/useGameData.ts";
 import { GameList } from "@/GameList.tsx";
@@ -69,56 +69,22 @@ export function Root() {
     };
 
     return (
-        <Container fluid h="100vh" style={{ overflow: "hidden" }} p={0}>
-            {/* Mobile Layout */}
-            <Flex h="100%" hiddenFrom="sm">
-                <Stack h="100%" w="100%" gap={0}>
-                    {/* Mobile Header */}
-                    <Box p="sm" style={{ borderBottom: "1px solid var(--mantine-color-gray-3)" }}>
-                        <Header isMobile />
-                    </Box>
+        <Container fluid h="100vh" style={{ overflow: "hidden" }} p={0} className={`${styles.root} ${gameMatch ? styles.rootInGame : styles.rootHome}`}>
+            {/* Header */}
+            <Box className={styles.header}>
+                <Header />
+            </Box>
 
-                    {/* Mobile Games List - hide when in a game */}
-                    {!gameMatch && (
-                        <Box flex={1} p="md" style={{ overflow: "auto" }}>
-                            <GameList games={games} />
-                        </Box>
-                    )}
+            {/* Main Content Area */}
+            <Box className={styles.content}>
+                <Outlet />
+            </Box>
 
-                    {/* Mobile Content Area */}
-                    <Box flex={gameMatch ? 1 : 0} p="md" pt={gameMatch ? "md" : "sm"} style={{ overflow: gameMatch ? "auto" : "visible" }}>
-                        <Outlet />
-                    </Box>
-                </Stack>
-            </Flex>
-
-            {/* Desktop Layout */}
-            <Flex h="100%" visibleFrom="sm">
-                {/* Main content area */}
-                <Box flex={1} p="xl">
-                    <Flex direction="column" align="center" h="100%">
-                        <Container size="xl" w="100%" h="100%">
-                            <Stack gap="xl" h="100%">
-                                <Header />
-                                <Outlet />
-                            </Stack>
-                        </Container>
-                    </Flex>
-                </Box>
-                {/* Right sidebar for game list */}
-                <Flex
-                    w={384}
-                    p="xl"
-                    direction="column"
-                    style={{
-                        borderLeft: "1px solid var(--mantine-color-gray-3)",
-                        overflow: "hidden",
-                    }}
-                >
-                    <ConnectionStatus />
-                    <GameList games={games} />
-                </Flex>
-            </Flex>
+            {/* Games List - always render, CSS handles visibility */}
+            <Box className={`${styles.gamesList} ${gameMatch ? styles.gamesListHidden : ""}`}>
+                <ConnectionStatus className={styles.desktopConnectionStatus} />
+                <GameList games={games} />
+            </Box>
             <div
                 className={`${styles["canvas-border"]} ${gameScreenMode === "maximized" ? styles["canvas-border-maximized"] : ""} ${gameScreenMode === "hidden" ? styles["canvas-border-hidden"] : ""}`}
             >

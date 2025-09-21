@@ -2,11 +2,13 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Root } from "@/Root.tsx";
 import { NoGame } from "@/NoGame.tsx";
 import { GamePage } from "@/GamePage.tsx";
+import { ErrorBoundary } from "@/ErrorBoundary.tsx";
 
 const router = createBrowserRouter([
     {
         path: "/",
         element: <Root />,
+        errorElement: <ErrorBoundary />,
         children: [
             {
                 index: true,

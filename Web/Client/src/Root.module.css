@@ -1,3 +1,111 @@
+/* Root Layout */
+.root {
+    display: grid;
+}
+
+/* Home Layout - with games list */
+.rootHome {
+    grid-template-areas:
+        "header"
+        "games"
+        "content";
+    grid-template-rows: auto 1fr auto;
+    grid-template-columns: 1fr;
+}
+
+/* In-Game Layout - no games list */
+.rootInGame {
+    grid-template-areas:
+        "header"
+        "content";
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr;
+}
+
+/* Desktop Layout - always show sidebar */
+@media (min-width: 768px) {
+    .rootHome,
+    .rootInGame {
+        grid-template-areas:
+            "header games"
+            "content games";
+        grid-template-rows: auto 1fr;
+        grid-template-columns: 1fr 384px;
+    }
+}
+
+.header {
+    grid-area: header;
+    padding: var(--mantine-spacing-sm);
+    border-bottom: 1px solid var(--mantine-color-gray-3);
+}
+
+/* Desktop header styling */
+@media (min-width: 768px) {
+    .header {
+        padding: var(--mantine-spacing-xl);
+        border-bottom: none;
+    }
+}
+
+.content {
+    grid-area: content;
+    padding: var(--mantine-spacing-md);
+    overflow: auto;
+    min-height: 0;
+}
+
+/* Desktop content styling */
+@media (min-width: 768px) {
+    .content {
+        padding: 0 var(--mantine-spacing-xl) var(--mantine-spacing-xl);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+
+.gamesList {
+    grid-area: games;
+    padding: var(--mantine-spacing-md);
+    overflow: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Desktop games list styling */
+@media (min-width: 768px) {
+    .gamesList {
+        padding: var(--mantine-spacing-xl);
+        border-left: 1px solid var(--mantine-color-gray-3);
+    }
+}
+
+.gamesListHidden {
+    display: none;
+}
+
+/* Desktop: always show games list */
+@media (min-width: 768px) {
+    .gamesListHidden {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+.desktopConnectionStatus {
+    display: none;
+}
+
+/* Desktop: show connection status in games list */
+@media (min-width: 768px) {
+    .desktopConnectionStatus {
+        display: block;
+    }
+}
+
 .canvas-border {
     position: fixed;
     bottom: 20px;

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { notifications } from "@mantine/notifications";
 
 interface InteropInterface {
     _malloc: (size: number) => number;
@@ -32,7 +33,12 @@ declare global {
 }
 
 const webglContextLostEventHandler = (e: Event) => {
-    alert("WebGL context lost. You will need to reload the page.");
+    notifications.show({
+        title: "WebGL Context Lost",
+        message: "The WebGL context was lost. You will need to reload the page to continue playing.",
+        color: "red",
+        autoClose: false,
+    });
     e.preventDefault();
 };
 

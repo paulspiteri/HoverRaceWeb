@@ -2,40 +2,32 @@ import { Group, ActionIcon, Title } from "@mantine/core";
 import { IconHome } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import { ConnectionStatus } from "./ConnectionStatus";
+import styles from "./Header.module.css";
 
-interface HeaderProps {
-    isMobile?: boolean;
-}
-
-export const Header: React.FC<HeaderProps> = ({ isMobile = false }) => {
+export const Header: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <Group justify={isMobile ? "space-between" : "center"} align="center">
-            <Group gap={isMobile ? "xs" : "sm"} align="center">
+        <Group className={styles.header}>
+            <Group className={styles.headerContent}>
                 <ActionIcon
                     variant="subtle"
                     onClick={() => navigate("/")}
-                    size={isMobile ? "lg" : "xl"}
+                    size="lg"
                     title="Go to Home"
+                    className={styles.homeButton}
                 >
-                    <IconHome size={isMobile ? 20 : 24} />
+                    <IconHome className={styles.homeIcon} />
                 </ActionIcon>
                 <Title
-                    order={isMobile ? 2 : 1}
-                    size={isMobile ? "h3" : "h1"}
-                    style={{
-                        background: "linear-gradient(45deg, #1976d2, #9c27b0)",
-                        WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        cursor: "pointer",
-                    }}
+                    order={2}
+                    className={styles.title}
                     onClick={() => navigate("/")}
                 >
                     HoverRace
                 </Title>
             </Group>
-            {isMobile && <ConnectionStatus />}
+            <ConnectionStatus className={styles.connectionStatus} />
         </Group>
     );
 };

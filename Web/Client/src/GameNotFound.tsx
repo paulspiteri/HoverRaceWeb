@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Button, Alert } from "@mantine/core";
+import { Button, Alert, Card } from "@mantine/core";
 import { useCreateGame } from "@/hooks/useCreateGame";
 import { notifications } from "@mantine/notifications";
 import styles from "./GameNotFound.module.css";
@@ -10,9 +10,11 @@ export const GameNotFound: React.FC = () => {
     return (
         <div className={styles.container}>
             <div className={styles.content}>
-                <Alert color="yellow" title="Game not found" className={styles.alert}>
-                    The game you&apos;re looking for doesn&apos;t exist or is no longer available.
-                </Alert>
+                <Card withBorder shadow="sm" radius="md" className={styles.card}>
+                    <Alert color="yellow" title="Game not found" className={styles.alert}>
+                        The game you&apos;re looking for doesn&apos;t exist or is no longer available.
+                    </Alert>
+                </Card>
                 <Button
                     className={styles.newGameButton}
                     onClick={() => {
