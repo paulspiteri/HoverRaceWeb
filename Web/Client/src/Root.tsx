@@ -6,6 +6,7 @@ import { GameList } from "@/GameList.tsx";
 import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { Header } from "@/Header.tsx";
 import { useNavigate, Outlet, useMatch } from "react-router-dom";
+import { VirtualJoysticks } from "@/components/VirtualJoysticks";
 import styles from "./Root.module.css";
 import { useSetAtom, useAtom } from "jotai";
 import {
@@ -20,6 +21,7 @@ import {
 
 export function Root() {
     const navigate = useNavigate();
+    const fullscreenContainerRef = useRef<HTMLDivElement | null>(null);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const gameMatch = useMatch("/game/*");
     const [gameScreenMode, setGameScreenMode] = useAtom(gameScreenModeAtom);
@@ -69,7 +71,13 @@ export function Root() {
     };
 
     return (
-        <Container fluid h="100vh" style={{ overflow: "hidden" }} p={0} className={`${styles.root} ${gameMatch ? styles.rootInGame : styles.rootHome}`}>
+        <Container
+            fluid
+            h="100vh"
+            style={{ overflow: "hidden" }}
+            p={0}
+            className={`${styles.root} ${gameMatch ? styles.rootInGame : styles.rootHome}`}
+        >
             {/* Header */}
             <Box className={styles.header}>
                 <Header />
@@ -86,6 +94,7 @@ export function Root() {
                 <GameList games={games} />
             </Box>
             <div
+                ref={fullscreenContainerRef}
                 className={`${styles["canvas-border"]} ${gameScreenMode === "maximized" ? styles["canvas-border-maximized"] : ""} ${gameScreenMode === "hidden" ? styles["canvas-border-hidden"] : ""}`}
             >
                 <canvas
@@ -101,7 +110,7 @@ export function Root() {
                         size="lg"
                         variant="filled"
                         color="blue"
-                        onClick={() => canvasRef.current?.requestFullscreen()}
+                        onClick={() => fullscreenContainerRef.current?.requestFullscreen()}
                         style={{
                             position: "absolute",
                             top: 10,
@@ -112,6 +121,11 @@ export function Root() {
                         <IconMaximize size={20} />
                     </ActionIcon>
                 )}
+
+                <VirtualJoysticks
+                    canvasElement={canvasRef.current}
+                    enabled={gameScreenMode === "maximized" || gameScreenMode === "fullscreen"}
+                />
             </div>
         </Container>
     );

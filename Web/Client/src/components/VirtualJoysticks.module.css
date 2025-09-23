@@ -1,0 +1,66 @@
+/* Virtual Joysticks */
+.joystickLeft,
+.joystickRight {
+    position: fixed;
+    width: 165px;
+    height: 165px;
+    background-color: rgba(0, 0, 255, 0.2);
+    border-radius: 50%;
+    z-index: 1000;
+    display: none;
+    pointer-events: auto;
+    bottom: 30px;
+}
+
+.joystickLeft {
+    left: 30px;
+    background-color: rgba(0, 0, 255, 0.2);
+}
+
+.joystickRight {
+    right: 30px;
+    background-color: rgba(255, 0, 0, 0.2);
+}
+
+@media (pointer: coarse) {
+    .joystickLeft.enabled,
+    .joystickRight.enabled {
+        display: block;
+    }
+}
+
+.labelTop,
+.labelBottom {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: black;
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.labelTop {
+    top: -20px;
+}
+
+.labelBottom {
+    bottom: -16px;
+}
+
+/* Portrait mode adjustments */
+@media (max-aspect-ratio: 1/1) {
+    .joystickLeft,
+    .joystickRight {
+        width: 120px;
+        height: 120px;
+        bottom: 15px;
+    }
+
+    .joystickLeft {
+        left: 15px;
+    }
+
+    .joystickRight {
+        right: 15px;
+    }
+}

@@ -9,44 +9,9 @@
         <meta property="og:url" content="https://hover.cx" />
         <meta property="og:type" content="website" />
         <link rel="stylesheet" href="index.css" />
-        <script src="https://unpkg.com/nipplejs@0.10.2/dist/nipplejs.js"></script>
     </head>
     <body>
-        <div class="root">
-            <div id="react-root"></div>
-
-            <div class="game-container" id="fullscreen-container">
-                <div id="joystick-zone"></div>
-                <div id="weapon-joystick-zone">
-                    <div
-                        style="
-                            position: absolute;
-                            top: -25px;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            color: black;
-                            font-size: 12px;
-                            pointer-events: none;
-                        "
-                    >
-                        ↑ Weapon
-                    </div>
-                    <div
-                        style="
-                            position: absolute;
-                            bottom: -25px;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            color: black;
-                            font-size: 12px;
-                            pointer-events: none;
-                        "
-                    >
-                        ↓ Fire
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div id="react-root"></div>
         <script type="module" src="/src/main.tsx"></script>
         <script src="%VITE_GAME_URL%/hoverrace.js"></script>
     </body>
