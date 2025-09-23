@@ -1,6 +1,7 @@
 /* Root Layout */
 .root {
     display: grid;
+    height: 100dvh; /* Dynamic viewport height - accounts for mobile browser UI */
 }
 
 /* Home Layout - with games list */

@@ -73,10 +73,9 @@ export function Root() {
     return (
         <Container
             fluid
-            h="100vh"
+            className={`${styles.root} ${gameMatch ? styles.rootInGame : styles.rootHome}`}
             style={{ overflow: "hidden" }}
             p={0}
-            className={`${styles.root} ${gameMatch ? styles.rootInGame : styles.rootHome}`}
         >
             {/* Header */}
             <Box className={styles.header}>

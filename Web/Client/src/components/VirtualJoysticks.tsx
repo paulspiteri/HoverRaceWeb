@@ -7,7 +7,12 @@ interface VirtualJoysticksProps {
     enabled: boolean;
 }
 
-const useVirtualJoysticks = ({ canvasElement, enabled, joystickZone, weaponJoystickZone }: VirtualJoysticksProps & { joystickZone: HTMLDivElement | null, weaponJoystickZone: HTMLDivElement | null }) => {
+const useVirtualJoysticks = ({
+    canvasElement,
+    enabled,
+    joystickZone,
+    weaponJoystickZone,
+}: VirtualJoysticksProps & { joystickZone: HTMLDivElement | null; weaponJoystickZone: HTMLDivElement | null }) => {
     useEffect(() => {
         if (!enabled || !canvasElement || !joystickZone || !weaponJoystickZone) return;
 
@@ -35,7 +40,6 @@ const useVirtualJoysticks = ({ canvasElement, enabled, joystickZone, weaponJoyst
             });
             canvasElement.dispatchEvent(event);
         };
-
 
         // Movement joystick (left side)
         const movementManager = nipplejs.create({
@@ -169,19 +173,15 @@ export function VirtualJoysticks({ canvasElement, enabled }: VirtualJoysticksPro
         canvasElement,
         enabled,
         joystickZone: joystickZoneRef.current,
-        weaponJoystickZone: weaponJoystickZoneRef.current
+        weaponJoystickZone: weaponJoystickZoneRef.current,
     });
 
     return (
         <>
             <div ref={joystickZoneRef} className={`${styles.joystickLeft} ${enabled && styles.enabled}`}></div>
             <div ref={weaponJoystickZoneRef} className={`${styles.joystickRight} ${enabled && styles.enabled}`}>
-                <div className={styles.labelTop}>
-                    ↑ Weapon
-                </div>
-                <div className={styles.labelBottom}>
-                    ↓ Fire
-                </div>
+                <div className={styles.labelTop}>↑ Select</div>
+                <div className={styles.labelBottom}>↓ Fire</div>
             </div>
         </>
     );
