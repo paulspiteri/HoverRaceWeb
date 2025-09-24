@@ -42,7 +42,7 @@ console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
 
 app.use(
     cors({
-        origin: clientUrl,
+        origin: clientUrl.split(","),
     }),
 );
 app.use(express.json());
@@ -64,7 +64,6 @@ app.get("/api/games/stream", (req, res) => {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
-        "Access-Control-Allow-Origin": clientUrl,
         "Access-Control-Allow-Credentials": "true",
         "Access-Control-Allow-Headers": "Cache-Control",
     });
@@ -412,7 +411,9 @@ app.post("/api/games/:id/chat", (req, res) => {
 
         if (!message || !gameToken) {
             console.log("❌ Missing required fields");
-            return res.status(400).json({ error: "Missing required fields: message, gameToken (Authorization header)" });
+            return res
+                .status(400)
+                .json({ error: "Missing required fields: message, gameToken (Authorization header)" });
         }
 
         const game = gameManager.getGame(id);

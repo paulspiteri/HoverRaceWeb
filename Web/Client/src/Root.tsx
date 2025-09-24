@@ -6,7 +6,7 @@ import { GameList } from "@/GameList.tsx";
 import { ConnectionStatus } from "@/ConnectionStatus.tsx";
 import { Header } from "@/Header.tsx";
 import { useNavigate, Outlet, useMatch } from "react-router-dom";
-import { VirtualJoysticks } from "@/components/VirtualJoysticks";
+import { MobileInput } from "@/components/MobileInput.tsx";
 import styles from "./Root.module.css";
 import { useSetAtom, useAtom } from "jotai";
 import {
@@ -121,7 +121,7 @@ export function Root() {
                     </ActionIcon>
                 )}
 
-                <VirtualJoysticks
+                <MobileInput
                     canvasElement={canvasRef.current}
                     enabled={gameScreenMode === "maximized" || gameScreenMode === "fullscreen"}
                 />

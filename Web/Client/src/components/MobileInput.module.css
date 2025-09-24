@@ -1,0 +1,125 @@
+/* Mobile Input Controls */
+.joystickLeft {
+    position: fixed;
+    width: 132px;
+    height: 132px;
+    left: 30px;
+    bottom: 30px;
+    background-color: rgba(0, 0, 255, 0.2);
+    border-radius: 50%;
+    z-index: 1000;
+    display: none;
+    pointer-events: auto;
+}
+
+.gasPedal {
+    position: fixed;
+    width: 132px;
+    height: 132px;
+    right: 30px;
+    bottom: 30px;
+    background-color: rgba(100, 100, 100, 0.3);
+    border-radius: 15px;
+    z-index: 1000;
+    display: none;
+    pointer-events: auto;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (pointer: coarse) {
+    .joystickLeft.enabled {
+        display: block;
+    }
+
+    .gasPedal.enabled {
+        display: flex;
+    }
+
+    .fireButtonsContainer.enabled {
+        display: flex;
+    }
+}
+
+
+.gasPedalIcon {
+    color: white;
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5));
+    pointer-events: none;
+}
+
+.gasPedal:active,
+.gasPedal.pressed {
+    background-color: rgba(255, 68, 68, 0.2);
+}
+
+.gasPedal:active .gasPedalIcon,
+.gasPedal.pressed .gasPedalIcon {
+    color: #ff4444;
+}
+
+/* Fire buttons container - flexbox layout */
+.fireButtonsContainer {
+    position: fixed;
+    left: 30px;
+    bottom: 182px;
+    display: none;
+    flex-direction: row;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.fireButton {
+    width: 70px;
+    height: 70px;
+    background-color: rgba(255, 100, 100, 0.4);
+    border-radius: 50%;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fireIcon {
+    color: white;
+    filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.5));
+    pointer-events: none;
+}
+
+.fireButton.pressed {
+    background-color: rgba(255, 68, 68, 0.6);
+}
+
+.fireButton.pressed .fireIcon {
+    color: #ff2222;
+}
+
+/* Portrait mode adjustments */
+@media (max-aspect-ratio: 1/1) {
+    .joystickLeft {
+        width: 96px;
+        height: 96px;
+        bottom: 15px;
+        left: 15px;
+    }
+
+    .gasPedal {
+        width: 96px;
+        height: 96px;
+        bottom: 15px;
+        right: 15px;
+    }
+
+    /* Portrait mode - vertical stacking */
+    .fireButtonsContainer {
+        left: 15px;
+        bottom: 126px;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .fireButton {
+        width: 55px;
+        height: 55px;
+    }
+}
