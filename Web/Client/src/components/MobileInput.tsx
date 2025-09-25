@@ -4,6 +4,16 @@ import styles from "./MobileInput.module.css";
 import { GasPedalIcon } from "./GasPedalIcon";
 import { IconRocket } from "@tabler/icons-react";
 
+const simulateKeyboardEvent = (eventType: "keydown" | "keyup", canvasElement: HTMLCanvasElement, key: string) => {
+    const event = new KeyboardEvent(eventType, {
+        key,
+        code: key,
+        bubbles: true,
+        cancelable: true,
+    });
+    canvasElement.dispatchEvent(event);
+};
+
 const useGasPedal = ({
     canvasElement,
     enabled,
@@ -18,38 +28,16 @@ const useGasPedal = ({
     useEffect(() => {
         if (!enabled || !canvasElement || !gasPedalZone) return;
 
-        const simulateKeyDown = (key: string) => {
-            if (!canvasElement) return;
-            const event = new KeyboardEvent("keydown", {
-                key,
-                code: key,
-                bubbles: true,
-                cancelable: true,
-            });
-            canvasElement.dispatchEvent(event);
-        };
-
-        const simulateKeyUp = (key: string) => {
-            if (!canvasElement) return;
-            const event = new KeyboardEvent("keyup", {
-                key,
-                code: key,
-                bubbles: true,
-                cancelable: true,
-            });
-            canvasElement.dispatchEvent(event);
-        };
-
         const handleTouchStart = (e: TouchEvent) => {
             e.preventDefault();
             setIsGasPedalPressed(true);
-            simulateKeyDown("ShiftLeft");
+            simulateKeyboardEvent("keydown", canvasElement, "ShiftLeft");
         };
 
         const handleTouchEnd = (e: TouchEvent) => {
             e.preventDefault();
             setIsGasPedalPressed(false);
-            simulateKeyUp("ShiftLeft");
+            simulateKeyboardEvent("keyup", canvasElement, "ShiftLeft");
         };
         gasPedalZone.addEventListener("touchstart", handleTouchStart, { passive: false });
         gasPedalZone.addEventListener("touchend", handleTouchEnd, { passive: false });
@@ -75,49 +63,38 @@ const useWeaponButtons = ({
     fireButton3Zone: HTMLDivElement | null;
 }) => {
     useEffect(() => {
-        if (!enabled || !canvasElement || !fireButton1Zone || !fireButton2Zone || !fireButton3Zone) return;
-
-        const simulateKeyDown = (key: string) => {
-            if (!canvasElement) return;
-            const event = new KeyboardEvent("keydown", {
-                key,
-                code: key,
-                bubbles: true,
-                cancelable: true,
-            });
-            canvasElement.dispatchEvent(event);
-        };
-
-        const simulateKeyUp = (key: string) => {
-            if (!canvasElement) return;
-            const event = new KeyboardEvent("keyup", {
-                key,
-                code: key,
-                bubbles: true,
-                cancelable: true,
-            });
-            canvasElement.dispatchEvent(event);
-        };
+        if (!enabled || !canvasElement) return;
 
         const handleTouchStart = (e: TouchEvent) => {
             e.preventDefault();
             const buttonZone = e.currentTarget as HTMLDivElement;
             buttonZone.classList.add(styles.pressed);
-            simulateKeyDown("ControlLeft");
+            simulateKeyboardEvent("keydown", canvasElement, "ControlLeft");
             setTimeout(() => {
                 buttonZone.classList.remove(styles.pressed);
-                simulateKeyUp("ControlLeft"); // Immediate release for tap
+                simulateKeyboardEvent("keyup", canvasElement, "ControlLeft");
             }, 150);
         };
 
-        fireButton1Zone.addEventListener("touchstart", handleTouchStart, { passive: false });
-        fireButton2Zone.addEventListener("touchstart", handleTouchStart, { passive: false });
-        fireButton3Zone.addEventListener("touchstart", handleTouchStart, { passive: false });
+        const cleanup: (() => void)[] = [];
+
+        if (fireButton1Zone) {
+            fireButton1Zone.addEventListener("touchstart", handleTouchStart, { passive: false });
+            cleanup.push(() => fireButton1Zone.removeEventListener("touchstart", handleTouchStart));
+        }
+
+        if (fireButton2Zone) {
+            fireButton2Zone.addEventListener("touchstart", handleTouchStart, { passive: false });
+            cleanup.push(() => fireButton2Zone.removeEventListener("touchstart", handleTouchStart));
+        }
+
+        if (fireButton3Zone) {
+            fireButton3Zone.addEventListener("touchstart", handleTouchStart, { passive: false });
+            cleanup.push(() => fireButton3Zone.removeEventListener("touchstart", handleTouchStart));
+        }
 
         return () => {
-            fireButton1Zone.removeEventListener("touchstart", handleTouchStart);
-            fireButton2Zone.removeEventListener("touchstart", handleTouchStart);
-            fireButton3Zone.removeEventListener("touchstart", handleTouchStart);
+            cleanup.forEach((fn) => fn());
         };
     }, [enabled, canvasElement, fireButton1Zone, fireButton2Zone, fireButton3Zone]);
 };
@@ -134,28 +111,6 @@ const useVirtualJoysticks = ({
 
         const currentMovementKeys = new Set<string>();
 
-        const simulateKeyDown = (key: string) => {
-            if (!canvasElement) return;
-            const event = new KeyboardEvent("keydown", {
-                key,
-                code: key,
-                bubbles: true,
-                cancelable: true,
-            });
-            canvasElement.dispatchEvent(event);
-        };
-
-        const simulateKeyUp = (key: string) => {
-            if (!canvasElement) return;
-            const event = new KeyboardEvent("keyup", {
-                key,
-                code: key,
-                bubbles: true,
-                cancelable: true,
-            });
-            canvasElement.dispatchEvent(event);
-        };
-
         const movementManager = nipplejs.create({
             zone: joystickZone,
             mode: "static",
@@ -164,12 +119,9 @@ const useVirtualJoysticks = ({
             size: 120,
         });
 
-        // joystickZone.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
-        // joystickZone.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
-
         movementManager.on("move", (_, data) => {
             currentMovementKeys.forEach((key) => {
-                simulateKeyUp(key);
+                simulateKeyboardEvent("keyup", canvasElement, key);
             });
             currentMovementKeys.clear();
 
@@ -201,7 +153,7 @@ const useVirtualJoysticks = ({
                 }
 
                 keys.forEach((key) => {
-                    simulateKeyDown(key);
+                    simulateKeyboardEvent("keydown", canvasElement, key);
                     currentMovementKeys.add(key);
                 });
             }
@@ -209,7 +161,7 @@ const useVirtualJoysticks = ({
 
         movementManager.on("end", () => {
             currentMovementKeys.forEach((key) => {
-                simulateKeyUp(key);
+                simulateKeyboardEvent("keyup", canvasElement, key);
             });
             currentMovementKeys.clear();
         });
@@ -264,11 +216,11 @@ export function MobileInput({ canvasElement, enabled }: MobileInputProps) {
                 <GasPedalIcon size={64} className={styles.gasPedalIcon} />
             </div>
             <div className={`${styles.fireButtonsContainer} ${enabled && styles.enabled}`}>
+                {/*<div ref={fireButton3ZoneRef} className={styles.fireButton}></div>*/}
+                {/*<div ref={fireButton2ZoneRef} className={styles.fireButton}></div>*/}
                 <div ref={fireButton1ZoneRef} className={styles.fireButton}>
                     <IconRocket size={32} className={styles.fireIcon} />
                 </div>
-                <div ref={fireButton2ZoneRef} className={styles.fireButton}></div>
-                <div ref={fireButton3ZoneRef} className={styles.fireButton}></div>
             </div>
         </>
     );

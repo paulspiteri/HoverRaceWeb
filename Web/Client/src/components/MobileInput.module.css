@@ -72,7 +72,7 @@
 .fireButton {
     width: 70px;
     height: 70px;
-    background-color: rgba(255, 100, 100, 0.4);
+    background-color: rgba(220, 120, 120, 0.4);
     border-radius: 50%;
     pointer-events: auto;
     display: flex;
@@ -87,7 +87,7 @@
 }
 
 .fireButton.pressed {
-    background-color: rgba(255, 68, 68, 0.6);
+    background-color: rgba(220, 90, 90, 0.6);
 }
 
 .fireButton.pressed .fireIcon {
