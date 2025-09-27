@@ -42,6 +42,7 @@ class MR_SDLGameApp
       void RefreshView(SDL_Texture* texture);
       void Simulate();
       void SetControlState(int pState1);
+      void SetCurrentWeapon(MR_MainCharacter::eWeapon pWeapon);
       void SetResolution(int width, int height);
       void SetOpenGLResolution(int width, int height);
       void DisconnectPlayer(int playerId);

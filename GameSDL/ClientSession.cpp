@@ -240,6 +240,14 @@ void MR_ClientSession::SetControlState( int pState1, int pState2 )
    }
 }
 
+void MR_ClientSession::SetCurrentWeapon( MR_MainCharacter::eWeapon pWeapon )
+{
+   if( mMainCharacter1 != NULL )
+   {
+      mMainCharacter1->SetCurrentWeapon( pWeapon );
+   }
+}
+
 const MR_Level* MR_ClientSession::GetCurrentLevel()const
 {
    MR_GameSession* lSession = (MR_GameSession*)&mSession;

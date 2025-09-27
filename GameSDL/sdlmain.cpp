@@ -73,6 +73,14 @@ extern "C" {
             }
         }
     }
+
+    void SetCurrentWeapon(int weaponType) {
+        if (game != nullptr) {
+            // Convert int to weapon enum: 0=Missile, 1=Mine, 2=PowerUp
+            auto weapon = static_cast<MR_MainCharacter::eWeapon>(weaponType);
+            game->SetCurrentWeapon(weapon);
+        }
+    }
 }
 
 std::optional<std::string> GetTrack() {

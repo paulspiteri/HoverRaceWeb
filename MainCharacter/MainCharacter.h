@@ -200,6 +200,7 @@ class MR_MainCharacter:public MR_FreeElement
       MR_DllDeclare double GetDirectionalSpeed()const;
 
       MR_DllDeclare eWeapon  GetCurrentWeapon()const;
+      MR_DllDeclare void     SetCurrentWeapon( eWeapon pWeapon );
       MR_DllDeclare int      GetMissileRefillLevel( int pNbLevel )const;
       MR_DllDeclare int      GetMineCount()const;
       MR_DllDeclare int      GetPowerUpCount()const;

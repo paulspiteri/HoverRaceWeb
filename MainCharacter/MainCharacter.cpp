@@ -1174,6 +1174,14 @@ MR_MainCharacter::eWeapon MR_MainCharacter::GetCurrentWeapon()const
    return mCurrentWeapon;
 }
 
+void MR_MainCharacter::SetCurrentWeapon( eWeapon pWeapon )
+{
+   if( pWeapon < eNotAWeapon )
+   {
+      mCurrentWeapon = pWeapon;
+   }
+}
+
 int MR_MainCharacter::GetMissileRefillLevel( int pNbLevel )const
 {
    if( mAllowWeapons )

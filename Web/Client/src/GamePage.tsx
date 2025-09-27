@@ -16,7 +16,7 @@ import {
     gamesAtom,
     eventSourceAtom,
     canvasAtom,
-    gameScreenModeAtom,
+    gameScreenModeAtom, gameApiAtom,
 } from "@/atoms.ts";
 
 export const GamePage: React.FC = () => {
@@ -28,7 +28,9 @@ export const GamePage: React.FC = () => {
     const canvasRef = useAtomValue(canvasAtom);
     const games = useAtomValue(gamesAtom);
     const setGameScreenMode = useSetAtom(gameScreenModeAtom);
+    const setGameAPI = useSetAtom(gameApiAtom);
     const { gameInstanceApi, isLoadingGameData } = useGameInstance(canvasRef?.current ?? null);
+    useEffect(() => setGameAPI(gameInstanceApi), [setGameAPI, gameInstanceApi]);
     useGameWindowSize(gameInstanceApi, canvasRef?.current ?? null);
 
     const game = games.find((x) => x.id === gameId);

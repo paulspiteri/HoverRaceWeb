@@ -2,6 +2,7 @@ import { atom } from "jotai";
 import type { Commands } from "./commands";
 import type { Game } from "./types";
 import type { RefObject } from "react";
+import type {GameInstanceAPI} from '@/interop/gameInterop.ts';
 
 export const connectionIdAtom = atom<string | undefined>(undefined);
 export const gameTokenAtom = atom<string | undefined>(undefined);
@@ -10,3 +11,4 @@ export const gamesAtom = atom<Game[]>([]);
 export const eventSourceAtom = atom<EventSource | undefined>(undefined);
 export const canvasAtom = atom<RefObject<HTMLCanvasElement | null> | undefined>(undefined);
 export const gameScreenModeAtom = atom<"hidden" | "mini" | "maximized" | "fullscreen">("hidden");
+export const gameApiAtom = atom<GameInstanceAPI | undefined>(undefined);

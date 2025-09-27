@@ -271,9 +271,17 @@ void MR_SDLGameApp::DrawBackground()
 
 void MR_SDLGameApp::SetControlState(int pState1)
 {
-   if (mCurrentSession != nullptr) 
+   if (mCurrentSession != nullptr)
    {
       mCurrentSession->SetControlState( pState1, 0 );
+   }
+}
+
+void MR_SDLGameApp::SetCurrentWeapon(MR_MainCharacter::eWeapon pWeapon)
+{
+   if (mCurrentSession != nullptr)
+   {
+      mCurrentSession->SetCurrentWeapon( pWeapon );
    }
 }
 

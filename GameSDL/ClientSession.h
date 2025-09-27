@@ -89,6 +89,7 @@ class MR_ClientSession
       virtual void      SetSimulationTime( MR_SimulationTime pTime );
       MR_SimulationTime GetSimulationTime()const;
       void              SetControlState( int pState1, int pState2 );
+      void              SetCurrentWeapon( MR_MainCharacter::eWeapon pWeapon );
 
       const MR_UInt8*   GetBackImage()const;
 

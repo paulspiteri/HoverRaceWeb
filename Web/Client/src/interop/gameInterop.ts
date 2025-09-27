@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { notifications } from "@mantine/notifications";
 
+export const WeaponType = {
+    Missile: 0,
+    Mine: 1,
+    PowerUp: 2,
+} as const;
+
+export type WeaponType = typeof WeaponType[keyof typeof WeaponType];
+
 interface InteropInterface {
     _malloc: (size: number) => number;
     _free: (dataPtr: number) => number;
@@ -11,6 +19,7 @@ interface InteropInterface {
     _SetPlayerId: (playerId: number) => void;
     _SetPeerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
     _ReceivePeerMessage: (playerId: number, dataPtr: number, size: number, reliable: boolean) => void;
+    _SetCurrentWeapon: (weaponType: number) => void;
 }
 
 export interface GameInstanceAPI {
@@ -18,6 +27,7 @@ export interface GameInstanceAPI {
     startGame: (playerIndex: number) => void;
     setPlayerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
     receiveGameData: (playerId: number, binaryData: Uint8Array, reliable: boolean) => void;
+    setCurrentWeapon: (weaponType: number) => void;
 }
 
 declare global {
@@ -100,7 +110,7 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
         };
     }, [canvas]);
 
-    const gameInstanceApi = useMemo(() => {
+    const gameInstanceApi = useMemo<GameInstanceAPI | undefined>(() => {
         if (gameInstance) {
             return {
                 setWindowSize: (width: number, height: number) => {
@@ -123,6 +133,9 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
 
                     // Free the allocated memory
                     gameInstance._free(dataPtr);
+                },
+                setCurrentWeapon: (weaponType: number) => {
+                    gameInstance._SetCurrentWeapon(weaponType);
                 },
             } satisfies GameInstanceAPI;
         }
