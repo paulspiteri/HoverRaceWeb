@@ -131,6 +131,7 @@ const useVirtualJoysticks = ({
             position: { left: "50%", top: "50%" },
             color: "blue",
             size: 120,
+            dynamicPage: true
         });
 
         movementManager.on("move", (_, data) => {
