@@ -14,13 +14,19 @@ export type ServerGame = {
     createdAt: Date;
     status: "waiting" | "playing";
     chatMessages: ChatMessage[];
+    trackName: string;
+    hasWeapons: boolean;
+    laps: number;
 };
 
 export type CreateGameRequest = {
-    name: string;
+    name?: string;
     maxPlayers: number;
     creatorConnectionId: string;
     creatorName?: string;
+    trackName?: string;
+    hasWeapons?: boolean;
+    laps?: number;
 };
 
 export type JoinGameRequest = {
@@ -39,6 +45,12 @@ export type SignalRequest = {
 
 export type UpdatePlayerRequest = {
     name: string;
+};
+
+export type UpdateGameRequest = {
+    trackName?: string;
+    hasWeapons?: boolean;
+    laps?: number;
 };
 
 export type StartGameRequest = {};
@@ -64,6 +76,9 @@ export type AvailableGame = {
     maxPlayers: number;
     createdAt: Date;
     status: "waiting" | "playing";
+    trackName: string;
+    hasWeapons: boolean;
+    laps: number;
 };
 
 export type JoinedGame = AvailableGame & {

@@ -1,4 +1,4 @@
-import type { ServerGame, CreateGameRequest } from "./types";
+import type { ServerGame, CreateGameRequest, UpdateGameRequest } from "./types";
 import { EventEmitter } from "events";
 import { v4 as uuidv4 } from "uuid";
 
@@ -18,14 +18,26 @@ export class GameManager extends EventEmitter {
             name: gameData.creatorName,
         };
 
+        const trackName = gameData.trackName ?? "Steeplechase.trk";
+        const hasWeapons = gameData.hasWeapons ?? true;
+        const laps = gameData.laps ?? 5;
+
+        // Generate game name from track, weapons, and laps
+        const trackBaseName = trackName.replace(/\.trk$/, "");
+        const weaponsText = hasWeapons ? "Weapons" : "No Weapons";
+        const generatedName = `${trackBaseName} - ${weaponsText} - ${laps} Laps`;
+
         const game: ServerGame = {
             id: this.generateId(),
-            name: gameData.name,
+            name: generatedName,
             players,
             maxPlayers: gameData.maxPlayers,
             createdAt: new Date(),
             status: "waiting",
             chatMessages: [],
+            trackName,
+            hasWeapons,
+            laps,
         };
 
         this.games.set(game.id, game);
@@ -124,6 +136,34 @@ export class GameManager extends EventEmitter {
         if (game.status !== "waiting") return false;
 
         game.status = "playing";
+        this.emit("gameUpdated", game);
+        return true;
+    }
+
+    updateGame(gameId: string, creatorToken: string, updates: UpdateGameRequest): boolean {
+        const game = this.games.get(gameId);
+        if (!game || !creatorToken) return false;
+
+        if (game.players[0]?.gameToken !== creatorToken) return false;
+
+        // Can only update games that are waiting
+        if (game.status !== "waiting") return false;
+
+        if (updates.trackName !== undefined) {
+            game.trackName = updates.trackName;
+        }
+        if (updates.hasWeapons !== undefined) {
+            game.hasWeapons = updates.hasWeapons;
+        }
+        if (updates.laps !== undefined) {
+            game.laps = updates.laps;
+        }
+
+        // Regenerate game name from updated settings
+        const trackBaseName = game.trackName.replace(/\.trk$/, "");
+        const weaponsText = game.hasWeapons ? "Weapons" : "No Weapons";
+        game.name = `${trackBaseName} - ${weaponsText} - ${game.laps} Laps`;
+
         this.emit("gameUpdated", game);
         return true;
     }

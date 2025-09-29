@@ -6,6 +6,7 @@ import { gameManager } from "./gameManager.ts";
 import type {
     CreateGameRequest,
     JoinGameRequest,
+    UpdateGameRequest,
     ChatMessage,
     AvailableGame,
     ServerGame,
@@ -117,9 +118,9 @@ app.post("/api/games", (req, res) => {
         const gameData: CreateGameRequest = req.body;
         console.log(`📝 Game data:`, gameData);
 
-        if (!gameData.name || !gameData.maxPlayers || !gameData.creatorConnectionId) {
+        if (!gameData.maxPlayers || !gameData.creatorConnectionId) {
             console.log("❌ Missing required fields");
-            return res.status(400).json({ error: "Missing required fields" });
+            return res.status(400).json({ error: "Missing required fields: maxPlayers, creatorConnectionId" });
         }
 
         const { game, creatorToken } = gameManager.createGame(gameData);
@@ -338,6 +339,37 @@ app.put("/api/games/:id/player", (req, res) => {
     }
 });
 
+// REST endpoint to update a game (creator only)
+app.put("/api/games/:id", (req, res) => {
+    console.log("⚙️ PUT /api/games/:id - Update game request");
+    try {
+        const { id } = req.params;
+        const creatorToken = req.headers.authorization?.replace("Bearer ", "");
+        const updates: UpdateGameRequest = req.body;
+        console.log(`🎯 Updating game ${id} with creator token:`, updates);
+
+        if (!creatorToken) {
+            console.log("❌ Missing creatorToken in Authorization header");
+            return res.status(400).json({ error: "Missing creatorToken in Authorization header" });
+        }
+
+        const updated = gameManager.updateGame(id, creatorToken, updates);
+
+        if (updated) {
+            console.log(`✅ Successfully updated game ${id}`);
+            res.status(200).json({ message: "Game updated successfully" });
+        } else {
+            console.log(`❌ Failed to update game ${id} - invalid token, game not found, or already started`);
+            res.status(400).json({
+                error: "Invalid creatorToken, game not found, or game already started",
+            });
+        }
+    } catch (error) {
+        console.log("💥 Error updating game:", error);
+        res.status(500).json({ error: "Failed to update game" });
+    }
+});
+
 // REST endpoint to start a game
 app.post("/api/games/:id/start", (req, res) => {
     console.log("🚀 POST /api/games/:id/start - Start game request");
@@ -464,6 +496,9 @@ function toPublicGameData(game: ServerGame): AvailableGame {
         maxPlayers: game.maxPlayers,
         createdAt: game.createdAt,
         status: game.status,
+        trackName: game.trackName,
+        hasWeapons: game.hasWeapons,
+        laps: game.laps,
     };
 }
 
@@ -477,6 +512,9 @@ function toJoinedGame(game: ServerGame): JoinedGame {
         maxPlayers: game.maxPlayers,
         createdAt: game.createdAt,
         status: game.status,
+        trackName: game.trackName,
+        hasWeapons: game.hasWeapons,
+        laps: game.laps,
     };
 }
 
