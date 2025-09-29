@@ -18,6 +18,8 @@ import {
     canvasAtom,
     gameScreenModeAtom,
 } from "@/atoms.ts";
+import { useCanvasResize } from "@/hooks/useCanvasResize.ts";
+import { useGameScreenModePinchGesture } from "@/hooks/useGameScreenModePinchGesture.ts";
 
 export function Root() {
     const navigate = useNavigate();
@@ -25,6 +27,8 @@ export function Root() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const gameMatch = useMatch("/game/*");
     const [gameScreenMode, setGameScreenMode] = useAtom(gameScreenModeAtom);
+    const { canvasSize, handleResizeStart } = useCanvasResize();
+    const { handleTouchStart, handleTouchMove, handleTouchEnd } = useGameScreenModePinchGesture(gameScreenMode, setGameScreenMode);
     useEffect(() => {
         const handleFullscreenChange = () =>
             void setGameScreenMode(document.fullscreenElement ? "fullscreen" : "maximized");
@@ -95,13 +99,28 @@ export function Root() {
             <div
                 ref={fullscreenContainerRef}
                 className={`${styles["canvas-border"]} ${gameScreenMode === "maximized" ? styles["canvas-border-maximized"] : ""} ${gameScreenMode === "hidden" ? styles["canvas-border-hidden"] : ""}`}
+                style={gameScreenMode === "mini" ? {
+                    width: `${canvasSize.width}px`,
+                    height: `${canvasSize.height}px`,
+                } : undefined}
             >
+                {gameScreenMode === "mini" && (
+                    <div
+                        onMouseDown={handleResizeStart}
+                        className={styles["resize-handle"]}
+                        title="Resize canvas"
+                    />
+                )}
+
                 <canvas
                     ref={canvasRef}
                     id="canvas"
                     tabIndex={-1}
                     className={`${styles["canvas-emscripten"]} ${gameScreenMode === "mini" ? styles["canvas-interactive"] : ""}`}
                     onClick={handleCanvasClick}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
                 />
 
                 {gameScreenMode === "maximized" && (

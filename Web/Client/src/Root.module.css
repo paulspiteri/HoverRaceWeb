@@ -117,13 +117,21 @@
 
 .canvas-border {
     position: fixed;
-    bottom: 20px;
+    top: 20px;
     right: 20px;
     border: 2px solid #ccc;
     border-radius: 8px;
     background-color: white;
     z-index: 1;
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Desktop: position bottom-right */
+@media (min-width: 768px) and (pointer: fine) {
+    .canvas-border {
+        top: auto;
+        bottom: 20px;
+    }
 }
 
 .canvas-border-maximized {
@@ -149,10 +157,19 @@
 .canvas-interactive {
     cursor: pointer;
     transition: opacity 0.2s ease;
-    width: 350px;
-    height: 262px;
 }
 
 .canvas-interactive:hover {
     opacity: 0.8;
+}
+
+.resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    cursor: nwse-resize;
+    z-index: 1000;
 }
