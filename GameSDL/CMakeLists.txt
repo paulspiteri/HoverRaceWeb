@@ -18,7 +18,7 @@ if(EMSCRIPTEN)
         OUTPUT_NAME "hoverrace"
         SUFFIX ".js"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/Web/Client/public"
-        LINK_FLAGS "-s MIN_WEBGL_VERSION=2 -s USE_WEBGL2=1 -O3 -sNO_DISABLE_EXCEPTION_CATCHING -sMODULARIZE -sEXIT_RUNTIME -sEXPORT_NAME=HoverRace -s EXPORTED_FUNCTIONS=['_main','_Quit','_ChangeWindowSize','_ReceivePeerMessage','_SetPlayerId','_SetPeerStatus','_SetCurrentWeapon','_malloc','_free'] -s EXPORTED_RUNTIME_METHODS=['ccall','HEAPU8']")
+        LINK_FLAGS "-s MIN_WEBGL_VERSION=2 -s USE_WEBGL2=1 -O3 -sNO_DISABLE_EXCEPTION_CATCHING -sMODULARIZE -sEXIT_RUNTIME -sEXPORT_NAME=HoverRace -s EXPORTED_FUNCTIONS=['_main','_Quit','_ChangeWindowSize','_ReceivePeerMessage','_SetPeerStatus','_ConfigureGame','_SetCurrentWeapon','_malloc','_free'] -s EXPORTED_RUNTIME_METHODS=['ccall','HEAPU8']")
     target_link_options(GameSDL PRIVATE
     "--preload-file=${CMAKE_SOURCE_DIR}/Assets/ObjFac1.dat@ObjFac1.dat"
     "--preload-file=${CMAKE_SOURCE_DIR}/Assets/Fonts/Roboto-MediumItalic.ttf@Roboto-MediumItalic.ttf"

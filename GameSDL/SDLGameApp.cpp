@@ -171,16 +171,16 @@ void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
    }
 }
 
-void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, const std::array<PeerStatus, WebPeerInterface::eMaxClient>& peers)
+void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, const std::array<PeerStatus, WebPeerInterface::eMaxClient>& peers, bool hasWeapons, int laps)
 {
    BOOL lSuccess = TRUE;
 
    // Delete the current session
    Clean();
 
-   // Prompt the user for a maze name
-   int     lNbLap = 5;
-   BOOL    lAllowWeapons = TRUE;
+   // Use passed game settings
+   int     lNbLap = laps;
+   BOOL    lAllowWeapons = hasWeapons;
 
    if( lSuccess )
    {

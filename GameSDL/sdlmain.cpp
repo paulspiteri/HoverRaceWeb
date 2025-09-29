@@ -23,6 +23,9 @@ SDL_GLContext glContext = nullptr;
 MR_SDLGameApp *game = nullptr;
 int lControlState = 0;
 int gPlayerId = 0;
+std::string gTrackName = "Steeplechase.trk";
+bool gHasWeapons = true;
+int gLaps = 5;
 int gWindowWidth = 640;
 int gWindowHeight = 400;
 
@@ -49,9 +52,13 @@ extern "C" {
         }
     }
 
-    void SetPlayerId(int playerId) {
-        printf("SetPlayerId: %d\n", playerId);
+    void ConfigureGame(int playerId, const char* trackName, bool hasWeapons, int laps) {
+        printf("ConfigureGame: Player %d, Track: %s, Weapons: %s, Laps: %d\n",
+               playerId, trackName, hasWeapons ? "enabled" : "disabled", laps);
         gPlayerId = playerId;
+        gTrackName = std::string(trackName);
+        gHasWeapons = hasWeapons;
+        gLaps = laps;
     }
 
     void SetPeerStatus(int playerId, bool isConnected, int minLatency, int avgLatency) {
@@ -84,10 +91,9 @@ extern "C" {
 }
 
 std::optional<std::string> GetTrack() {
-    std::string defaultTrackFile = "Steeplechase.trk";
-    if (std::filesystem::exists(defaultTrackFile)) {
-        std::cout << "Selected default track: " << defaultTrackFile << std::endl;
-        return defaultTrackFile.c_str();
+    if (std::filesystem::exists(gTrackName)) {
+        std::cout << "Selected track: " << gTrackName << std::endl;
+        return gTrackName;
     } else {
         std::cout << "Attempting to select a track... " << std::endl;
         std::promise<std::optional<std::string> > dialogPromise;
@@ -173,7 +179,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
         return SDL_APP_FAILURE;
     }
     ASSERT(gPlayerId >= 0);
-    game->LoadSelectedTrack(track.value().c_str(), gPlayerId, gPeerStatus);
+    game->LoadSelectedTrack(track.value().c_str(), gPlayerId, gPeerStatus, gHasWeapons, gLaps);
     ImGui_ImplSDL3_InitForOther(glWindow);
     return SDL_APP_CONTINUE;
 

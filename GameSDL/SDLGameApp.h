@@ -37,7 +37,7 @@ class MR_SDLGameApp
 
       void Clean();
       BOOL InitGame();
-      void LoadSelectedTrack(const char* trackFile, int playerId, const std::array<PeerStatus, WebPeerInterface::eMaxClient>& peers);
+      void LoadSelectedTrack(const char* trackFile, int playerId, const std::array<PeerStatus, WebPeerInterface::eMaxClient>& peers, bool hasWeapons, int laps);
       void SetVideoMode(int width, int height);
       void RefreshView(SDL_Texture* texture);
       void Simulate();

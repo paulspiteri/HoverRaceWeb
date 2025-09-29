@@ -82,11 +82,20 @@ export const GamePage: React.FC = () => {
         }
     }, [peerStatuses, peerLatencies, isGamePlaying, gameInstanceApi, setGameScreenMode]);
 
+    const trackName = joinedGame?.trackName;
+    const hasWeapons = joinedGame?.hasWeapons;
+    const laps = joinedGame?.laps;
+
     useEffect(() => {
-        if (isGamePlaying && gameInstanceApi) {
-            gameInstanceApi.startGame(playerIndex);
+        if (isGamePlaying && gameInstanceApi && trackName && hasWeapons !== undefined && laps) {
+            gameInstanceApi.startGame(
+                playerIndex,
+                trackName,
+                hasWeapons,
+                laps
+            );
         }
-    }, [gameInstanceApi, isGamePlaying, playerIndex]);
+    }, [gameInstanceApi, isGamePlaying, playerIndex, trackName, hasWeapons, laps]);
 
     // If we're already in the game, show the normal game interface
     if (isInGame && joinedGame) {

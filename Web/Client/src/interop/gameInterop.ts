@@ -16,7 +16,7 @@ interface InteropInterface {
     _main: () => void;
     _Quit: () => void;
     _ChangeWindowSize: (width: number, height: number) => void;
-    _SetPlayerId: (playerId: number) => void;
+    _ConfigureGame: (playerId: number, trackNamePtr: number, hasWeapons: boolean, laps: number) => void;
     _SetPeerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
     _ReceivePeerMessage: (playerId: number, dataPtr: number, size: number, reliable: boolean) => void;
     _SetCurrentWeapon: (weaponType: number) => void;
@@ -24,7 +24,7 @@ interface InteropInterface {
 
 export interface GameInstanceAPI {
     setWindowSize: (width: number, height: number) => void;
-    startGame: (playerIndex: number) => void;
+    startGame: (playerIndex: number, trackName: string, hasWeapons: boolean, laps: number) => void;
     setPlayerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
     receiveGameData: (playerId: number, binaryData: Uint8Array, reliable: boolean) => void;
     setCurrentWeapon: (weaponType: number) => void;
@@ -116,8 +116,18 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
                 setWindowSize: (width: number, height: number) => {
                     gameInstance._ChangeWindowSize(width, height);
                 },
-                startGame: (playerIndex: number) => {
-                    gameInstance._SetPlayerId(playerIndex);
+                startGame: (playerIndex: number, trackName: string, hasWeapons: boolean, laps: number) => {
+                    // Allocate memory for track name string in C++ heap
+                    const trackNamePtr = gameInstance._malloc(trackName.length + 1);
+                    gameInstance.HEAPU8.set(new TextEncoder().encode(trackName + '\0'), trackNamePtr);
+
+                    // Configure the game with all parameters
+                    gameInstance._ConfigureGame(playerIndex, trackNamePtr, hasWeapons, laps);
+
+                    // Free the allocated memory
+                    gameInstance._free(trackNamePtr);
+
+                    // Actually start the game
                     gameInstance._main();
                 },
                 setPlayerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => {
