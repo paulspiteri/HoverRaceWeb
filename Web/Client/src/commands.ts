@@ -3,6 +3,7 @@ import type {
     SignalRequest,
     JoinGameRequest,
     UpdatePlayerRequest,
+    UpdateGameRequest,
     StartGameRequest,
     SendChatMessageRequest,
     ChatMessage,
@@ -142,6 +143,28 @@ export const createCommands = (baseUrl: string, setActiveGame: (id: string | und
         }
     };
 
+    const updateGame = async (gameId: string, creatorToken: string, updates: UpdateGameRequest) => {
+        try {
+            const response = await fetch(`${baseUrl}/games/${gameId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${creatorToken}`,
+                },
+                body: JSON.stringify(updates),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to update game");
+            }
+
+            const result = await response.json();
+            console.log("Game updated successfully:", result);
+        } catch (error) {
+            console.error("Error updating game:", error);
+        }
+    };
+
     const startGame = async (gameId: string, creatorToken: string) => {
         try {
             const response = await fetch(`${baseUrl}/games/${gameId}/start`, {
@@ -216,6 +239,7 @@ export const createCommands = (baseUrl: string, setActiveGame: (id: string | und
         leaveGame,
         sendSignal,
         updatePlayer,
+        updateGame,
         startGame,
         sendChatMessage,
         getChatHistory,

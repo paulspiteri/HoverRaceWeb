@@ -11,8 +11,9 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { connectionIdAtom, gameScreenModeAtom, gameTokenAtom } from "@/atoms.ts";
 import { useLeaveGame } from "@/hooks/useLeaveGame";
 import { useStartGame } from "@/hooks/useStartGame";
+import { GameSettingsModal } from "./GameSettingsModal";
 import { notifications } from "@mantine/notifications";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconSettings } from "@tabler/icons-react";
 import styles from "./ActiveGame.module.css";
 
 interface ActiveGameProps {
@@ -35,6 +36,8 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
     const setGameScreenMode = useSetAtom(gameScreenModeAtom);
     const leaveGameMutation = useLeaveGame();
     const startGameMutation = useStartGame(game.id);
+
+    const [settingsModalOpen, setSettingsModalOpen] = React.useState(false);
 
     const handleLeaveGame = async () => {
         if (gameToken) {
@@ -147,19 +150,31 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
                         <PlayerNameInput currentPlayerName={currentPlayerName} gameId={game.id} />
                     </Box>
                     {isCreator && (
-                        <Button
-                            onClick={handleStartGame}
-                            disabled={
-                                game.players.filter((p) => p !== undefined).length < 2 ||
-                                !allPeersConnected ||
-                                !allPeersGameReady ||
-                                game.status === "playing" ||
-                                startGameMutation.isPending
-                            }
-                            size="sm"
-                        >
-                            {game.status === "playing" ? "Started" : "Start"}
-                        </Button>
+                        <Group gap="xs">
+                            {game.status === "waiting" && (
+                                <ActionIcon
+                                    variant="subtle"
+                                    onClick={() => setSettingsModalOpen(true)}
+                                    size="lg"
+                                    title="Game Settings"
+                                >
+                                    <IconSettings size={20} />
+                                </ActionIcon>
+                            )}
+                            <Button
+                                onClick={handleStartGame}
+                                disabled={
+                                    game.players.filter((p) => p !== undefined).length < 2 ||
+                                    !allPeersConnected ||
+                                    !allPeersGameReady ||
+                                    game.status === "playing" ||
+                                    startGameMutation.isPending
+                                }
+                                size="sm"
+                            >
+                                {game.status === "playing" ? "Started" : "Start"}
+                            </Button>
+                        </Group>
                     )}
                 </Group>
 
@@ -206,6 +221,12 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
                 </Box>
 
             </Box>
+
+            <GameSettingsModal
+                game={game}
+                opened={settingsModalOpen}
+                onClose={() => setSettingsModalOpen(false)}
+            />
         </Card>
     );
 };
