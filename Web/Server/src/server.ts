@@ -22,6 +22,7 @@ import type {
 } from "./types";
 
 dotenv.config({ path: ".env" });
+dotenv.config({ path: ".env.local", override: true });
 
 if (!process.env.CLIENT_URL) {
     console.error("❌ FATAL: CLIENT_URL environment variable is not set");
