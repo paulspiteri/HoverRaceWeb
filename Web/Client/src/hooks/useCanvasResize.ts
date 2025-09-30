@@ -20,11 +20,11 @@ export function useCanvasResize(
     maxHeightPercent = 0.95
 ): UseCanvasResizeReturn {
     const getInitialSize = (): CanvasSize => {
-        const isMobile = window.innerWidth < 768 || !window.matchMedia('(pointer: fine)').matches;
+        const isMobile = !window.matchMedia('(pointer: fine)').matches;
         if (isMobile) {
             return {
-                width: initialWidth / 2,
-                height: initialHeight / 2
+                width: initialWidth / 1.67,
+                height: initialHeight / 1.67
             };
         }
         return {
