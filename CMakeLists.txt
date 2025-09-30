@@ -27,6 +27,13 @@ add_library(sokol INTERFACE)
 target_include_directories(sokol INTERFACE ${sokol_SOURCE_DIR})
 
 FetchContent_Declare(
+        sokol-tools-bin
+        GIT_REPOSITORY https://github.com/floooh/sokol-tools-bin.git
+        GIT_TAG 90d2b9267813cbfb66e26c8e3eca5cc866f947e0
+)
+FetchContent_MakeAvailable(sokol-tools-bin)
+
+FetchContent_Declare(
         glm
         GIT_REPOSITORY	https://github.com/g-truc/glm.git
         GIT_TAG 	1.0.1
