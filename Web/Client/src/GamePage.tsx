@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useCallback, useEffect } from "react";
+import {useCallback, useEffect, useRef} from "react";
 import { useParams } from "react-router-dom";
 import { ActiveGame } from "@/ActiveGame.tsx";
 import { JoinGameOffer } from "@/JoinGameOffer.tsx";
@@ -63,10 +63,15 @@ export const GamePage: React.FC = () => {
 
     useEffect(() => void (global.sendGameMessage = sendData), [sendData]);
 
+    const isGameStarted = useRef(false) // to guarantee we only start once
     const isGamePlaying = joinedGame?.status === "playing" && playerIndex !== undefined;
+    const trackName = joinedGame?.trackName;
+    const hasWeapons = joinedGame?.hasWeapons;
+    const laps = joinedGame?.laps;
     useEffect(() => {
         {
-            if (isGamePlaying && gameInstanceApi) {
+            if (!isGameStarted.current && isGamePlaying && gameInstanceApi  && trackName && hasWeapons !== undefined && laps) {
+                isGameStarted.current = true;
                 const isMobile = window.matchMedia("(pointer: coarse)").matches;
                 setGameScreenMode(isMobile ? "maximized" : "mini");
                 peerStatuses?.forEach((x, idx) => {
@@ -78,24 +83,15 @@ export const GamePage: React.FC = () => {
                         latencies?.averageLatency ?? 0,
                     );
                 });
+                gameInstanceApi.startGame(
+                    playerIndex,
+                    trackName,
+                    hasWeapons,
+                    laps
+                );
             }
         }
     }, [peerStatuses, peerLatencies, isGamePlaying, gameInstanceApi, setGameScreenMode]);
-
-    const trackName = joinedGame?.trackName;
-    const hasWeapons = joinedGame?.hasWeapons;
-    const laps = joinedGame?.laps;
-
-    useEffect(() => {
-        if (isGamePlaying && gameInstanceApi && trackName && hasWeapons !== undefined && laps) {
-            gameInstanceApi.startGame(
-                playerIndex,
-                trackName,
-                hasWeapons,
-                laps
-            );
-        }
-    }, [gameInstanceApi, isGamePlaying, playerIndex, trackName, hasWeapons, laps]);
 
     // If we're already in the game, show the normal game interface
     if (isInGame && joinedGame) {
