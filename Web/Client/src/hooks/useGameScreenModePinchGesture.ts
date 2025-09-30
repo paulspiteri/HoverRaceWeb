@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 type GameScreenMode = "mini" | "maximized" | "fullscreen" | "hidden";
 
@@ -15,6 +15,7 @@ export function useGameScreenModePinchGesture(
     pinchOutThreshold = 1.3   // 30% increase triggers maximized mode
 ): UsePinchGestureReturn {
     const [initialPinchDistance, setInitialPinchDistance] = useState<number | undefined>(undefined);
+    const tapStartRef = useRef<{ x: number; y: number; time: number } | undefined>(undefined);
 
     const getDistance = (touch1: React.Touch, touch2: React.Touch) => {
         const dx = touch1.clientX - touch2.clientX;
@@ -26,6 +27,14 @@ export function useGameScreenModePinchGesture(
         if (e.touches.length === 2 && (gameScreenMode === "maximized" || gameScreenMode === "mini")) {
             const distance = getDistance(e.touches[0], e.touches[1]);
             setInitialPinchDistance(distance);
+            tapStartRef.current = undefined;
+        } else if (e.touches.length === 1) {
+            // Track single tap for click detection
+            tapStartRef.current = {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY,
+                time: Date.now()
+            };
         }
     };
 
@@ -48,6 +57,20 @@ export function useGameScreenModePinchGesture(
     };
 
     const handleTouchEnd = () => {
+        // Handle single tap
+        if (tapStartRef.current) {
+            const tapDuration = Date.now() - tapStartRef.current.time;
+            if (tapDuration < 300) { // Quick tap
+                // Toggle screen mode
+                if (gameScreenMode === "fullscreen") {
+                    document.exitFullscreen();
+                    setGameScreenMode("mini");
+                } else if (gameScreenMode === "mini") {
+                    setGameScreenMode("maximized");
+                }
+            }
+            tapStartRef.current = undefined;
+        }
         setInitialPinchDistance(undefined);
     };
 

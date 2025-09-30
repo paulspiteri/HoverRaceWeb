@@ -123,7 +123,7 @@ export function Root() {
                     onTouchEnd={handleTouchEnd}
                 />
 
-                {gameScreenMode === "maximized" && (
+                {gameScreenMode === "maximized" && document.fullscreenEnabled && (
                     <ActionIcon
                         size="lg"
                         variant="filled"
