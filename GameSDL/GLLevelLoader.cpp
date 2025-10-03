@@ -57,7 +57,7 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
             auto actorPosition = lElement->mPosition;
             auto position = SwapYZ(glm::ivec3(actorPosition.mX, actorPosition.mY, actorPosition.mZ));
             const MR_ResActor* actor = nullptr;
-            int type = 0, orientation = 0, sequence = 0, frame = 0;
+            int type = 0, orientation = 0, sequence = 0, frame = 0, variant = 0;
             if (lElement->mId.mDllId == MR_MAIN_CHARACTER_DLL_ID && lElement->mId.mClassId ==
                 MR_MAIN_CHARACTER_CLASS_ID)
             {
@@ -78,6 +78,7 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
                 {
                     frame = hoverRenderer->GetFrame(); // note - is dependent on legacy renderer running
                 }
+                variant = mainCharacter->GetHoverId();
             }
             else
             {
@@ -95,7 +96,7 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
             if (actor != nullptr)
             {
                 FreeElementInstance instance = {
-                    .position = position, .type = type, .orientation = orientation, .sequence = sequence, .frame = frame
+                    .position = position, .type = type, .orientation = orientation, .sequence = sequence, .frame = frame, .variant = variant
                 };
                 freeElementInstances[type].push_back(instance);
             }
@@ -559,6 +560,18 @@ std::unordered_map<int, VerticesData<FreeElementVertex>> GLLevelLoader::LoadGame
     auto missile = gObjectFactoryData->mResourceLib.GetActor(MR_MISSILE);
     std::array actors = {electroCar, hitechCar, biturboCar, powerUp, mine, bumperGate, missile};
 
+    // preload all players cockpit bitmap so that they have sequential IDs in the atlas
+    for( int lCounter = 0; lCounter < 10; lCounter++ )
+    {
+        auto cockpitPlayerBitmap = gObjectFactoryData->mResourceLib.GetBitmap( MR_CAR_COCKPIT1+lCounter );
+        glRenderer->LoadFreeElementTexture(cockpitPlayerBitmap->GetResourceId(), cockpitPlayerBitmap);
+    }
+    for( int lCounter = 0; lCounter < 10; lCounter++ )
+    {
+        auto cockpit2PlayerBitmap = gObjectFactoryData->mResourceLib.GetBitmap( MR_CAR_COCKPIT21+lCounter );
+        glRenderer->LoadFreeElementTexture(cockpit2PlayerBitmap->GetResourceId(), cockpit2PlayerBitmap);
+    }
+
     for (auto actor : actors)
     {
         VerticesData<FreeElementVertex> verts;
@@ -576,7 +589,24 @@ std::unordered_map<int, VerticesData<FreeElementVertex>> GLLevelLoader::LoadGame
                     float lBitmapRowInc = static_cast<float>(lBitmapXRes) / static_cast<float>(lVRes - 1);
                     float lBitmapColInc = static_cast<float>(lBitmapYRes) / static_cast<float>(lURes - 1);
                     const MR_3DCoordinate* lNodeList = patch->GetNodeList();
-                    int textureId = glRenderer->LoadFreeElementTexture(patch->mBitmap->GetResourceId(), patch->mBitmap);
+                    int textureId, is_variant_texture = 0;
+                    if (patch->mBitmap->GetResourceId() == MR_CAR_COCKPIT)  // cockpit placeholder texture, replaced by player1 texture (electro & bi-turbo vehicles)
+                    {
+                        auto cockpit1Player1Bitmap = gObjectFactoryData->mResourceLib.GetBitmap( MR_CAR_COCKPIT1);
+                        textureId = glRenderer->LoadFreeElementTexture(cockpit1Player1Bitmap->GetResourceId(), cockpit1Player1Bitmap);
+                        is_variant_texture = 1; // enable texture index offsetting in shader
+                    }
+                    else if (patch->mBitmap->GetResourceId() == MR_CAR2_COCKPIT)  // cockpit placeholder texture, replaced by player1 texture (CX vehicle)
+                    {
+                        auto cockpit2Player1Bitmap = gObjectFactoryData->mResourceLib.GetBitmap( MR_CAR_COCKPIT21);
+                        textureId = glRenderer->LoadFreeElementTexture(cockpit2Player1Bitmap->GetResourceId(), cockpit2Player1Bitmap);
+                        is_variant_texture = 1; // enable texture index offsetting in shader
+                    }
+                    else
+                    {
+                        textureId = glRenderer->LoadFreeElementTexture(patch->mBitmap->GetResourceId(), patch->mBitmap);
+                    }
+
                     uint16_t startVertexIdx = verts.vertices.size();
                     for (int lV = 0; lV < lVRes; lV++)
                     {
@@ -592,7 +622,8 @@ std::unordered_map<int, VerticesData<FreeElementVertex>> GLLevelLoader::LoadGame
                                 .vertex = SwapYZ(
                                     makeVertexWithTextureId(node.mX, node.mY, node.mZ, u, 1 - v, textureId)),
                                 .sequence = seqIdx,
-                                .frame = frameIdx
+                                .frame = frameIdx,
+                                .is_variant_texture = is_variant_texture,
                             };
                             verts.vertices.push_back(freeElementVertex);
                         }

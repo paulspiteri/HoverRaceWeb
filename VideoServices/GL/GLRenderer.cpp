@@ -126,6 +126,8 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_sequence].buffer_index = 0;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_frame].format = SG_VERTEXFORMAT_INT;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_frame].buffer_index = 0;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_is_variant_texture].format = SG_VERTEXFORMAT_INT;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_is_variant_texture].buffer_index = 0;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instancePosition].format = SG_VERTEXFORMAT_INT3;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instancePosition].buffer_index = 1;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_type].format = SG_VERTEXFORMAT_INT;
@@ -136,6 +138,8 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_sequence].buffer_index = 1;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_frame].format = SG_VERTEXFORMAT_INT;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_frame].buffer_index = 1;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_variant].format = SG_VERTEXFORMAT_INT;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_variant].buffer_index = 1;
     free_element_pipeline_desc.layout.buffers[0].step_func = SG_VERTEXSTEP_PER_VERTEX;
     free_element_pipeline_desc.layout.buffers[0].step_rate = 1;
     free_element_pipeline_desc.layout.buffers[1].step_func = SG_VERTEXSTEP_PER_INSTANCE;
@@ -392,7 +396,8 @@ float GLRenderer::CalculateFontScale(int height)
     return std::max(0.3f, std::min(3.0f, targetScale));
 }
 
-std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal(std::vector<TextureData>& collection)
+template<size_t N>
+std::tuple<sg_image, std::array<glm::vec4, N>> GLRenderer::BindTexturesInternal(std::vector<TextureData>& collection)
 {
     std::vector<stbrp_rect> rects;
     rects.reserve(collection.size());
@@ -455,7 +460,7 @@ std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal
         texture.atlas_coords.u2 = (rect.x + rect.w - bleed_padding) / atlas_width;
         texture.atlas_coords.v2 = (rect.y + rect.h - bleed_padding) / atlas_height;
 
-        delete[] texture.pixels; // todo
+        delete[] texture.pixels;
         texture.pixels = nullptr;
     }
 
@@ -469,11 +474,11 @@ std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal
     auto atlas_texture = sg_make_image(&img_desc);
     delete[] atlas_pixels;
 
-    std::array<glm::vec4, 32> atlas_coords = {};
+    std::array<glm::vec4, N> atlas_coords = {};
     int i = 0;
     for (const auto& texture : collection)
     {
-        if (i >= 32)
+        if (i >= N)
         {
             throw std::runtime_error("Too many textures in atlas");
         }
@@ -489,9 +494,13 @@ std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal
     return std::make_tuple(atlas_texture, atlas_coords);
 }
 
+// Explicit template instantiation for the sizes we use
+template std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal<32>(std::vector<TextureData>&);
+template std::tuple<sg_image, std::array<glm::vec4, 64>> GLRenderer::BindTexturesInternal<64>(std::vector<TextureData>&);
+
 void GLRenderer::BindWorldTextures()
 {
-    auto [atlas_texture, atlas_coords] = BindTexturesInternal(textures);
+    auto [atlas_texture, atlas_coords] = BindTexturesInternal<32>(textures);
     state.world_bindings.images[0] = atlas_texture;
     state.water_bindings.images[0] = atlas_texture;
     state.wall_bindings.images[0] = atlas_texture;
@@ -710,7 +719,7 @@ unsigned long GLRenderer::GetSpriteAtlasIndex(MR_UInt32 id) const
 
 void GLRenderer::BindFreeElementTextures()
 {
-    auto [atlas_texture, atlas_coords] = BindTexturesInternal(free_element_textures);
+    auto [atlas_texture, atlas_coords] = BindTexturesInternal<64>(free_element_textures);
     for (auto& [_, binding] : state.free_element_bindings)
     {
         binding.images[0] = atlas_texture;
@@ -720,7 +729,7 @@ void GLRenderer::BindFreeElementTextures()
 
 void GLRenderer::BindSpriteTextures()
 {
-    auto [atlas_texture, atlas_coords] = BindTexturesInternal(sprites);
+    auto [atlas_texture, atlas_coords] = BindTexturesInternal<32>(sprites);
     state.sprites_image = atlas_texture;
     state.sprite_atlas_coords = atlas_coords;
 }

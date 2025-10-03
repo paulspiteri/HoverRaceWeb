@@ -7,7 +7,7 @@ layout(binding = 0) uniform FreeElementUniforms {
     float scale;
 };
 layout(binding = 1) uniform FreeElementAtlasCoords {
-    vec4 atlas_coords[32];
+    vec4 atlas_coords[64];
 };
 
 // Per-vertex attributes (buffer 0)
@@ -16,6 +16,7 @@ in vec2 texcoord0;
 in int textureIdx;
 in int sequence;
 in int frame;
+in int is_variant_texture;
 
 // Per-instance attributes (buffer 1)
 in ivec3 instancePosition;
@@ -23,6 +24,7 @@ in int type;
 in int orientation;
 in int instance_sequence;
 in int instance_frame;
+in int instance_variant;         // only used for vehicles, to index into player# texture
 
 out vec2 free_element_uv;
 flat out vec4 atlas_coord;
@@ -56,7 +58,7 @@ void main() {
     vec4 worldPos = vec4(scaledPos.xyz + instancePosition, 1);
     gl_Position = proj * view * worldPos;
     free_element_uv = texcoord0;
-    atlas_coord = atlas_coords[textureIdx];
+    atlas_coord = atlas_coords[textureIdx + (is_variant_texture == 0 ? 0 : instance_variant)];
 }
 @end
 

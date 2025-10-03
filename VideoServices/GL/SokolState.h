@@ -45,7 +45,7 @@ struct Sokol_State {
     std::unordered_map<int, int> free_element_instance_count;
 
     std::array<glm::vec4, 32> world_atlas_coords;
-    std::array<glm::vec4, 32> free_element_atlas_coords;
+    std::array<glm::vec4, 64> free_element_atlas_coords;
     std::array<glm::vec4, 32> sprite_atlas_coords;
 
     sg_image sprites_image;

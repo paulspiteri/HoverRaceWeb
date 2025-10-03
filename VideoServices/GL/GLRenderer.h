@@ -109,6 +109,7 @@ struct FreeElementVertex
     VertexWithTextureId vertex;
     int sequence;
     int frame;
+    int is_variant_texture;
 };
 
 struct FreeElementInstance
@@ -118,6 +119,7 @@ struct FreeElementInstance
     int orientation;
     int sequence;
     int frame;
+    int variant;
 
     bool operator==(const FreeElementInstance& other) const = default;
 };
@@ -134,7 +136,8 @@ class GLRenderer
     uint32_t* ConvertBackgroundToRGBA8(const MR_UInt8* backImage);
     uint32_t* ConvertSpriteToRGBA8(const MR_Sprite* sprite);
     unsigned long LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF);
-    std::tuple<sg_image, std::array<glm::vec4, 32>> BindTexturesInternal(std::vector<TextureData>& collection);
+    template<size_t N>
+    std::tuple<sg_image, std::array<glm::vec4, N>> BindTexturesInternal(std::vector<TextureData>& collection);
     float CalculateFontScale(int height);
 
 
