@@ -126,6 +126,8 @@ struct FreeElementInstance
 
 class GLRenderer
 {
+    static constexpr int ATLAS_PADDING = 1;  // Padding around each texture to prevent bleeding
+
     std::vector<TextureData> textures;
     std::vector<TextureData> free_element_textures;
     std::vector<TextureData> sprites;
@@ -136,6 +138,8 @@ class GLRenderer
     uint32_t* ConvertBackgroundToRGBA8(const MR_UInt8* backImage);
     uint32_t* ConvertSpriteToRGBA8(const MR_Sprite* sprite);
     unsigned long LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF);
+    void CopyTextureToAtlasWithPadding(uint32_t* atlas_pixels, int atlas_width,
+                                        const TextureData& texture, int rect_x, int rect_y);
     template<size_t N>
     std::tuple<sg_image, std::array<glm::vec4, N>> BindTexturesInternal(std::vector<TextureData>& collection);
     float CalculateFontScale(int height);

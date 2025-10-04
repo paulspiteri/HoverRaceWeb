@@ -396,6 +396,75 @@ float GLRenderer::CalculateFontScale(int height)
     return std::max(0.3f, std::min(3.0f, targetScale));
 }
 
+void GLRenderer::CopyTextureToAtlasWithPadding(uint32_t* atlas_pixels, int atlas_width,
+                                                const TextureData& texture, int rect_x, int rect_y)
+{
+    // Copy the main texture to the center of the padded region
+    for (int y = 0; y < texture.height; y++)
+    {
+        for (int x = 0; x < texture.width; x++)
+        {
+            int atlas_idx = (rect_y + ATLAS_PADDING + y) * atlas_width + (rect_x + ATLAS_PADDING + x);
+            int tex_idx = y * texture.width + x;
+            atlas_pixels[atlas_idx] = texture.pixels[tex_idx];
+        }
+    }
+
+    // Extrude edges to fill padding and prevent bleeding
+    // Top and bottom edges
+    for (int x = 0; x < texture.width; x++)
+    {
+        uint32_t top_pixel = texture.pixels[x];
+        uint32_t bottom_pixel = texture.pixels[(texture.height - 1) * texture.width + x];
+        for (int p = 0; p < ATLAS_PADDING; p++)
+        {
+            // Top padding
+            int top_idx = (rect_y + p) * atlas_width + (rect_x + ATLAS_PADDING + x);
+            atlas_pixels[top_idx] = top_pixel;
+            // Bottom padding
+            int bottom_idx = (rect_y + ATLAS_PADDING + texture.height + p) * atlas_width + (rect_x + ATLAS_PADDING + x);
+            atlas_pixels[bottom_idx] = bottom_pixel;
+        }
+    }
+
+    // Left and right edges
+    for (int y = 0; y < texture.height; y++)
+    {
+        uint32_t left_pixel = texture.pixels[y * texture.width];
+        uint32_t right_pixel = texture.pixels[y * texture.width + texture.width - 1];
+        for (int p = 0; p < ATLAS_PADDING; p++)
+        {
+            // Left padding
+            int left_idx = (rect_y + ATLAS_PADDING + y) * atlas_width + (rect_x + p);
+            atlas_pixels[left_idx] = left_pixel;
+            // Right padding
+            int right_idx = (rect_y + ATLAS_PADDING + y) * atlas_width + (rect_x + ATLAS_PADDING + texture.width + p);
+            atlas_pixels[right_idx] = right_pixel;
+        }
+    }
+
+    // Corner pixels
+    uint32_t top_left = texture.pixels[0];
+    uint32_t top_right = texture.pixels[texture.width - 1];
+    uint32_t bottom_left = texture.pixels[(texture.height - 1) * texture.width];
+    uint32_t bottom_right = texture.pixels[(texture.height - 1) * texture.width + texture.width - 1];
+
+    for (int py = 0; py < ATLAS_PADDING; py++)
+    {
+        for (int px = 0; px < ATLAS_PADDING; px++)
+        {
+            // Top-left corner
+            atlas_pixels[(rect_y + py) * atlas_width + (rect_x + px)] = top_left;
+            // Top-right corner
+            atlas_pixels[(rect_y + py) * atlas_width + (rect_x + ATLAS_PADDING + texture.width + px)] = top_right;
+            // Bottom-left corner
+            atlas_pixels[(rect_y + ATLAS_PADDING + texture.height + py) * atlas_width + (rect_x + px)] = bottom_left;
+            // Bottom-right corner
+            atlas_pixels[(rect_y + ATLAS_PADDING + texture.height + py) * atlas_width + (rect_x + ATLAS_PADDING + texture.width + px)] = bottom_right;
+        }
+    }
+}
+
 template<size_t N>
 std::tuple<sg_image, std::array<glm::vec4, N>> GLRenderer::BindTexturesInternal(std::vector<TextureData>& collection)
 {
@@ -407,8 +476,8 @@ std::tuple<sg_image, std::array<glm::vec4, N>> GLRenderer::BindTexturesInternal(
     {
         stbrp_rect rect;
         rect.id = texture.id;
-        rect.w = texture.width;
-        rect.h = texture.height;
+        rect.w = texture.width + (ATLAS_PADDING * 2);
+        rect.h = texture.height + (ATLAS_PADDING * 2);
         max_dim = std::max(max_dim, std::max(rect.w, rect.h));
         rects.push_back(rect);
     }
@@ -444,21 +513,13 @@ std::tuple<sg_image, std::array<glm::vec4, N>> GLRenderer::BindTexturesInternal(
         const auto& rect = *rectIt;
         auto& texture = *texIt;
 
-        for (int y = 0; y < rect.h; y++)
-        {
-            for (int x = 0; x < rect.w; x++)
-            {
-                int atlas_idx = (rect.y + y) * atlas_width + (rect.x + x);
-                int tex_idx = y * texture.width + x;
-                atlas_pixels[atlas_idx] = texture.pixels[tex_idx];
-            }
-        }
+        CopyTextureToAtlasWithPadding(atlas_pixels, atlas_width, texture, rect.x, rect.y);
 
-        float bleed_padding = 0.5f;
-        texture.atlas_coords.u1 = (rect.x + bleed_padding) / atlas_width;
-        texture.atlas_coords.v1 = (rect.y + bleed_padding) / atlas_height;
-        texture.atlas_coords.u2 = (rect.x + rect.w - bleed_padding) / atlas_width;
-        texture.atlas_coords.v2 = (rect.y + rect.h - bleed_padding) / atlas_height;
+        // UV coordinates map to the actual texture region (excluding padding)
+        texture.atlas_coords.u1 = static_cast<float>(rect.x + ATLAS_PADDING) / atlas_width;
+        texture.atlas_coords.v1 = static_cast<float>(rect.y + ATLAS_PADDING) / atlas_height;
+        texture.atlas_coords.u2 = static_cast<float>(rect.x + ATLAS_PADDING + texture.width) / atlas_width;
+        texture.atlas_coords.v2 = static_cast<float>(rect.y + ATLAS_PADDING + texture.height) / atlas_height;
 
         delete[] texture.pixels;
         texture.pixels = nullptr;
