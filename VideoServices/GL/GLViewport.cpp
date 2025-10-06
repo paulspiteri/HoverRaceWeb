@@ -26,8 +26,8 @@ void GLViewport::SetCameraPosition(const MR_3DCoordinate& pPosition, MR_Angle pO
     float aspect = static_cast<float>(sizeX) / static_cast<float>(sizeY);
     glm::mat4 view = camera.getViewMatrix();
     glm::mat4 projection = camera.getProjectionMatrix(aspect);
-    std::memcpy(glRenderer->state.world_uniforms.view, &view, sizeof(view));
-    std::memcpy(glRenderer->state.world_uniforms.proj, &projection, sizeof(projection));
+    std::memcpy(glRenderer->state.floor_uniforms.view, &view, sizeof(view));
+    std::memcpy(glRenderer->state.floor_uniforms.proj, &projection, sizeof(projection));
     std::memcpy(glRenderer->state.water_uniforms.view, &view, sizeof(view));
     std::memcpy(glRenderer->state.water_uniforms.proj, &projection, sizeof(projection));
     std::memcpy(glRenderer->state.wall_uniforms.view, &view, sizeof(view));
@@ -60,8 +60,8 @@ void GLViewport::SetMapSize(const glm::ivec4& size)
         -halfHeight, halfHeight
     );
 
-    std::memcpy(glRenderer->state.world_minimap_uniforms.view, &map_view, sizeof(map_view));
-    std::memcpy(glRenderer->state.world_minimap_uniforms.proj, &map_projection, sizeof(map_projection));
+    std::memcpy(glRenderer->state.floor_minimap_uniforms.view, &map_view, sizeof(map_view));
+    std::memcpy(glRenderer->state.floor_minimap_uniforms.proj, &map_projection, sizeof(map_projection));
     std::memcpy(glRenderer->state.free_element_minimap_uniforms.view, &map_view, sizeof(map_view));
     std::memcpy(glRenderer->state.free_element_minimap_uniforms.proj, &map_projection, sizeof(map_projection));
 }

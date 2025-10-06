@@ -94,13 +94,19 @@ struct AtlasCoords
     float u2, v2; // Bottom-right
 };
 
+struct MipmapLevel
+{
+    int width;
+    int height;
+    uint32_t* pixels;
+};
+
+template<size_t NumLevels>
 struct TextureData
 {
     MR_UInt32 id;   // high bit for 'b' animation frame
-    int width;
-    int height;
     AtlasCoords atlas_coords;
-    uint32_t* pixels;
+    std::array<MipmapLevel, NumLevels> levels;
 };
 
 
@@ -126,22 +132,26 @@ struct FreeElementInstance
 
 class GLRenderer
 {
-    static constexpr int ATLAS_PADDING = 1;  // Padding around each texture to prevent bleeding
+    static constexpr int ATLAS_PADDING = 1;  // Base padding around each texture (scaled by mipmap level)
 
-    std::vector<TextureData> textures;
-    std::vector<TextureData> free_element_textures;
-    std::vector<TextureData> sprites;
+    std::vector<TextureData<6>> floor_textures;
+    std::vector<TextureData<1>> wall_textures;
+    std::vector<TextureData<1>> free_element_textures;
+    std::vector<TextureData<1>> sprites;
     std::unordered_map<int, std::vector<FreeElementInstance>> freeElementInstances;
     MR_VideoBuffer* videoBuffer;
 
-    uint32_t* ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF);
+    uint32_t* ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF, int mipmapLevel = 0);
     uint32_t* ConvertBackgroundToRGBA8(const MR_UInt8* backImage);
     uint32_t* ConvertSpriteToRGBA8(const MR_Sprite* sprite);
-    unsigned long LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF);
+    template<size_t NumLevels>
+    unsigned long LoadTextureInternal(std::vector<TextureData<NumLevels>>& collection, MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF);
+    template<size_t NumLevels>
+    void PadMipmapLevelsWithUpscaling(TextureData<NumLevels>& textureData, int sourceLevel, int destStartLevel);
     void CopyTextureToAtlasWithPadding(uint32_t* atlas_pixels, int atlas_width,
-                                        const TextureData& texture, int rect_x, int rect_y);
-    template<size_t N>
-    std::tuple<sg_image, std::array<glm::vec4, N>> BindTexturesInternal(std::vector<TextureData>& collection);
+                                        const MipmapLevel& level, int rect_x, int rect_y, int mipLevel, int padding);
+    template<size_t N, size_t M>
+    std::tuple<sg_image, std::array<glm::vec4, N>> BindTexturesInternal(std::vector<TextureData<M>>& collection);
     float CalculateFontScale(int height);
 
 
@@ -152,16 +162,18 @@ public:
     SDL_Window* glWindow;
     SDL_GLContext glContext;
 
-    void BindWorldTextures();
-    void BindWorldVertices(const VerticesData<VertexWithTextureId>& vertices);
+    void BindFloorVertices(const VerticesData<VertexWithTextureId>& vertices);
     void BindWaterVertices(const VerticesData<VertexWithTextureId>& vertices);
     void BindWallVertices(const VerticesData<WallVertex>& vertices);
     void BindFreeElementVertices(const std::unordered_map<int, VerticesData<FreeElementVertex>>& freeElements);
     void BindFreeElementInstances(const std::unordered_map<int, std::vector<FreeElementInstance>>& updatedFreeElementInstances);
-    unsigned long LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF);
+    unsigned long LoadFloorTexture(MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF);
+    unsigned long LoadWallTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
     unsigned long LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitmap* bitmap);
     unsigned long LoadSprite(MR_UInt32 id, const MR_Sprite* sprite);
     unsigned long GetSpriteAtlasIndex(MR_UInt32 id) const;
+    void BindFloorTextures();
+    void BindWallTextures();
     void BindFreeElementTextures();
     void BindSpriteTextures();
     void BindBackgroundVertices(const VerticesData<Vertex>& vertices);

@@ -33,10 +33,11 @@ void GLLevelLoader::LoadLevel(const MR_Level* level, const MR_UInt8* backImage)
 
     LoadBackground(backImage);
     glRenderer->BindBackgroundVertices(bkgVerts);
-    glRenderer->BindWorldVertices(worldVerts);
+    glRenderer->BindFloorVertices(worldVerts);
     glRenderer->BindWaterVertices(waterVerts);
     glRenderer->BindWallVertices(wallVerts);
-    glRenderer->BindWorldTextures();
+    glRenderer->BindFloorTextures();
+    glRenderer->BindWallTextures();
     glRenderer->BindFreeElementVertices(LoadGameFreeElements());
     glRenderer->BindFreeElementTextures();
     LoadGameSprites();
@@ -289,7 +290,7 @@ void GLLevelLoader::LoadFloor(MR_PolygonShape* shape, MR_SurfaceElement* surface
     auto height = shape->ZMin();
     auto lNbVertex = shape->VertexCount();
     auto baseIndex = worldVerts.vertices.size();
-    auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+    auto textureAtlasId = glRenderer->LoadFloorTexture(surfaceElement->mId.mClassId, bitmap);
 
     for (auto i = 0; i < lNbVertex; i++)
     {
@@ -314,7 +315,7 @@ void GLLevelLoader::LoadWater(MR_PolygonShape* shape, MR_SurfaceElement* surface
     auto lNbVertex = shape->VertexCount();
     auto baseIndex = waterVerts.vertices.size();
     int textureId = surfaceElement->mId.mClassId | 0x40000000; // turn on high bit for alpha copy
-    auto textureAtlasId = glRenderer->LoadTexture(textureId, bitmap, 0x80);
+    auto textureAtlasId = glRenderer->LoadFloorTexture(textureId, bitmap, 0x80);
 
     for (auto i = 0; i < lNbVertex; i++)
     {
@@ -343,7 +344,7 @@ void GLLevelLoader::LoadCeiling(MR_PolygonShape* shape, MR_SurfaceElement* surfa
     auto height = shape->ZMax();
     auto lNbVertex = shape->VertexCount();
     auto baseIndex = worldVerts.vertices.size();
-    auto textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+    auto textureAtlasId = glRenderer->LoadFloorTexture(surfaceElement->mId.mClassId, bitmap);
 
     for (auto i = 0; i < lNbVertex; i++)
     {
@@ -369,7 +370,7 @@ void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_Surface
         return;
     }
 
-    int textureAtlasId = glRenderer->LoadTexture(surfaceElement->mId.mClassId, bitmap);
+    int textureAtlasId = glRenderer->LoadWallTexture(surfaceElement->mId.mClassId, bitmap);
 
     std::optional<int> maxHeight;
     auto vstretchBitmap = dynamic_cast<MR_VStretchBitmapSurface*>(surfaceElement);
@@ -382,7 +383,7 @@ void GLLevelLoader::AddWall(MR_3DCoordinate lP0, MR_3DCoordinate lP1, MR_Surface
     if (bitmap2 != nullptr && bitmap2 != bitmap)
     {
         MR_UInt32 id2 = surfaceElement->mId.mClassId | 0x80000000; // turn on high bit for bitmap2
-        glRenderer->LoadTexture(id2, bitmap2);
+        glRenderer->LoadWallTexture(id2, bitmap2);
 
         int rotationSpeed = 0, rotationLength = 0;
         auto bitmapSurface = dynamic_cast<MR_BitmapSurface*>(surfaceElement);

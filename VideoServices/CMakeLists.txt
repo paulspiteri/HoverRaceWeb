@@ -28,7 +28,7 @@ set(SHADER_FILES
     GL/shaders/free_element.glsl
     GL/shaders/wall.glsl
     GL/shaders/water.glsl
-    GL/shaders/world.glsl
+    GL/shaders/floor.glsl
 )
 
 foreach(SHADER_FILE ${SHADER_FILES})

@@ -54,24 +54,24 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     bkg_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
     state.bkg_pipeline = sg_make_pipeline(&bkg_pipeline_desc);
 
-    const sg_shader_desc* world_shdr_desc = world_shader_desc(sg_query_backend());
-    sg_shader world_shader = sg_make_shader(world_shdr_desc);
-    sg_pipeline_desc world_pipeline_desc = {};
-    world_pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
-    world_pipeline_desc.shader = world_shader;
-    world_pipeline_desc.sample_count = 16;
-    world_pipeline_desc.label = "world-pipeline";
-    world_pipeline_desc.layout.attrs[ATTR_world_position].format = SG_VERTEXFORMAT_INT3;
-    world_pipeline_desc.layout.attrs[ATTR_world_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
-    world_pipeline_desc.layout.attrs[ATTR_world_textureIdx].format = SG_VERTEXFORMAT_INT;
-    world_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
-    world_pipeline_desc.depth.write_enabled = true;
-    world_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
-    state.world_pipeline = sg_make_pipeline(&world_pipeline_desc);
-    state.world_uniforms.textureScale = 1.0f;
-    state.world_minimap_uniforms.textureScale = 2.0f;
+    const sg_shader_desc* floor_shdr_desc = floor_shader_desc(sg_query_backend());
+    sg_shader floor_shader = sg_make_shader(floor_shdr_desc);
+    sg_pipeline_desc floor_pipeline_desc = {};
+    floor_pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
+    floor_pipeline_desc.shader = floor_shader;
+    floor_pipeline_desc.sample_count = 16;
+    floor_pipeline_desc.label = "floor-pipeline";
+    floor_pipeline_desc.layout.attrs[ATTR_floor_position].format = SG_VERTEXFORMAT_INT3;
+    floor_pipeline_desc.layout.attrs[ATTR_floor_texcoord0].format = SG_VERTEXFORMAT_FLOAT2;
+    floor_pipeline_desc.layout.attrs[ATTR_floor_textureIdx].format = SG_VERTEXFORMAT_INT;
+    floor_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
+    floor_pipeline_desc.depth.write_enabled = true;
+    floor_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
+    state.floor_pipeline = sg_make_pipeline(&floor_pipeline_desc);
+    state.floor_uniforms.textureScale = 1.0f;
+    state.floor_minimap_uniforms.textureScale = 2.0f;
 
-    const sg_shader_desc* water_shdr_desc = world_shader_desc(sg_query_backend());
+    const sg_shader_desc* water_shdr_desc = floor_shader_desc(sg_query_backend());
     sg_shader water_shader = sg_make_shader(water_shdr_desc);
     sg_pipeline_desc water_pipeline_desc = {};
     water_pipeline_desc.index_type = SG_INDEXTYPE_UINT16;
@@ -160,10 +160,11 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBu
     sg_sampler_desc wrap_sampler_desc = {};
     wrap_sampler_desc.min_filter = SG_FILTER_LINEAR;
     wrap_sampler_desc.mag_filter = SG_FILTER_LINEAR;
+    wrap_sampler_desc.mipmap_filter = SG_FILTER_LINEAR;  // Enable trilinear filtering with mipmaps
     wrap_sampler_desc.wrap_u = SG_WRAP_REPEAT;
     wrap_sampler_desc.wrap_v = SG_WRAP_REPEAT;
     state.wrap_sampler = sg_make_sampler(&wrap_sampler_desc);
-    state.world_bindings.samplers[0] = state.wrap_sampler;
+    state.floor_bindings.samplers[0] = state.wrap_sampler;
     state.water_bindings.samplers[0] = state.wrap_sampler;
     state.wall_bindings.samplers[0] = state.wrap_sampler;
 
@@ -217,14 +218,14 @@ GLRenderer::~GLRenderer()
 
     sg_destroy_buffer(state.wall_bindings.vertex_buffers[0]);
     sg_destroy_buffer(state.wall_bindings.index_buffer);
-    sg_destroy_buffer(state.world_bindings.vertex_buffers[0]);
-    sg_destroy_buffer(state.world_bindings.index_buffer);
+    sg_destroy_buffer(state.floor_bindings.vertex_buffers[0]);
+    sg_destroy_buffer(state.floor_bindings.index_buffer);
     sg_destroy_buffer(state.water_bindings.vertex_buffers[0]);
     sg_destroy_buffer(state.water_bindings.index_buffer);
-    sg_destroy_image(state.world_bindings.images[0]);
-    sg_destroy_sampler(state.world_bindings.samplers[0]);
+    sg_destroy_image(state.floor_bindings.images[0]);
+    sg_destroy_sampler(state.floor_bindings.samplers[0]);
     sg_destroy_pipeline(state.free_element_pipeline);
-    sg_destroy_pipeline(state.world_pipeline);
+    sg_destroy_pipeline(state.floor_pipeline);
     sg_destroy_pipeline(state.water_pipeline);
     sg_destroy_pipeline(state.wall_pipeline);
 
@@ -245,15 +246,15 @@ void GLRenderer::BeginRender() const
     sg_apply_bindings(&state.bkg_bindings);
     sg_draw(0, state.bkg_count, 1);
 
-    sg_apply_pipeline(state.world_pipeline);
-    sg_apply_uniforms(0, SG_RANGE(state.world_uniforms));
-    sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
-    sg_apply_bindings(&state.world_bindings);
-    sg_draw(0, state.world_count, 1);
+    sg_apply_pipeline(state.floor_pipeline);
+    sg_apply_uniforms(0, SG_RANGE(state.floor_uniforms));
+    sg_apply_uniforms(1, SG_RANGE(state.floor_atlas_coords));
+    sg_apply_bindings(&state.floor_bindings);
+    sg_draw(0, state.floor_count, 1);
 
     sg_apply_pipeline(state.wall_pipeline);
     sg_apply_uniforms(0, SG_RANGE(state.wall_uniforms));
-    sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
+    sg_apply_uniforms(1, SG_RANGE(state.wall_atlas_coords));
     sg_apply_bindings(&state.wall_bindings);
     sg_draw(0, state.wall_count, 1);
 
@@ -278,7 +279,7 @@ void GLRenderer::BeginRender() const
         // water should be last as it has alpha
         sg_apply_pipeline(state.water_pipeline);
         sg_apply_uniforms(0, SG_RANGE(state.water_uniforms));
-        sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
+        sg_apply_uniforms(1, SG_RANGE(state.floor_atlas_coords));
         sg_apply_bindings(&state.water_bindings);
         sg_draw(0, state.water_count, 1);
     }
@@ -333,11 +334,11 @@ void GLRenderer::RenderMiniMap(glm::ivec4 size)
     }
     sg_apply_viewport(margin, margin, viewportWidth, viewportHeight, true);
 
-    sg_apply_pipeline(state.world_pipeline);
-    sg_apply_uniforms(0, SG_RANGE(state.world_minimap_uniforms));
-    sg_apply_uniforms(1, SG_RANGE(state.world_atlas_coords));
-    sg_apply_bindings(&state.world_bindings);
-    sg_draw(0, state.world_count, 1);
+    sg_apply_pipeline(state.floor_pipeline);
+    sg_apply_uniforms(0, SG_RANGE(state.floor_minimap_uniforms));
+    sg_apply_uniforms(1, SG_RANGE(state.floor_atlas_coords));
+    sg_apply_bindings(&state.floor_bindings);
+    sg_draw(0, state.floor_count, 1);
 
     sg_apply_pipeline(state.free_element_pipeline);
     sg_apply_uniforms(1, SG_RANGE(state.free_element_atlas_coords));
@@ -396,88 +397,131 @@ float GLRenderer::CalculateFontScale(int height)
     return std::max(0.3f, std::min(3.0f, targetScale));
 }
 
-void GLRenderer::CopyTextureToAtlasWithPadding(uint32_t* atlas_pixels, int atlas_width,
-                                                const TextureData& texture, int rect_x, int rect_y)
+template<size_t NumLevels>
+void GLRenderer::PadMipmapLevelsWithUpscaling(TextureData<NumLevels>& textureData, int sourceLevel, int destStartLevel)
 {
-    // Copy the main texture to the center of the padded region
-    for (int y = 0; y < texture.height; y++)
+    for (int i = destStartLevel; i >= 0; i--)
     {
-        for (int x = 0; x < texture.width; x++)
+        // Calculate how many times to upscale (2x for each level)
+        int scaleSteps = sourceLevel - i;
+        int scaleFactor = 1 << scaleSteps; // 2^scaleSteps
+
+        int sourceWidth = textureData.levels[sourceLevel].width;
+        int sourceHeight = textureData.levels[sourceLevel].height;
+        int scaledWidth = sourceWidth * scaleFactor;
+        int scaledHeight = sourceHeight * scaleFactor;
+
+        // Upscale by nearest-neighbor
+        auto scaledPixels = new uint32_t[scaledWidth * scaledHeight];
+        for (int y = 0; y < scaledHeight; y++)
         {
-            int atlas_idx = (rect_y + ATLAS_PADDING + y) * atlas_width + (rect_x + ATLAS_PADDING + x);
-            int tex_idx = y * texture.width + x;
-            atlas_pixels[atlas_idx] = texture.pixels[tex_idx];
+            for (int x = 0; x < scaledWidth; x++)
+            {
+                int srcX = x / scaleFactor;
+                int srcY = y / scaleFactor;
+                scaledPixels[y * scaledWidth + x] =
+                    textureData.levels[sourceLevel].pixels[srcY * sourceWidth + srcX];
+            }
+        }
+
+        textureData.levels[i].width = scaledWidth;
+        textureData.levels[i].height = scaledHeight;
+        textureData.levels[i].pixels = scaledPixels;
+    }
+}
+
+void GLRenderer::CopyTextureToAtlasWithPadding(uint32_t* atlas_pixels, int atlas_width,
+                                                const MipmapLevel& level, int rect_x, int rect_y, int mipLevel, int padding)
+{
+
+    // Calculate the actual rect position for this mip level
+    int mipRectX = rect_x >> mipLevel;
+    int mipRectY = rect_y >> mipLevel;
+    int texWidth = level.width;
+    int texHeight = level.height;
+
+    // Copy the main texture to the center of the padded region
+    for (int y = 0; y < texHeight; y++)
+    {
+        for (int x = 0; x < texWidth; x++)
+        {
+            int atlas_idx = (mipRectY + padding + y) * atlas_width + (mipRectX + padding + x);
+            int tex_idx = y * texWidth + x;
+            atlas_pixels[atlas_idx] = level.pixels[tex_idx];
         }
     }
 
     // Extrude edges to fill padding and prevent bleeding
     // Top and bottom edges
-    for (int x = 0; x < texture.width; x++)
+    for (int x = 0; x < texWidth; x++)
     {
-        uint32_t top_pixel = texture.pixels[x];
-        uint32_t bottom_pixel = texture.pixels[(texture.height - 1) * texture.width + x];
-        for (int p = 0; p < ATLAS_PADDING; p++)
+        uint32_t top_pixel = level.pixels[x];
+        uint32_t bottom_pixel = level.pixels[(texHeight - 1) * texWidth + x];
+        for (int p = 0; p < padding; p++)
         {
             // Top padding
-            int top_idx = (rect_y + p) * atlas_width + (rect_x + ATLAS_PADDING + x);
+            int top_idx = (mipRectY + p) * atlas_width + (mipRectX + padding + x);
             atlas_pixels[top_idx] = top_pixel;
             // Bottom padding
-            int bottom_idx = (rect_y + ATLAS_PADDING + texture.height + p) * atlas_width + (rect_x + ATLAS_PADDING + x);
+            int bottom_idx = (mipRectY + padding + texHeight + p) * atlas_width + (mipRectX + padding + x);
             atlas_pixels[bottom_idx] = bottom_pixel;
         }
     }
 
     // Left and right edges
-    for (int y = 0; y < texture.height; y++)
+    for (int y = 0; y < texHeight; y++)
     {
-        uint32_t left_pixel = texture.pixels[y * texture.width];
-        uint32_t right_pixel = texture.pixels[y * texture.width + texture.width - 1];
-        for (int p = 0; p < ATLAS_PADDING; p++)
+        uint32_t left_pixel = level.pixels[y * texWidth];
+        uint32_t right_pixel = level.pixels[y * texWidth + texWidth - 1];
+        for (int p = 0; p < padding; p++)
         {
             // Left padding
-            int left_idx = (rect_y + ATLAS_PADDING + y) * atlas_width + (rect_x + p);
+            int left_idx = (mipRectY + padding + y) * atlas_width + (mipRectX + p);
             atlas_pixels[left_idx] = left_pixel;
             // Right padding
-            int right_idx = (rect_y + ATLAS_PADDING + y) * atlas_width + (rect_x + ATLAS_PADDING + texture.width + p);
+            int right_idx = (mipRectY + padding + y) * atlas_width + (mipRectX + padding + texWidth + p);
             atlas_pixels[right_idx] = right_pixel;
         }
     }
 
     // Corner pixels
-    uint32_t top_left = texture.pixels[0];
-    uint32_t top_right = texture.pixels[texture.width - 1];
-    uint32_t bottom_left = texture.pixels[(texture.height - 1) * texture.width];
-    uint32_t bottom_right = texture.pixels[(texture.height - 1) * texture.width + texture.width - 1];
+    uint32_t top_left = level.pixels[0];
+    uint32_t top_right = level.pixels[texWidth - 1];
+    uint32_t bottom_left = level.pixels[(texHeight - 1) * texWidth];
+    uint32_t bottom_right = level.pixels[(texHeight - 1) * texWidth + texWidth - 1];
 
-    for (int py = 0; py < ATLAS_PADDING; py++)
+    for (int py = 0; py < padding; py++)
     {
-        for (int px = 0; px < ATLAS_PADDING; px++)
+        for (int px = 0; px < padding; px++)
         {
             // Top-left corner
-            atlas_pixels[(rect_y + py) * atlas_width + (rect_x + px)] = top_left;
+            atlas_pixels[(mipRectY + py) * atlas_width + (mipRectX + px)] = top_left;
             // Top-right corner
-            atlas_pixels[(rect_y + py) * atlas_width + (rect_x + ATLAS_PADDING + texture.width + px)] = top_right;
+            atlas_pixels[(mipRectY + py) * atlas_width + (mipRectX + padding + texWidth + px)] = top_right;
             // Bottom-left corner
-            atlas_pixels[(rect_y + ATLAS_PADDING + texture.height + py) * atlas_width + (rect_x + px)] = bottom_left;
+            atlas_pixels[(mipRectY + padding + texHeight + py) * atlas_width + (mipRectX + px)] = bottom_left;
             // Bottom-right corner
-            atlas_pixels[(rect_y + ATLAS_PADDING + texture.height + py) * atlas_width + (rect_x + ATLAS_PADDING + texture.width + px)] = bottom_right;
+            atlas_pixels[(mipRectY + padding + texHeight + py) * atlas_width + (mipRectX + padding + texWidth + px)] = bottom_right;
         }
     }
 }
 
-template<size_t N>
-std::tuple<sg_image, std::array<glm::vec4, N>> GLRenderer::BindTexturesInternal(std::vector<TextureData>& collection)
+template<size_t N, size_t M>
+std::tuple<sg_image, std::array<glm::vec4, N>> GLRenderer::BindTexturesInternal(std::vector<TextureData<M>>& collection)
 {
     std::vector<stbrp_rect> rects;
     rects.reserve(collection.size());
+
+    // Calculate padding for level 0 (maximum padding)
+    int level0Padding = ATLAS_PADDING << (M - 1);
 
     int max_dim = 0;
     for (const auto& texture : collection)
     {
         stbrp_rect rect;
         rect.id = texture.id;
-        rect.w = texture.width + (ATLAS_PADDING * 2);
-        rect.h = texture.height + (ATLAS_PADDING * 2);
+        rect.w = texture.levels[0].width + (level0Padding * 2);
+        rect.h = texture.levels[0].height + (level0Padding * 2);
         max_dim = std::max(max_dim, std::max(rect.w, rect.h));
         rects.push_back(rect);
     }
@@ -502,10 +546,7 @@ std::tuple<sg_image, std::array<glm::vec4, N>> GLRenderer::BindTexturesInternal(
         }
     }
 
-    // Create the atlas texture
-    auto atlas_pixels = new uint32_t[atlas_width * atlas_height]{};
-
-    // Copy all textures to their positions in the atlas
+    // Calculate atlas UV coordinates for each texture (based on level 0 packing)
     for (auto [rectIt, texIt] = std::tuple{rects.begin(), collection.begin()};
          rectIt != rects.end();
          ++rectIt, ++texIt)
@@ -513,27 +554,81 @@ std::tuple<sg_image, std::array<glm::vec4, N>> GLRenderer::BindTexturesInternal(
         const auto& rect = *rectIt;
         auto& texture = *texIt;
 
-        CopyTextureToAtlasWithPadding(atlas_pixels, atlas_width, texture, rect.x, rect.y);
-
         // UV coordinates map to the actual texture region (excluding padding)
-        texture.atlas_coords.u1 = static_cast<float>(rect.x + ATLAS_PADDING) / atlas_width;
-        texture.atlas_coords.v1 = static_cast<float>(rect.y + ATLAS_PADDING) / atlas_height;
-        texture.atlas_coords.u2 = static_cast<float>(rect.x + ATLAS_PADDING + texture.width) / atlas_width;
-        texture.atlas_coords.v2 = static_cast<float>(rect.y + ATLAS_PADDING + texture.height) / atlas_height;
-
-        delete[] texture.pixels;
-        texture.pixels = nullptr;
+        texture.atlas_coords.u1 = static_cast<float>(rect.x + level0Padding) / atlas_width;
+        texture.atlas_coords.v1 = static_cast<float>(rect.y + level0Padding) / atlas_height;
+        texture.atlas_coords.u2 = static_cast<float>(rect.x + level0Padding + texture.levels[0].width) / atlas_width;
+        texture.atlas_coords.v2 = static_cast<float>(rect.y + level0Padding + texture.levels[0].height) / atlas_height;
     }
 
-    // Create the atlas texture
+    // Determine maximum number of mipmap levels to create
+    int maxMipmapLevels = M;  // Use the template parameter
+
+    // Create atlas for each mipmap level
+    std::vector<uint32_t*> mipmap_atlases;
+    mipmap_atlases.reserve(maxMipmapLevels);
+
+    for (int mipLevel = 0; mipLevel < maxMipmapLevels; mipLevel++)
+    {
+        int mipAtlasWidth = std::max(1, atlas_width >> mipLevel);
+        int mipAtlasHeight = std::max(1, atlas_height >> mipLevel);
+        auto mip_atlas_pixels = new uint32_t[mipAtlasWidth * mipAtlasHeight]{};
+
+        // Calculate padding for this mip level (level 0 has most padding, scales down with each level)
+        int padding = ATLAS_PADDING << (maxMipmapLevels - 1 - mipLevel);
+
+        // Copy textures to this mipmap level atlas
+        for (auto [rectIt, texIt] = std::tuple{rects.begin(), collection.begin()};
+             rectIt != rects.end();
+             ++rectIt, ++texIt)
+        {
+            const auto& rect = *rectIt;
+            auto& texture = *texIt;
+
+            // Skip if texture doesn't have this mipmap level
+            if (mipLevel >= static_cast<int>(M) || texture.levels[mipLevel].pixels == nullptr)
+                continue;
+
+            // Copy texture to atlas with edge extrusion padding
+            CopyTextureToAtlasWithPadding(mip_atlas_pixels, mipAtlasWidth,
+                                          texture.levels[mipLevel], rect.x, rect.y, mipLevel, padding);
+        }
+
+        mipmap_atlases.push_back(mip_atlas_pixels);
+    }
+
+    // Clean up texture pixels after copying to atlas
+    for (auto& texture : collection)
+    {
+        for (size_t i = 0; i < M; i++)
+        {
+            delete[] texture.levels[i].pixels;
+            texture.levels[i].pixels = nullptr;
+        }
+    }
+
+    // Create the atlas texture with all mipmap levels
     sg_image_desc img_desc = {};
     img_desc.width = atlas_width;
     img_desc.height = atlas_height;
     img_desc.pixel_format = SG_PIXELFORMAT_RGBA8;
-    img_desc.data.subimage[0][0].ptr = atlas_pixels;
-    img_desc.data.subimage[0][0].size = atlas_width * atlas_height * 4;
+    img_desc.num_mipmaps = maxMipmapLevels;
+
+    for (int mipLevel = 0; mipLevel < maxMipmapLevels; mipLevel++)
+    {
+        int mipAtlasWidth = std::max(1, atlas_width >> mipLevel);
+        int mipAtlasHeight = std::max(1, atlas_height >> mipLevel);
+        img_desc.data.subimage[0][mipLevel].ptr = mipmap_atlases[mipLevel];
+        img_desc.data.subimage[0][mipLevel].size = mipAtlasWidth * mipAtlasHeight * 4;
+    }
+
     auto atlas_texture = sg_make_image(&img_desc);
-    delete[] atlas_pixels;
+
+    // Clean up all atlas pixel arrays
+    for (auto* atlas : mipmap_atlases)
+    {
+        delete[] atlas;
+    }
 
     std::array<glm::vec4, N> atlas_coords = {};
     int i = 0;
@@ -556,19 +651,26 @@ std::tuple<sg_image, std::array<glm::vec4, N>> GLRenderer::BindTexturesInternal(
 }
 
 // Explicit template instantiation for the sizes we use
-template std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal<32>(std::vector<TextureData>&);
-template std::tuple<sg_image, std::array<glm::vec4, 64>> GLRenderer::BindTexturesInternal<64>(std::vector<TextureData>&);
+template std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal<32, 6>(std::vector<TextureData<6>>&);
+template std::tuple<sg_image, std::array<glm::vec4, 32>> GLRenderer::BindTexturesInternal<32, 1>(std::vector<TextureData<1>>&);
+template std::tuple<sg_image, std::array<glm::vec4, 64>> GLRenderer::BindTexturesInternal<64, 1>(std::vector<TextureData<1>>&);
 
-void GLRenderer::BindWorldTextures()
+void GLRenderer::BindFloorTextures()
 {
-    auto [atlas_texture, atlas_coords] = BindTexturesInternal<32>(textures);
-    state.world_bindings.images[0] = atlas_texture;
+    auto [atlas_texture, atlas_coords] = BindTexturesInternal<32, 6>(floor_textures);
+    state.floor_bindings.images[0] = atlas_texture;
     state.water_bindings.images[0] = atlas_texture;
-    state.wall_bindings.images[0] = atlas_texture;
-    state.world_atlas_coords = atlas_coords;
+    state.floor_atlas_coords = atlas_coords;
 }
 
-void GLRenderer::BindWorldVertices(const VerticesData<VertexWithTextureId>& vertices)
+void GLRenderer::BindWallTextures()
+{
+    auto [atlas_texture, atlas_coords] = BindTexturesInternal<32, 1>(wall_textures);
+    state.wall_bindings.images[0] = atlas_texture;
+    state.wall_atlas_coords = atlas_coords;
+}
+
+void GLRenderer::BindFloorVertices(const VerticesData<VertexWithTextureId>& vertices)
 {
     sg_buffer_desc buf_desc = {
         .usage= {
@@ -578,7 +680,7 @@ void GLRenderer::BindWorldVertices(const VerticesData<VertexWithTextureId>& vert
         .data = make_sg_range(vertices.vertices),
         .label = "floor-vertices"
     };
-    state.world_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
+    state.floor_bindings.vertex_buffers[0] = sg_make_buffer(&buf_desc);
 
     sg_buffer_desc index_buf_desc = {
         .usage= {
@@ -587,9 +689,9 @@ void GLRenderer::BindWorldVertices(const VerticesData<VertexWithTextureId>& vert
         .data = make_sg_range(vertices.indices),
         .label = "floor-indices"
     };
-    state.world_bindings.index_buffer = sg_make_buffer(&index_buf_desc);
+    state.floor_bindings.index_buffer = sg_make_buffer(&index_buf_desc);
 
-    state.world_count = static_cast<uint32_t>(vertices.indices.size());
+    state.floor_count = static_cast<uint32_t>(vertices.indices.size());
 }
 
 void GLRenderer::BindWaterVertices(const VerticesData<VertexWithTextureId>& vertices)
@@ -726,26 +828,56 @@ void GLRenderer::BindFreeElementInstances(
     this->freeElementInstances = updatedFreeElementInstances;
 }
 
-unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData>& collection, MR_UInt32 id,
+template<size_t NumLevels>
+unsigned long GLRenderer::LoadTextureInternal(std::vector<TextureData<NumLevels>>& collection, MR_UInt32 id,
                                               const MR_ResBitmap* bitmap, uint8_t alpha)
 {
     auto it = std::ranges::find_if(collection, [=](const auto& t) { return t.id == id; });
     if (it == collection.end())
     {
-        TextureData textureData = {};
+        TextureData<NumLevels> textureData = {};
         textureData.id = id;
-        textureData.width = bitmap->GetMaxXRes();
-        textureData.height = bitmap->GetMaxYRes();
-        textureData.pixels = ConvertTextureToRGBA8(bitmap, alpha);
+
+        // Get number of available mipmap levels from bitmap
+        int nbSubBitmaps = bitmap->GetNbSubBitmap();
+        int levelsToLoad = std::min(static_cast<int>(NumLevels), nbSubBitmaps);
+
+        // Load available mipmap levels into the worst (highest numbered) slots
+        int destStartLevel = NumLevels - levelsToLoad;
+        for (int destLevel = destStartLevel; destLevel < NumLevels; destLevel++)
+        {
+            int srcLevel = destLevel - destStartLevel;
+            textureData.levels[destLevel].width = bitmap->GetXRes(srcLevel);
+            textureData.levels[destLevel].height = bitmap->GetYRes(srcLevel);
+            textureData.levels[destLevel].pixels = ConvertTextureToRGBA8(bitmap, alpha, srcLevel);
+        }
+
+        // Pad remaining levels with upscaled versions of the best quality available level (source level 0)
+        if (levelsToLoad > 0 && destStartLevel > 0)
+        {
+            PadMipmapLevelsWithUpscaling(textureData, destStartLevel, destStartLevel - 1);
+        }
+
         collection.push_back(textureData);
         return collection.size() - 1;
     }
     return std::distance(collection.begin(), it);
 }
 
-unsigned long GLRenderer::LoadTexture(MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha)
+// Explicit template instantiation
+template unsigned long GLRenderer::LoadTextureInternal<1>(std::vector<TextureData<1>>&, MR_UInt32, const MR_ResBitmap*, uint8_t);
+template unsigned long GLRenderer::LoadTextureInternal<6>(std::vector<TextureData<6>>&, MR_UInt32, const MR_ResBitmap*, uint8_t);
+template void GLRenderer::PadMipmapLevelsWithUpscaling<1>(TextureData<1>&, int, int);
+template void GLRenderer::PadMipmapLevelsWithUpscaling<6>(TextureData<6>&, int, int);
+
+unsigned long GLRenderer::LoadFloorTexture(MR_UInt32 id, const MR_ResBitmap* bitmap, uint8_t alpha)
 {
-    return LoadTextureInternal(textures, id, bitmap, alpha);
+    return LoadTextureInternal(floor_textures, id, bitmap, alpha);
+}
+
+unsigned long GLRenderer::LoadWallTexture(MR_UInt32 id, const MR_ResBitmap* bitmap)
+{
+    return LoadTextureInternal(wall_textures, id, bitmap);
 }
 
 unsigned long GLRenderer::LoadFreeElementTexture(MR_UInt32 id, const MR_ResBitmap* bitmap)
@@ -758,11 +890,11 @@ unsigned long GLRenderer::LoadSprite(MR_UInt32 id, const MR_Sprite* sprite)
     auto it = std::ranges::find_if(sprites, [=](const auto& t) { return t.id == id; });
     if (it == sprites.end())
     {
-        TextureData textureData = {};
+        TextureData<1> textureData = {};
         textureData.id = id;
-        textureData.width = sprite->GetItemWidth(),
-        textureData.height = sprite->GetItemHeight() * sprite->GetNbItem();
-        textureData.pixels = ConvertSpriteToRGBA8(sprite);
+        textureData.levels[0].width = sprite->GetItemWidth(),
+        textureData.levels[0].height = sprite->GetItemHeight() * sprite->GetNbItem();
+        textureData.levels[0].pixels = ConvertSpriteToRGBA8(sprite);
         sprites.push_back(textureData);
         return sprites.size() - 1;
     }
@@ -780,7 +912,7 @@ unsigned long GLRenderer::GetSpriteAtlasIndex(MR_UInt32 id) const
 
 void GLRenderer::BindFreeElementTextures()
 {
-    auto [atlas_texture, atlas_coords] = BindTexturesInternal<64>(free_element_textures);
+    auto [atlas_texture, atlas_coords] = BindTexturesInternal<64, 1>(free_element_textures);
     for (auto& [_, binding] : state.free_element_bindings)
     {
         binding.images[0] = atlas_texture;
@@ -790,7 +922,7 @@ void GLRenderer::BindFreeElementTextures()
 
 void GLRenderer::BindSpriteTextures()
 {
-    auto [atlas_texture, atlas_coords] = BindTexturesInternal<32>(sprites);
+    auto [atlas_texture, atlas_coords] = BindTexturesInternal<32, 1>(sprites);
     state.sprites_image = atlas_texture;
     state.sprite_atlas_coords = atlas_coords;
 }
@@ -861,17 +993,16 @@ uint32_t* GLRenderer::ConvertSpriteToRGBA8(const MR_Sprite* sprite)
     return lDest;
 }
 
-uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, uint8_t alpha)
+uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, uint8_t alpha, int mipmapLevel)
 {
     auto palette = videoBuffer->GetPalette();
-    int width = bitmap->GetMaxXRes();
-    int height = bitmap->GetMaxYRes();
-    if (width != height)
-    {
-        throw std::runtime_error("Only square textures are supported");
-    }
-    MR_UInt8* lSrc = bitmap->GetBuffer(0);
+    int width = bitmap->GetXRes(mipmapLevel);
+    int height = bitmap->GetYRes(mipmapLevel);
+    bool isSquare = (width == height);
+
+    MR_UInt8* lSrc = bitmap->GetBuffer(mipmapLevel);
     auto lDest = new uint32_t[width * height];
+
     for (int y = 0; y < height; y++)
     {
         for (int x = 0; x < width; x++)
@@ -881,12 +1012,19 @@ uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, uint8_t 
             NoMFC::PALETTEENTRY& paletteEntry = palette[pixelColorPaletteIdx];
             uint32_t color =  (alpha << 24) | (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
 
-            // textures appear to be rotated 90 degrees, which this code corrects
-            int rotated_x = y;
-            int rotated_y = width - 1 - x;
-            int rotated_pixelIdx = rotated_y * width + rotated_x;
-
-            lDest[rotated_pixelIdx] = color;
+            // Square textures appear to be rotated 90 degrees, which this code corrects
+            // Non-square textures are used as-is
+            if (isSquare)
+            {
+                int rotated_x = y;
+                int rotated_y = width - 1 - x;
+                int rotated_pixelIdx = rotated_y * width + rotated_x;
+                lDest[rotated_pixelIdx] = color;
+            }
+            else
+            {
+                lDest[pixelIdx] = color;
+            }
         }
     }
     return lDest;

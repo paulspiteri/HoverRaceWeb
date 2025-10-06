@@ -4,7 +4,7 @@
 
 #include "sokol_gfx.h"
 #include "shaders/background.h"
-#include "shaders/world.h"
+#include "shaders/floor.h"
 #include "shaders/water.h"
 #include "shaders/wall.h"
 #include "shaders/free_element.h"
@@ -21,11 +21,11 @@ struct Sokol_State {
     sg_bindings bkg_bindings;
     int bkg_count;
 
-    sg_pipeline world_pipeline;
-    WorldUniforms_t world_uniforms;
-    WorldUniforms_t world_minimap_uniforms;
-    sg_bindings world_bindings;
-    int world_count;
+    sg_pipeline floor_pipeline;
+    FloorUniforms_t floor_uniforms;
+    FloorUniforms_t floor_minimap_uniforms;
+    sg_bindings floor_bindings;
+    int floor_count;
 
     sg_pipeline water_pipeline;
     WaterUniforms_t water_uniforms;
@@ -44,7 +44,8 @@ struct Sokol_State {
     std::unordered_map<int, int> free_element_vertex_count;
     std::unordered_map<int, int> free_element_instance_count;
 
-    std::array<glm::vec4, 32> world_atlas_coords;
+    std::array<glm::vec4, 32> floor_atlas_coords;
+    std::array<glm::vec4, 32> wall_atlas_coords;
     std::array<glm::vec4, 64> free_element_atlas_coords;
     std::array<glm::vec4, 32> sprite_atlas_coords;
 
