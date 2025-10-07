@@ -94,7 +94,7 @@ export function Root() {
             {/* Games List - always render, CSS handles visibility */}
             <Box className={`${styles.gamesList} ${gameMatch ? styles.gamesListHidden : ""}`}>
                 <ConnectionStatus className={styles.desktopConnectionStatus} />
-                <GameList games={games} />
+                <GameList/>
             </Box>
             <div
                 ref={fullscreenContainerRef}
