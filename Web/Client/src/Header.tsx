@@ -1,11 +1,13 @@
-import { Group} from "@mantine/core";
 import { ConnectionStatus } from "./ConnectionStatus";
+import { ElectroIntro } from "./ElectroIntro.tsx";
 import styles from "./Header.module.css";
 
 export const Header: React.FC = () => {
     return (
-        <Group className={styles.header}>
+        <div className={styles.header}>
             <ConnectionStatus className={styles.connectionStatus} />
-        </Group>
+            <div className={styles.title}>HoverRace Web</div>
+            <ElectroIntro  />
+        </div>
     );
 };

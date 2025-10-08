@@ -1,19 +1,21 @@
 .header {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
 }
 
+.title {
+    font-size: 24px;
+    font-weight: bold;
+}
 .connectionStatus {
     /* Only show on mobile */
+    margin-left: auto;
 }
 
 /* Desktop styles */
 @media (min-width: 768px) and (pointer: fine) {
-    .header {
-        justify-content: center;
-    }
-
     .connectionStatus {
         display: none;
     }

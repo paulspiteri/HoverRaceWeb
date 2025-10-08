@@ -44,14 +44,12 @@
 
 .header {
     grid-area: header;
-    padding: var(--mantine-spacing-sm);
     border-bottom: 1px solid var(--mantine-color-gray-3);
 }
 
 /* Desktop header styling */
 @media (min-width: 768px) and (pointer: fine) {
     .header {
-        padding: var(--mantine-spacing-xl);
         border-bottom: none;
     }
 }
@@ -67,7 +65,7 @@
 /* Desktop content styling */
 @media (min-width: 768px) and (pointer: fine) {
     .content {
-        padding: 0 var(--mantine-spacing-xl) var(--mantine-spacing-xl);
+        padding: 0 var(--mantine-spacing-xl);
         display: flex;
         flex-direction: column;
         align-items: center;

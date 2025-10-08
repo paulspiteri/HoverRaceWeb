@@ -10,7 +10,6 @@
 /* Desktop: add border and margins back */
 @media (min-width: 768px) and (pointer: fine) {
     .card {
-        margin-top: var(--mantine-spacing-xl);
         margin-bottom: var(--mantine-spacing-xl);
         border: 1px solid var(--mantine-color-gray-3);
         border-radius: var(--mantine-radius-md);

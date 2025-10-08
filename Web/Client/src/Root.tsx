@@ -83,7 +83,7 @@ export function Root() {
         >
             {/* Header */}
             <Box className={styles.header}>
-                <Header />
+                {!gameMatch &&<Header />}
             </Box>
 
             {/* Main Content Area */}

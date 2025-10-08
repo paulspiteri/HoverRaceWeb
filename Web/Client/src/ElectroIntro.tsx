@@ -1,15 +1,15 @@
-import {useEffect, useRef} from "react";
-import {Box} from "@mantine/core";
+import { useEffect, useRef } from "react";
+import { Box } from "@mantine/core";
 import * as THREE from "three";
-import {useElectroCarModel} from "./useElectroCarModel";
+import { useElectroCarModel } from "./useElectroCarModel";
 
-interface ElectroCarProps {
+interface DrivingCarProps {
     width?: number;
     height?: number;
     className?: string;
 }
 
-export function ElectroCar({ width = 90, height = 50, className }: ElectroCarProps) {
+export function ElectroIntro({ width = 400, height = 75, className }: DrivingCarProps) {
     const mountRef = useRef<HTMLDivElement>(null);
     const animationIdRef = useRef<number>(undefined);
     const model = useElectroCarModel();
@@ -21,7 +21,7 @@ export function ElectroCar({ width = 90, height = 50, className }: ElectroCarPro
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 1000);
-        camera.position.set(0, 2, 4);
+        camera.position.set(0, 0, 0);
         camera.lookAt(0, 0, 0);
 
         const renderer = new THREE.WebGLRenderer({
@@ -38,13 +38,39 @@ export function ElectroCar({ width = 90, height = 50, className }: ElectroCarPro
 
         mountRef.current.appendChild(renderer.domElement);
 
-        model.scale.setScalar(1.0);
-        model.position.set(0, -0.3, 0);
-        model.rotation.set(-0.1, Math.PI * 0.75, 0);
+        model.scale.setScalar(0.8);
+        model.position.set(0, 0, 0);
+        model.rotation.set(0, 0, 0);
         scene.add(model);
 
+        // Swooping camera animation (from GLObserver.cpp)
+        const startTime = Date.now();
+        const countdownStart = -11000; // Start at -11 seconds
+        let lOrientation = 0;
+
         const animate = () => {
-            model.rotation.y += 0.015;
+            const elapsed = Date.now() - startTime;
+            const pTime = countdownStart + elapsed; // Count up from -11000 to 0
+
+            let lDist = 3;
+
+            if (pTime < 0) {
+                const lFactor = (-pTime) * 2 / 3;
+                const MR_2PI = Math.PI * 2;
+                const rotateDegrees = lFactor * MR_2PI / 11000;
+                lOrientation = rotateDegrees;
+                lDist += lFactor / 1000;
+            }
+
+            // Calculate camera position (C++ uses X,Y for ground plane, Z for height)
+            // THREE.js uses X,Z for ground plane, Y for height
+            const cameraX = model.position.x - lDist * Math.cos(lOrientation);
+            const cameraZ = model.position.z - lDist * Math.sin(lOrientation);
+            const cameraY = 1.7;
+
+            camera.position.set(cameraX, cameraY, cameraZ);
+            camera.lookAt(model.position);
+
             renderer.render(scene, camera);
             animationIdRef.current = requestAnimationFrame(animate);
         };
@@ -68,5 +94,5 @@ export function ElectroCar({ width = 90, height = 50, className }: ElectroCarPro
         };
     }, [width, height, model]);
 
-    return <Box ref={mountRef} w={width} h={height} className={className}/>;
+    return <Box ref={mountRef} w={width} h={height} className={className} />;
 }
