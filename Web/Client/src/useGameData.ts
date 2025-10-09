@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Game, ServerMessage } from "@/types.ts";
 import { createCommands } from "@/commands.ts";
+import { useKeepalive } from "@/hooks/useKeepalive.ts";
 
 export const useGameData = (baseUrl: string, setActiveGame: (id: string | undefined, token?: string) => void) => {
     const url = `${baseUrl}/games/stream`;
     const [eventSource, setEventSource] = useState<EventSource>();
     const [connectionId, setConnectionId] = useState<string>();
     const [games, setGames] = useState<Game[]>([]);
+
+    useKeepalive(baseUrl, connectionId);
 
     useEffect(() => {
         const es = new EventSource(url);

@@ -36,13 +36,13 @@ if (!process.env.PORT) {
 const app = express();
 const port = Number(process.env.PORT);
 const clientUrl = process.env.CLIENT_URL;
-const heartbeatInterval = Number(process.env.SSE_HEARTBEAT_INTERVAL) || 15000;
+const connectionTimeout = Number(process.env.CONNECTION_TIMEOUT_MS) || 45000;
 
 console.log(`🔧 Server configuration:`);
 console.log(`   PORT: ${port}`);
 console.log(`   CLIENT_URL: ${clientUrl}`);
 console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
-console.log(`   SSE_HEARTBEAT_INTERVAL: ${heartbeatInterval}ms`);
+console.log(`   CONNECTION_TIMEOUT_MS: ${connectionTimeout}ms`);
 
 app.use(
     cors({
@@ -59,25 +59,49 @@ app.get("/health", (req, res) => {
     });
 });
 
-// Store SSE connections with associated creator IDs
-const sseClients = new Map<express.Response, string>();
+// Store SSE connections with associated creator IDs and last heartbeat timestamp
+const sseClients = new Map<express.Response, { connectionId: string; lastHeartbeat: Date }>();
+
+// Client-side heartbeat endpoint
+app.post("/api/keepalive", (req, res) => {
+    const { connectionId } = req.body;
+
+    if (!connectionId) {
+        return res.status(400).json({ error: "Missing connectionId" });
+    }
+
+    let found = false;
+    for (const [, clientData] of sseClients.entries()) {
+        if (clientData.connectionId === connectionId) {
+            clientData.lastHeartbeat = new Date();
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
+        res.status(200).json({ message: "Keepalive received" });
+    } else {
+        res.status(404).json({ error: "Connection not found" });
+    }
+});
 
 function removeConnection(client: express.Response, reason: string) {
-    const connectionId = sseClients.get(client);
-    if (!connectionId) {
+    const clientData = sseClients.get(client);
+    if (!clientData) {
         return; // Already removed
     }
 
-    console.log(`🔌 SSE connection removed (${reason}): ${connectionId}`);
+    console.log(`🔌 SSE connection removed (${reason}): ${clientData.connectionId}`);
     sseClients.delete(client);
 
     // Remove disconnected players from games (including creators)
     const games = gameManager.getAllGames();
     games.forEach((game) => {
-        const player = game.players.find((p) => p?.connectionId === connectionId);
+        const player = game.players.find((p) => p?.connectionId === clientData.connectionId);
         if (player && player.gameToken) {
             console.log(
-                `🚪 Auto-removing player ${player.name || connectionId} from game ${game.id} (${reason})`,
+                `🚪 Auto-removing player ${player.name || clientData.connectionId} from game ${game.id} (${reason})`,
             );
             gameManager.leaveGame(game.id, player.gameToken);
         }
@@ -113,7 +137,7 @@ app.get("/api/games/stream", (req, res) => {
     res.write(`data: ${JSON.stringify(connectionIdMessage)}\n\n`);
     res.write(`data: ${JSON.stringify(gameListMessage)}\n\n`);
 
-    sseClients.set(res, connectionId);
+    sseClients.set(res, { connectionId, lastHeartbeat: new Date() });
 
     req.on("close", () => {
         removeConnection(res, "client closed");
@@ -158,7 +182,7 @@ app.post("/api/games/:id/join", (req, res) => {
         }
 
         // Validate connectionId exists in active SSE connections
-        const isValidConnectionId = Array.from(sseClients.values()).includes(connectionId);
+        const isValidConnectionId = Array.from(sseClients.values()).some((c) => c.connectionId === connectionId);
         if (!isValidConnectionId) {
             console.log("❌ Invalid or inactive connectionId");
             return res.status(400).json({ error: "Invalid or inactive connectionId" });
@@ -533,13 +557,13 @@ function broadcastPublicUpdate(data: ServerMessage, excludeConnectionIds?: strin
     let sentCount = 0;
     const deadConnections: express.Response[] = [];
 
-    sseClients.forEach((connectionId, client) => {
-        if (!excludeConnectionIds || !excludeConnectionIds.includes(connectionId)) {
+    sseClients.forEach((clientData, client) => {
+        if (!excludeConnectionIds || !excludeConnectionIds.includes(clientData.connectionId)) {
             try {
                 client.write(message);
                 sentCount++;
             } catch (error) {
-                console.log(`💔 Broadcast write failed for ${connectionId}, marking for removal`);
+                console.log(`💔 Broadcast write failed for ${clientData.connectionId}, marking for removal`);
                 deadConnections.push(client);
             }
         }
@@ -558,12 +582,12 @@ function broadcastPrivateUpdate(game: ServerGame, data: ServerMessage) {
     const participantConnectionIds = game.players.filter((p) => p !== undefined).map((p) => p!.connectionId);
     const deadConnections: express.Response[] = [];
 
-    sseClients.forEach((connectionId, client) => {
-        if (participantConnectionIds.includes(connectionId)) {
+    sseClients.forEach((clientData, client) => {
+        if (participantConnectionIds.includes(clientData.connectionId)) {
             try {
                 client.write(message);
             } catch (error) {
-                console.log(`💔 Private broadcast write failed for ${connectionId}, marking for removal`);
+                console.log(`💔 Private broadcast write failed for ${clientData.connectionId}, marking for removal`);
                 deadConnections.push(client);
             }
         }
@@ -630,19 +654,25 @@ app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
 });
 
+// Cleanup stale connections that haven't sent a keepalive
 setInterval(() => {
-    const deadConnections: express.Response[] = [];
+    const staleConnections: express.Response[] = [];
 
-    sseClients.forEach((connectionId, client) => {
-        try {
-            client.write(": heartbeat\n\n");
-        } catch (error) {
-            console.log(`💔 Heartbeat failed for ${connectionId}, marking for removal`);
-            deadConnections.push(client);
+    sseClients.forEach((clientData, client) => {
+        const timeSinceLastHeartbeat = Date.now() - clientData.lastHeartbeat.getTime();
+        if (timeSinceLastHeartbeat > connectionTimeout) {
+            console.log(
+                `⏰ Connection ${clientData.connectionId} stale (${timeSinceLastHeartbeat}ms since last heartbeat)`,
+            );
+            staleConnections.push(client);
         }
     });
 
-    deadConnections.forEach((client) => {
-        removeConnection(client, "heartbeat failed");
+    staleConnections.forEach((client) => {
+        removeConnection(client, "connection timeout");
     });
-}, heartbeatInterval);
+
+    if (staleConnections.length > 0) {
+        console.log(`🧹 Cleaned up ${staleConnections.length} stale connection(s)`);
+    }
+}, 3000);
