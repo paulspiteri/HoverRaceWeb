@@ -36,11 +36,13 @@ if (!process.env.PORT) {
 const app = express();
 const port = Number(process.env.PORT);
 const clientUrl = process.env.CLIENT_URL;
+const heartbeatInterval = Number(process.env.SSE_HEARTBEAT_INTERVAL) || 15000;
 
 console.log(`🔧 Server configuration:`);
 console.log(`   PORT: ${port}`);
 console.log(`   CLIENT_URL: ${clientUrl}`);
 console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`   SSE_HEARTBEAT_INTERVAL: ${heartbeatInterval}ms`);
 
 app.use(
     cors({
@@ -59,6 +61,28 @@ app.get("/health", (req, res) => {
 
 // Store SSE connections with associated creator IDs
 const sseClients = new Map<express.Response, string>();
+
+function removeConnection(client: express.Response, reason: string) {
+    const connectionId = sseClients.get(client);
+    if (!connectionId) {
+        return; // Already removed
+    }
+
+    console.log(`🔌 SSE connection removed (${reason}): ${connectionId}`);
+    sseClients.delete(client);
+
+    // Remove disconnected players from games (including creators)
+    const games = gameManager.getAllGames();
+    games.forEach((game) => {
+        const player = game.players.find((p) => p?.connectionId === connectionId);
+        if (player && player.gameToken) {
+            console.log(
+                `🚪 Auto-removing player ${player.name || connectionId} from game ${game.id} (${reason})`,
+            );
+            gameManager.leaveGame(game.id, player.gameToken);
+        }
+    });
+}
 
 // SSE endpoint for real-time game list updates
 app.get("/api/games/stream", (req, res) => {
@@ -92,23 +116,7 @@ app.get("/api/games/stream", (req, res) => {
     sseClients.set(res, connectionId);
 
     req.on("close", () => {
-        const disconnectedConnectionId = sseClients.get(res);
-        console.log(`🔌 SSE connection closed: ${disconnectedConnectionId}`);
-        sseClients.delete(res);
-
-        // Remove disconnected players from games (including creators)
-        if (disconnectedConnectionId) {
-            const games = gameManager.getAllGames();
-            games.forEach((game) => {
-                const player = game.players.find((p) => p?.connectionId === disconnectedConnectionId);
-                if (player && player.gameToken) {
-                    console.log(
-                        `🚪 Auto-removing player ${player.name || disconnectedConnectionId} from game ${game.id} (player disconnected)`,
-                    );
-                    gameManager.leaveGame(game.id, player.gameToken);
-                }
-            });
-        }
+        removeConnection(res, "client closed");
     });
 });
 
@@ -300,7 +308,7 @@ app.post("/api/games/:id/signal", (req, res) => {
         } catch (writeError) {
             console.log(`❌ Failed to send signal to ${targetConnectionId}:`, writeError);
             // Remove dead connection
-            sseClients.delete(targetClient);
+            removeConnection(targetClient, "signal write failed");
             res.status(500).json({ error: "Failed to deliver signal" });
         }
     } catch (error) {
@@ -523,16 +531,24 @@ function toJoinedGame(game: ServerGame): JoinedGame {
 function broadcastPublicUpdate(data: ServerMessage, excludeConnectionIds?: string[]) {
     const message = `data: ${JSON.stringify(data)}\n\n`;
     let sentCount = 0;
+    const deadConnections: express.Response[] = [];
+
     sseClients.forEach((connectionId, client) => {
         if (!excludeConnectionIds || !excludeConnectionIds.includes(connectionId)) {
             try {
                 client.write(message);
                 sentCount++;
-            } catch {
-                sseClients.delete(client);
+            } catch (error) {
+                console.log(`💔 Broadcast write failed for ${connectionId}, marking for removal`);
+                deadConnections.push(client);
             }
         }
     });
+
+    deadConnections.forEach((client) => {
+        removeConnection(client, "broadcast write failed");
+    });
+
     console.log(`📤 Public broadcast sent to ${sentCount} non-participant clients`);
 }
 
@@ -540,15 +556,21 @@ function broadcastPublicUpdate(data: ServerMessage, excludeConnectionIds?: strin
 function broadcastPrivateUpdate(game: ServerGame, data: ServerMessage) {
     const message = `data: ${JSON.stringify(data)}\n\n`;
     const participantConnectionIds = game.players.filter((p) => p !== undefined).map((p) => p!.connectionId);
+    const deadConnections: express.Response[] = [];
 
     sseClients.forEach((connectionId, client) => {
         if (participantConnectionIds.includes(connectionId)) {
             try {
                 client.write(message);
-            } catch {
-                sseClients.delete(client);
+            } catch (error) {
+                console.log(`💔 Private broadcast write failed for ${connectionId}, marking for removal`);
+                deadConnections.push(client);
             }
         }
+    });
+
+    deadConnections.forEach((client) => {
+        removeConnection(client, "private broadcast write failed");
     });
 }
 
@@ -607,3 +629,20 @@ gameManager.on("gameUpdated", (game: ServerGame) => {
 app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
 });
+
+setInterval(() => {
+    const deadConnections: express.Response[] = [];
+
+    sseClients.forEach((connectionId, client) => {
+        try {
+            client.write(": heartbeat\n\n");
+        } catch (error) {
+            console.log(`💔 Heartbeat failed for ${connectionId}, marking for removal`);
+            deadConnections.push(client);
+        }
+    });
+
+    deadConnections.forEach((client) => {
+        removeConnection(client, "heartbeat failed");
+    });
+}, heartbeatInterval);
