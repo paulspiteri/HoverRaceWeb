@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import {useEffect} from "react";
+import type {KeepAliveRequest} from '../../../Server/src/types.ts';
 
 export const useKeepalive = (baseUrl: string, connectionId: string | undefined) => {
     useEffect(() => {
@@ -9,7 +10,7 @@ export const useKeepalive = (baseUrl: string, connectionId: string | undefined) 
                 await fetch(`${baseUrl}/keepalive`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ connectionId }),
+                    body: JSON.stringify({ connectionId } as KeepAliveRequest),
                 });
             } catch (error) {
                 console.error("Keepalive failed:", error);

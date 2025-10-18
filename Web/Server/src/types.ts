@@ -57,7 +57,10 @@ export type StartGameRequest = {};
 
 export type SendChatMessageRequest = {
     message: string;
-    // gameToken is now passed via Authorization: Bearer header
+};
+
+export type KeepAliveRequest = {
+    connectionId: string;
 };
 
 export type ChatMessage = {

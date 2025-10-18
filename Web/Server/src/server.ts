@@ -18,7 +18,7 @@ import type {
     GameDeletedMessage,
     SignalMessage,
     ChatMessageServerMessage,
-    ServerMessage,
+    ServerMessage, SignalRequest, UpdatePlayerRequest, SendChatMessageRequest, KeepAliveRequest,
 } from "./types";
 
 dotenv.config({ path: ".env" });
@@ -64,7 +64,7 @@ const sseClients = new Map<express.Response, { connectionId: string; lastHeartbe
 
 // Client-side heartbeat endpoint
 app.post("/api/keepalive", (req, res) => {
-    const { connectionId } = req.body;
+    const { connectionId }: KeepAliveRequest = req.body;
 
     if (!connectionId) {
         return res.status(400).json({ error: "Missing connectionId" });
@@ -272,7 +272,7 @@ app.post("/api/games/:id/signal", (req, res) => {
     try {
         const { id } = req.params;
         const gameToken = req.headers.authorization?.replace("Bearer ", "");
-        const { targetConnectionId, signalData } = req.body;
+        const { targetConnectionId, signalData }: SignalRequest = req.body;
         console.log(`🎯 Sending signal in game ${id} to ${targetConnectionId}`);
 
         if (!targetConnectionId || !gameToken || !signalData) {
@@ -306,8 +306,8 @@ app.post("/api/games/:id/signal", (req, res) => {
 
         // Find target's SSE connection
         let targetClient: express.Response | undefined;
-        for (const [client, connectionId] of sseClients.entries()) {
-            if (connectionId === targetConnectionId) {
+        for (const [client, clientData] of sseClients.entries()) {
+            if (clientData.connectionId === targetConnectionId) {
                 targetClient = client;
                 break;
             }
@@ -347,7 +347,7 @@ app.put("/api/games/:id/player", (req, res) => {
     try {
         const { id } = req.params;
         const gameToken = req.headers.authorization?.replace("Bearer ", "");
-        const { name } = req.body;
+        const { name }: UpdatePlayerRequest = req.body;
         console.log(`🎯 Updating player in game ${id} with name: ${name}`);
 
         if (!gameToken || !name) {
@@ -471,7 +471,7 @@ app.post("/api/games/:id/chat", (req, res) => {
     try {
         const { id } = req.params;
         const gameToken = req.headers.authorization?.replace("Bearer ", "");
-        const { message } = req.body;
+        const { message }: SendChatMessageRequest = req.body;
         console.log(`🎯 Sending chat message to game ${id}`);
 
         if (!message || !gameToken) {
