@@ -23,8 +23,8 @@
 #include "FreeElementMovingHelper.h"
 #include <chrono>
 
-#define MR_SIMULATION_SLICE             25 
-#define MR_MINIMUM_SIMULATION_SLICE      5
+#define MR_SIMULATION_SLICE             15
+//#define MR_MINIMUM_SIMULATION_SLICE      5
 
 MR_GameSession::MR_GameSession( BOOL pAllowRendering )
 {
@@ -126,9 +126,10 @@ MR_SimulationTime MR_GameSession::GetSimulationTime()const
 }
 
 
-void MR_GameSession::Simulate()
+bool MR_GameSession::Simulate()
 {
    ASSERT( mCurrentLevel !=NULL );
+   bool hasSimulated = false;
 
    long long lSimulateCallTime = timeGetTime();
    MR_SimulationTime lTimeToSimulate;
@@ -158,18 +159,21 @@ void MR_GameSession::Simulate()
       SimulateFreeElems( mSimulationTime < 0?0:MR_SIMULATION_SLICE );
       lTimeToSimulate -= MR_SIMULATION_SLICE;
       mSimulationTime += MR_SIMULATION_SLICE;
+      hasSimulated = true;
    }
 
-   if( lTimeToSimulate >= MR_MINIMUM_SIMULATION_SLICE )
-   {
-      SimulateFreeElems( mSimulationTime < 0?0:lTimeToSimulate );
-      mSimulationTime += lTimeToSimulate;
-      lTimeToSimulate = 0;
-   }
+   // COMMENTED OUT TO MATCH AUSTIN'S RESEARCH https://discord.com/channels/890153069705322546/1401502758993006713
+   // if( lTimeToSimulate >= MR_MINIMUM_SIMULATION_SLICE )
+   // {
+   //    SimulateFreeElems( mSimulationTime < 0?0:lTimeToSimulate );
+   //    mSimulationTime += lTimeToSimulate;
+   //    lTimeToSimulate = 0;
+   // }
 
    SimulateSurfaceElems( lSimulateCallTime-lTimeToSimulate-mLastSimulateCallTime );
 
    mLastSimulateCallTime = lSimulateCallTime - lTimeToSimulate;
+   return hasSimulated;
 }
 
 void MR_GameSession::SimulateLateElement( MR_FreeElementHandle pElement, MR_SimulationTime pDuration, int pRoom )
@@ -200,11 +204,12 @@ void MR_GameSession::SimulateLateElement( MR_FreeElementHandle pElement, MR_Simu
       mSimulationTime += MR_SIMULATION_SLICE;
    }
 
-   if( (pRoom>=0)&&(lTimeToSimulate >= MR_MINIMUM_SIMULATION_SLICE) )
-   {
-      pRoom = SimulateOneFreeElem( lTimeToSimulate, pElement, pRoom );
-      SimulateFreeElems( mSimulationTime < 0?0:lTimeToSimulate );
-   }
+   // COMMENTED OUT TO MATCH AUSTIN'S RESEARCH https://discord.com/channels/890153069705322546/1401502758993006713
+   // if( (pRoom>=0)&&(lTimeToSimulate >= MR_MINIMUM_SIMULATION_SLICE) )
+   // {
+   //    pRoom = SimulateOneFreeElem( lTimeToSimulate, pElement, pRoom );
+   //    SimulateFreeElems( mSimulationTime < 0?0:lTimeToSimulate );
+   // }
 
    // return to good time
    mSimulationTime = lOriginalTime;
