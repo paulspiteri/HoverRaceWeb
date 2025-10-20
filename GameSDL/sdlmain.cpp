@@ -135,7 +135,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
                                 SDL_PIXELFORMAT_ARGB8888,
                                 SDL_TEXTUREACCESS_STREAMING,
                                 gWindowWidth, gWindowHeight);
-    SDL_HideWindow(sdlWindow);
+ //   SDL_HideWindow(sdlWindow);
 #endif
     #ifdef __EMSCRIPTEN__
     auto windowTitle = "HoverRace Web";
