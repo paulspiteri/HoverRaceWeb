@@ -126,9 +126,10 @@ MR_SimulationTime MR_GameSession::GetSimulationTime()const
 }
 
 
-void MR_GameSession::Simulate()
+bool MR_GameSession::Simulate()
 {
    ASSERT( mCurrentLevel !=NULL );
+   bool hasSimulated = false;
 
    long long lSimulateCallTime = timeGetTime();
    MR_SimulationTime lTimeToSimulate;
@@ -158,6 +159,7 @@ void MR_GameSession::Simulate()
       SimulateFreeElems( mSimulationTime < 0?0:MR_SIMULATION_SLICE );
       lTimeToSimulate -= MR_SIMULATION_SLICE;
       mSimulationTime += MR_SIMULATION_SLICE;
+      hasSimulated = true;
    }
 
    // COMMENTED OUT TO MATCH AUSTIN'S RESEARCH https://discord.com/channels/890153069705322546/1401502758993006713
@@ -171,6 +173,7 @@ void MR_GameSession::Simulate()
    SimulateSurfaceElems( lSimulateCallTime-lTimeToSimulate-mLastSimulateCallTime );
 
    mLastSimulateCallTime = lSimulateCallTime - lTimeToSimulate;
+   return hasSimulated;
 }
 
 void MR_GameSession::SimulateLateElement( MR_FreeElementHandle pElement, MR_SimulationTime pDuration, int pRoom )

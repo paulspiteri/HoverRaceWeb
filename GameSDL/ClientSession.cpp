@@ -42,9 +42,9 @@ MR_ClientSession::~MR_ClientSession()
    delete mMap;
 }
 
-void MR_ClientSession::Process( int pSpeedFactor )
+bool MR_ClientSession::Process( int pSpeedFactor )
 {
-   mSession.Simulate();
+   return mSession.Simulate();
 }
 
 void MR_ClientSession::ReadLevelAttrib( MR_RecordFile* pRecordFile, MR_VideoBuffer* pVideo )

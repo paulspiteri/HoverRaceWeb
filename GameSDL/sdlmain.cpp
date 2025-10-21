@@ -277,10 +277,12 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 SDL_AppResult SDL_AppIterate(void *appstate) {
     // necessary to re-set the control state on each frame because the existing code polled in the game loop
     game->SetControlState(lControlState);
-    game->Simulate();
-    game->RefreshView(texture);
-    SDL_RenderTexture(renderer, texture, nullptr, nullptr);
-    SDL_RenderPresent(renderer);
+    if (game->Simulate())
+    {
+        game->RefreshView(texture);
+        SDL_RenderTexture(renderer, texture, nullptr, nullptr);
+        SDL_RenderPresent(renderer);
+    }
 
     return SDL_APP_CONTINUE;
 }
