@@ -87,13 +87,16 @@ BOOL MR_SDLGameApp::InitGame()
    return lReturnValue;
 }
 
-bool MR_SDLGameApp::Simulate()
+void MR_SDLGameApp::Simulate()
 {
    if (mCurrentSession != nullptr) 
    {
-      return mCurrentSession->Process();
+      mCurrentSession->Process();
    }
-   throw std::runtime_error("Cannot simulate when no current session");
+   else
+   {
+      throw std::runtime_error("Cannot simulate when no current session");
+   }
 }
 
 void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
