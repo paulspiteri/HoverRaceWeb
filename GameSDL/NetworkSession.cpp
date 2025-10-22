@@ -229,12 +229,13 @@ int MR_NetworkSession::GetRank( const MR_MainCharacter* /*pPlayer*/ )const
 }
 
 
-void MR_NetworkSession::Process( int pSpeedFactor )
+bool MR_NetworkSession::Process( int pSpeedFactor )
 {
    ReadNet();
-   MR_ClientSession::Process( pSpeedFactor );
+   bool didSimulate = MR_ClientSession::Process( pSpeedFactor );
    WriteNet();
    ReadNet();
+   return didSimulate;
 }
 
 BOOL MR_NetworkSession::LoadNew( const char* pTitle, MR_RecordFile* pMazeFile, int pNbLap, BOOL pAllowWeapons, MR_VideoBuffer* pVideo )
