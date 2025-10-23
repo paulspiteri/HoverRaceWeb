@@ -215,7 +215,8 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, const
          mGLLevelLoader->LoadLevel(level, lCurrentSession->GetBackImage());
          auto levelSize = mGLLevelLoader->GetLevelSize(level);
          mObserver1->SetMapSize(levelSize);
-         lCurrentSession->SetSimulationTime( -13000 );
+         bool hasConnectedPeers = std::any_of(peers.begin(), peers.end(), [](const auto& peer) { return peer.isConnected; });
+         lCurrentSession->SetSimulationTime(hasConnectedPeers ? -13000 : -4000);
       }
 
       // Create the main character
