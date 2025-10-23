@@ -23,8 +23,6 @@
 #ifndef OBSERVER_H
 #define OBSERVER_H
 
-#include <optional>
-
 #include "../VideoServices/3DViewport.h"
 #include "ClientSession.h"
 #include "../MainCharacter/MainCharacter.h"
@@ -56,7 +54,6 @@ class MR_Observer
    private:
       glm::ivec4 mMapSize;
       MR_3DCoordinate mLastCameraPos;
-      std::optional<MR_3DCoordinate> mLastGlCameraPos;
       BOOL            mLastCameraPosValid;
       BOOL            mCockpitView;
 

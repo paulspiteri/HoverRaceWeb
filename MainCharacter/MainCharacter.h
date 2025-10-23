@@ -242,7 +242,8 @@ class MR_MainCharacter:public MR_FreeElement
       // Sounds
       void  PlayInternalSounds();
       void  PlayExternalSounds( int pDB, int pPan );
-
+      MR_3DCoordinate     mLastPosition;
+      MR_Angle            mLastOrientation;
 };
 
 

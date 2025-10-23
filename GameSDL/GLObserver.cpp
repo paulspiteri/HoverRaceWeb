@@ -8,6 +8,7 @@
 void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime)
 {
     MR_Angle lOrientation = pViewingCharacter->mOrientation;
+    MR_Angle lLastOrientation = pViewingCharacter->mLastOrientation;
 
     int lDist = 3400;
     if (pTime < -3000)
@@ -15,6 +16,7 @@ void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_Sim
         int lFactor = (-pTime - 3000) * 2 / 3;
         int rotateMRDegrees = lFactor * MR_2PI / 11000; // some fraction of a game circle
         lOrientation = static_cast<MR_Int16>((lOrientation + rotateMRDegrees) % MR_2PI);
+        lLastOrientation = static_cast<MR_Int16>((lLastOrientation + rotateMRDegrees) % MR_2PI);
 
         lDist += lFactor;
     }
@@ -24,15 +26,19 @@ void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_Sim
     lCameraPos.mX = pViewingCharacter->mPosition.mX - lDist * cos(orientationRadians);
     lCameraPos.mY = pViewingCharacter->mPosition.mY - lDist * sin(orientationRadians);
     lCameraPos.mZ = pViewingCharacter->mPosition.mZ + 1700;
-    if (mLastGlCameraPos.has_value())
-    {
-        constexpr float XY_SMOOTHING = 0.75f;
-        constexpr float Z_SMOOTHING = 0.667f;
-        lCameraPos.mX = std::lerp(mLastGlCameraPos.value().mX, lCameraPos.mX, XY_SMOOTHING);
-        lCameraPos.mY = std::lerp(mLastGlCameraPos.value().mY, lCameraPos.mY, XY_SMOOTHING);
-        lCameraPos.mZ = std::lerp(mLastGlCameraPos.value().mZ, lCameraPos.mZ, Z_SMOOTHING);
-    }
-    mLastGlCameraPos = lCameraPos;
+
+    auto lastOrientationRadians = MR_ANGLE_TO_RADIANS(lLastOrientation);
+    MR_3DCoordinate lLastCameraPos;
+    lLastCameraPos.mX = pViewingCharacter->mLastPosition.mX - lDist * cos(lastOrientationRadians);
+    lLastCameraPos.mY = pViewingCharacter->mLastPosition.mY - lDist * sin(lastOrientationRadians);
+    lLastCameraPos.mZ = pViewingCharacter->mLastPosition.mZ + 1700;
+
+    constexpr float XY_SMOOTHING = 0.75f;
+    constexpr float Z_SMOOTHING = 0.667f;
+    lCameraPos.mX = std::lerp(lLastCameraPos.mX, lCameraPos.mX, XY_SMOOTHING);
+    lCameraPos.mY = std::lerp(lLastCameraPos.mY, lCameraPos.mY, XY_SMOOTHING);
+    lCameraPos.mZ = std::lerp(lLastCameraPos.mZ, lCameraPos.mZ, Z_SMOOTHING);
+
     mGLView.SetCameraPosition(lCameraPos, lOrientation);
     mGLView.SetSimulationTime(pTime);
 }

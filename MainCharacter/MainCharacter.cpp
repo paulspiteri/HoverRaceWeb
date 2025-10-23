@@ -553,6 +553,9 @@ int MR_MainCharacter::Simulate( MR_SimulationTime pDuration, MR_Level* pLevel, i
    if( mMasterMode )
    {
       MR_SimulationTime lDuration = pDuration;
+      // added by Austin to be able to smooth camera in an accurate way
+      mLastPosition = mPosition;
+      mLastOrientation = mOrientation;
 
       while( lDuration > 0 )
       {
@@ -1160,7 +1163,7 @@ MR_Int32 MR_MainCharacter::Cylinder::RayLen()const
 
 MR_Angle MR_MainCharacter::GetCabinOrientation()const
 {
-   return mCabinOrientation;
+   return mOrientation;
 }
 
 
