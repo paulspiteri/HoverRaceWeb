@@ -7,6 +7,7 @@
 #include <SDL3/SDL.h>
 #include <filesystem>
 
+#include "GLObserver.h"
 #include "NetworkSession.h"
 
 // global registration variables
@@ -38,10 +39,10 @@ MR_SDLGameApp::~MR_SDLGameApp()
 void MR_SDLGameApp::Clean()
 {
    delete mCurrentSession;
-   mCurrentSession = NULL;
+   mCurrentSession = nullptr;
    
-   mObserver1->Delete();
-   mObserver1 = NULL;
+   delete mObserver1;
+   mObserver1 = nullptr;
 
    delete mGLRenderer;
    mGLRenderer = nullptr;
@@ -83,7 +84,7 @@ void MR_SDLGameApp::RefreshView()
    {
       if( mObserver1 != NULL )
       {
-         mObserver1->RenderNormalDisplay( mGLRenderer, mCurrentSession->GetMainCharacter(), mCurrentSession->GetSimulationTime() );
+         mObserver1->RenderGLDisplay( mGLRenderer, mCurrentSession->GetMainCharacter(), mCurrentSession->GetSimulationTime() );
       }
    }
 
@@ -155,7 +156,7 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, const
       {
          mGLRenderer = new GLRenderer(mGLWindow, mGLContext, palette);
          mGLLevelLoader = new GLLevelLoader(mGLRenderer);
-         mObserver1 = MR_Observer::New();
+         mObserver1 = new GLObserver();
 
          auto level = lCurrentSession->GetCurrentLevel();
          mGLLevelLoader->LoadLevel(level, palette->GetBackImage());

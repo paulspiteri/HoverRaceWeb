@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Observer.h"
 #include <SDL3/SDL.h>
 
 #include "GLLevelLoader.h"
+#include "GLObserver.h"
 #include "NetworkSession.h"
 #include "WebPeerInterface.h"
 #include "../VideoServices/GL/GLRenderer.h"
@@ -17,8 +17,8 @@ class MR_SDLGameApp
       SDL_GLContext            mGLContext;
       GLRenderer*              mGLRenderer;
       GLLevelLoader*           mGLLevelLoader;
-      MR_Observer*             mObserver1;
-      MR_NetworkSession*        mCurrentSession;
+      GLObserver*              mObserver1;
+      MR_NetworkSession*       mCurrentSession;
 
       int                      mClrScrTodo;
 

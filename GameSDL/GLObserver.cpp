@@ -1,11 +1,46 @@
-#include "Observer.h"
+#include "GLObserver.h"
 #include "../Util/StrRes.h"
+
 #include "imgui.h"
 #define SOKOL_IMGUI_NO_SOKOL_APP
-
 #include "util/sokol_imgui.h"
 
-void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime)
+const char* gFirstLapStr = MR_LoadString( IDS_FLAP_STR );
+const char* gChartFinish     = MR_LoadString( IDS_CHART_FINISH );
+const char* gChart           = MR_LoadString( IDS_CHART );
+const char* gHitChart        = MR_LoadString( IDS_HIT_CHART );
+const char* gCountdownStr    = MR_LoadString( IDS_COUNTDOWN );
+const char* gFinishStr       = MR_LoadString( IDS_FINISH );
+const char* gFinishStrSingle = MR_LoadString( IDS_FINISH_SINGLE );
+const char* gBestLapStr      = MR_LoadString( IDS_BEST_LAP );
+const char* gHeaderStr       = MR_LoadString( IDS_HEADER );
+const char* gLastLapStr      = MR_LoadString( IDS_LAST_LAP );
+const char* gCurLapStr       = MR_LoadString( IDS_CUR_LAP );
+
+GLObserver::GLObserver()
+{
+    MR_ObjectFromFactoryId lMissileLevelId = { 1, 1100 };
+    mMissileLevel = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lMissileLevelId );
+
+    MR_ObjectFromFactoryId lMineDispId = { 1, 1102 };
+    mMineDisp = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lMineDispId );
+
+    MR_ObjectFromFactoryId lPowerUpDispId = { 1, 1103 };
+    mPowerUpDisp = (MR_SpriteHandle*)MR_DllObjectFactory::CreateObject( lPowerUpDispId );
+}
+
+void GLObserver::RenderGLDisplay( GLRenderer* glRenderer, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime )
+{
+    mGLView.Setup(glRenderer, glRenderer->state.swapchain.width, glRenderer->state.swapchain.height);
+    mGLView.SetMapSize(mMapSize);
+
+    if( pViewingCharacter->mRoom != -1 )
+    {
+        RenderGLView(pViewingCharacter, pTime);
+    }
+}
+
+void GLObserver::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime)
 {
     MR_Angle lOrientation = pViewingCharacter->mOrientation;
     MR_Angle lLastOrientation = pViewingCharacter->mLastOrientation;
@@ -43,14 +78,14 @@ void MR_Observer::RenderGLView(const MR_MainCharacter* pViewingCharacter, MR_Sim
     mGLView.SetSimulationTime(pTime);
 }
 
-void MR_Observer::RenderGLHUD(const GLRenderer* glRenderer, const MR_ClientSession* currentSession)
+void GLObserver::RenderGLHUD(const GLRenderer* glRenderer, const MR_ClientSession* currentSession)
 {
     RenderGLHUDBars(currentSession->GetMainCharacter());
     RenderGLHUDWeapon(glRenderer, currentSession->GetMainCharacter(), currentSession->GetSimulationTime());
     RenderGLHUDLapTimes(currentSession);
 }
 
-void MR_Observer::RenderGLHUDBars(const MR_MainCharacter* pViewingCharacter)
+void GLObserver::RenderGLHUDBars(const MR_MainCharacter* pViewingCharacter)
 {
     ImDrawList* draw_list = ImGui::GetForegroundDrawList();
     ImGuiIO& io = ImGui::GetIO();
@@ -90,7 +125,7 @@ void MR_Observer::RenderGLHUDBars(const MR_MainCharacter* pViewingCharacter)
                              IM_COL32(84, 115, 207, 0xFF));
 }
 
-void MR_Observer::RenderGLHUDWeapon(const GLRenderer* glRenderer, const MR_MainCharacter* pViewingCharacter,
+void GLObserver::RenderGLHUDWeapon(const GLRenderer* glRenderer, const MR_MainCharacter* pViewingCharacter,
                                     MR_SimulationTime pTime)
 {
     ImDrawList* draw_list = ImGui::GetForegroundDrawList();
@@ -179,7 +214,7 @@ void DrawTextWithEffect(ImVec2 pos, const char* text) {
     draw_list->AddText(pos, IM_COL32(221, 22, 83, 255), text);
 }
 
-void MR_Observer::RenderGLHUDLapTimes(const MR_ClientSession* pSession)
+void GLObserver::RenderGLHUDLapTimes(const MR_ClientSession* pSession)
 {
     auto pViewingCharacter = pSession->GetMainCharacter();
     auto pTime = pSession->GetSimulationTime();
@@ -263,4 +298,51 @@ void MR_Observer::RenderGLHUDLapTimes(const MR_ClientSession* pSession)
         lapTextPos.y -= lapTextSize.y;
         DrawTextWithEffect(lapTextPos, lLapLineBuffer);
     }
+}
+
+void GLObserver::PlaySounds( const MR_Level* pLevel, MR_MainCharacter* pViewingCharacter )
+{
+    // Play the sound of all moving elemnts arround
+
+    int lCurrentRoom   = pViewingCharacter->mRoom;
+    int lNeighborCount = pLevel->GetRoomVertexCount( lCurrentRoom );
+
+    for( int lCounter = -1; lCounter < lNeighborCount; lCounter++ )
+    {
+        int      lRoomId;
+
+        if( lCounter == -1 )
+        {
+            lRoomId = lCurrentRoom;
+        }
+        else
+        {
+            lRoomId = pLevel->GetNeighbor( lCurrentRoom, lCounter );
+        }
+
+        if( lRoomId != -1 )
+        {
+            MR_FreeElementHandle lHandle = pLevel->GetFirstFreeElement( lRoomId );
+
+            while( lHandle != NULL )
+            {
+                MR_FreeElement* lElement = MR_Level::GetFreeElement( lHandle );
+
+                if( lElement != pViewingCharacter )
+                {
+                    double lXDist = pViewingCharacter->mPosition.mX-lElement->mPosition.mX;
+                    double lYDist = pViewingCharacter->mPosition.mY-lElement->mPosition.mY;
+
+                    int lDB = -std::sqrt( lXDist*lXDist+lYDist*lYDist )/15.0;
+
+
+                    lElement->PlayExternalSounds( lDB, 0 );
+                }
+
+                lHandle = MR_Level::GetNextFreeElement( lHandle );
+            }
+        }
+    }
+
+    pViewingCharacter->PlayInternalSounds();
 }
