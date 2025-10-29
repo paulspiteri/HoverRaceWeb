@@ -18,8 +18,8 @@
 #include "util/sokol_imgui.h"
 #include "sokol_gfx.h"
 
-GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer)
-    : glWindow(glWindow), glContext(glContext), videoBuffer(videoBuffer)
+GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, VideoPalette* pVideoPalette)
+    : glWindow(glWindow), glContext(glContext), videoPalette(pVideoPalette)
 {
     int width, height;
     SDL_GetWindowSize(glWindow, &width, &height);
@@ -974,7 +974,7 @@ void GLRenderer::MakeGLContextCurrent() const
 
 uint32_t* GLRenderer::ConvertSpriteToRGBA8(const MR_Sprite* sprite)
 {
-    auto palette = videoBuffer->GetPalette();
+    auto palette = videoPalette->GetPalette();
     int width = sprite->GetItemWidth();
     int height = sprite->GetItemHeight() * sprite->GetNbItem();
     MR_UInt8* lSrc = sprite->GetData();
@@ -995,7 +995,7 @@ uint32_t* GLRenderer::ConvertSpriteToRGBA8(const MR_Sprite* sprite)
 
 uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, uint8_t alpha, int mipmapLevel)
 {
-    auto palette = videoBuffer->GetPalette();
+    auto palette = videoPalette->GetPalette();
     int width = bitmap->GetXRes(mipmapLevel);
     int height = bitmap->GetYRes(mipmapLevel);
     bool isSquare = (width == height);
@@ -1032,7 +1032,7 @@ uint32_t* GLRenderer::ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, uint8_t 
 
 uint32_t* GLRenderer::ConvertBackgroundToRGBA8(const MR_UInt8* backImage)
 {
-    auto palette = videoBuffer->GetPalette();
+    auto palette = videoPalette->GetPalette();
     int srcWidth = MR_BACK_Y_RES; // image is rotated 90 degrees
     int srcHeight = MR_BACK_X_RES;
     int destWidth = srcHeight;

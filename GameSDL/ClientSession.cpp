@@ -30,16 +30,12 @@ MR_ClientSession::MR_ClientSession()
 {
    mMainCharacter1      = NULL;
    mMainCharacter2      = NULL;
-   mBackImage           = NULL;
-   mMap                 = NULL;
    mNbLap               = 1;
    mAllowWeapons        = TRUE;
 }
 
 MR_ClientSession::~MR_ClientSession()
 {
-   delete []mBackImage;
-   delete mMap;
 }
 
 bool MR_ClientSession::Process( int pSpeedFactor )
@@ -47,96 +43,15 @@ bool MR_ClientSession::Process( int pSpeedFactor )
    return mSession.Simulate();
 }
 
-void MR_ClientSession::ReadLevelAttrib( MR_RecordFile* pRecordFile, MR_VideoBuffer* pVideo )
-{
-   // Read level background palette
-   if( (pVideo != NULL)&&(pRecordFile->GetNbRecords()>=3 ) )
-   {
-      pRecordFile->SelectRecord( 2 );
-
-      {
-         NoMFC::CArchive lArchive( pRecordFile->File(), NoMFC::CArchive::load );
-
-         int lImageType;
-
-         lArchive >> lImageType;
-
-         if( lImageType == MR_RAWBITMAP )
-         {
-            MR_UInt8* lPalette = new MR_UInt8[ MR_BACK_COLORS*3 ];
-         
-            if( mBackImage == NULL )
-            {
-               mBackImage = new MR_UInt8[ MR_BACK_X_RES*MR_BACK_Y_RES ];
-            }
-
-
-            lArchive.Read( lPalette, MR_BACK_COLORS*3 );
-            lArchive.Read( mBackImage, MR_BACK_X_RES*MR_BACK_Y_RES );
-
-            pVideo->SetBackPalette( lPalette );
-         }
-      }
-   }
-
-   // Read map section
-   if( pRecordFile->GetNbRecords()>=4 )
-   {
-      pRecordFile->SelectRecord( 3 );
-      {
-         NoMFC::CArchive lArchive( pRecordFile->File(), NoMFC::CArchive::load );
-
-         int          lX0;
-         int          lX1;
-         int          lY0;
-         int          lY1;
-
-         MR_Sprite* lMapSprite = new MR_Sprite;
-
-         lArchive >> lX0;
-         lArchive >> lX1;
-         lArchive >> lY0;
-         lArchive >> lY1;
-
-         lMapSprite->Serialize( lArchive );
-
-         SetMap( lMapSprite, lX0, lY0, lX1, lY1 );
-      }
-   }
-
-
-   // Read level midi stream
-   if( pRecordFile->GetNbRecords()>=5 )
-   {
-      pRecordFile->SelectRecord( 4 );
-      {
-         // TODO
-      }
-   }
-}
-
-
-
-BOOL MR_ClientSession::LoadNew( const char* pTitle, MR_RecordFile* pMazeFile, int pNbLap, BOOL pAllowWeapons, MR_VideoBuffer* pVideo )
+BOOL MR_ClientSession::LoadNew( const char* pTitle, MR_RecordFile* pMazeFile, int pNbLap, BOOL pAllowWeapons)
 {
    BOOL lReturnValue;
    mNbLap        = pNbLap;
    mAllowWeapons = pAllowWeapons; 
    lReturnValue  = mSession.LoadNew( pTitle, pMazeFile );
 
-   if( lReturnValue )
-   {
-      ReadLevelAttrib( pMazeFile, pVideo );
-   }
-
    return lReturnValue;
 }
-
-const MR_UInt8* MR_ClientSession::GetBackImage()const
-{
-   return mBackImage;
-}
-
 
 // Main character controll and interogation
 BOOL MR_ClientSession::CreateMainCharacter()
@@ -248,13 +163,21 @@ void MR_ClientSession::SetCurrentWeapon( MR_MainCharacter::eWeapon pWeapon )
    }
 }
 
+const MR_Sprite* MR_ClientSession::GetMap() const
+{
+   return nullptr;
+}
+
+void MR_ClientSession::ConvertMapCoordinate(int& pX, int& pY, int pRatio) const
+{
+}
+
 const MR_Level* MR_ClientSession::GetCurrentLevel()const
 {
    MR_GameSession* lSession = (MR_GameSession*)&mSession;
 
    return lSession->GetCurrentLevel();
 }
-
 
 int MR_ClientSession::ResultAvaillable()const
 {
@@ -318,33 +241,6 @@ int MR_ClientSession::GetRank( const MR_MainCharacter* pPlayer )const
       }
    }
    return lReturnValue;
-}
-
-void MR_ClientSession::SetMap( MR_Sprite* pMap, int pX0, int pY0, int pX1, int pY1 )
-{
-   delete mMap;
-
-   mMap = pMap;
-
-   mX0Map = pX0;
-   mY0Map = pY0;
-   mWidthMap = pX1-pX0;
-   mHeightMap = pY1-pY0;
-
-   mWidthSprite   = mMap->GetItemWidth();
-   mHeightSprite  = mMap->GetItemHeight();
-
-}
-
-const MR_Sprite* MR_ClientSession::GetMap()const
-{
-   return mMap;
-}
-
-void MR_ClientSession::ConvertMapCoordinate( int& pX, int& pY, int pRatio )const
-{
-   pX = ( pX-mX0Map )*mWidthSprite/ (mWidthMap*pRatio);
-   pY = (mHeightSprite-1-( pY-mY0Map )*mHeightSprite/mHeightMap)/pRatio;
 }
 
 const MR_MainCharacter* MR_ClientSession::GetPlayer( int pPlayerIndex )const

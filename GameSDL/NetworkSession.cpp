@@ -238,9 +238,9 @@ bool MR_NetworkSession::Process( int pSpeedFactor )
    return didSimulate;
 }
 
-BOOL MR_NetworkSession::LoadNew( const char* pTitle, MR_RecordFile* pMazeFile, int pNbLap, BOOL pAllowWeapons, MR_VideoBuffer* pVideo )
+BOOL MR_NetworkSession::LoadNew( const char* pTitle, MR_RecordFile* pMazeFile, int pNbLap, BOOL pAllowWeapons)
 {
-   BOOL lReturnValue = MR_ClientSession::LoadNew( pTitle, pMazeFile, pNbLap, pAllowWeapons, pVideo );
+   BOOL lReturnValue = MR_ClientSession::LoadNew( pTitle, pMazeFile, pNbLap, pAllowWeapons );
 
    if( lReturnValue )
    {

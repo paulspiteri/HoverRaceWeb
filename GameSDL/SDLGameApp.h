@@ -15,7 +15,6 @@ class MR_SDLGameApp
 
       SDL_Window*              mGLWindow;
       SDL_GLContext            mGLContext;
-      MR_VideoBuffer*          mVideoBuffer;
       GLRenderer*              mGLRenderer;
       GLLevelLoader*           mGLLevelLoader;
       MR_Observer*             mObserver1;
@@ -23,12 +22,7 @@ class MR_SDLGameApp
 
       int                      mClrScrTodo;
 
-      double mGamma;
-      double mContrast;
-      double mBrightness;
       bool mIsHost;
-
-      void DrawBackground();
 
    public:
 
@@ -38,12 +32,10 @@ class MR_SDLGameApp
       void Clean();
       BOOL InitGame();
       void LoadSelectedTrack(const char* trackFile, int playerId, const std::array<PeerStatus, WebPeerInterface::eMaxClient>& peers, bool hasWeapons, int laps);
-      void SetVideoMode(int width, int height);
-      void RefreshView(SDL_Texture* texture);
+      void RefreshView();
       bool Simulate();
       void SetControlState(int pState1);
       void SetCurrentWeapon(MR_MainCharacter::eWeapon pWeapon);
-      void SetResolution(int width, int height);
       void SetOpenGLResolution(int width, int height);
       void DisconnectPlayer(int playerId);
 };

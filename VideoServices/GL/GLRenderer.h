@@ -7,8 +7,7 @@
 #include "../Sprite.h"
 #include "SDL3/SDL.h"
 #include "../../ObjFacTools/ResBitmap.h"
-#include "../VideoBuffer.h"
-
+#include "../../GameSDL/VideoPalette.h"
 struct Vertex
 {
     glm::i32vec3 position;
@@ -139,8 +138,7 @@ class GLRenderer
     std::vector<TextureData<1>> free_element_textures;
     std::vector<TextureData<1>> sprites;
     std::unordered_map<int, std::vector<FreeElementInstance>> freeElementInstances;
-    MR_VideoBuffer* videoBuffer;
-
+    VideoPalette* videoPalette;
     uint32_t* ConvertTextureToRGBA8(const MR_ResBitmap* bitmap, uint8_t alpha = 0xFF, int mipmapLevel = 0);
     uint32_t* ConvertBackgroundToRGBA8(const MR_UInt8* backImage);
     uint32_t* ConvertSpriteToRGBA8(const MR_Sprite* sprite);
@@ -156,7 +154,7 @@ class GLRenderer
 
 
 public:
-    GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, MR_VideoBuffer* videoBuffer);
+    GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, VideoPalette* pVideoPalette);
     ~GLRenderer();
     Sokol_State state{};
     SDL_Window* glWindow;

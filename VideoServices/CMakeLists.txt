@@ -63,6 +63,8 @@ add_library(VideoServices STATIC
     GL/GLViewport.h
     GL/sokol_impl.cpp
     ${SHADER_HEADERS}
+        ../GameSDL/VideoPalette.cpp
+        ../GameSDL/VideoPalette.h
 )
 
 target_compile_definitions(VideoServices PRIVATE

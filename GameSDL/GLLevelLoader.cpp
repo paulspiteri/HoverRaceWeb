@@ -77,8 +77,12 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
                 sequence = isMotorOn ? 1 : 0;
                 if (isMotorOn)
                 {
-                    frame = hoverRenderer->GetFrame(); // note - is dependent on legacy renderer running
+                    mMotorFrame = (mMotorFrame+1)%2;    // animate engine on every other frame. used to be in HoverRender.cpp
+                } else
+                {
+                    mMotorFrame = 0;
                 }
+                frame = mMotorFrame;
                 variant = mainCharacter->GetHoverId();
             }
             else

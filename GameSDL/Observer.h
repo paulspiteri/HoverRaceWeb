@@ -83,12 +83,9 @@ class MR_Observer
       MR_Observer();
       ~MR_Observer();
 
-      void Render2DDebugView(   MR_VideoBuffer* pDest,  const MR_Level* pLevel, const MR_MainCharacter* pViewingCharacter );
-      void RenderWireFrameView( const MR_Level* pLevel, const MR_MainCharacter* pViewingCharacter );
       void Render3DView(        const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
       void RenderGLView(        const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime);
 
-      void DrawWFSection       ( const MR_Level* pLevel, const MR_SectionId& pSectionId, MR_UInt8 pColor );
       void RenderRoomWalls     ( const MR_Level* pLevel, int pRoomId, MR_SimulationTime pTime );
       void RenderFeatureWalls  ( const MR_Level* pLevel, int pFeatureId, MR_SimulationTime pTime );
       void RenderFloorOrCeiling( const MR_Level* pLevel, const MR_SectionId& pSectionId, BOOL pFloor, MR_SimulationTime pTime );
@@ -117,9 +114,7 @@ class MR_Observer
 
       void SetSplitMode( eSplitMode pMode );
       
-      // Rendering function
-      void RenderDebugDisplay( MR_VideoBuffer* pDest, GLRenderer* glRenderer, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
-      void RenderNormalDisplay( MR_VideoBuffer* pDest, GLRenderer* glRenderer, const MR_ClientSession* pSession, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime, const MR_UInt8* pBackImage );
+      void RenderNormalDisplay( GLRenderer* glRenderer, const MR_MainCharacter* pViewingCharacter, MR_SimulationTime pTime );
 
       void PlaySounds( const MR_Level* pLevel, MR_MainCharacter* pViewingCharacter );
 

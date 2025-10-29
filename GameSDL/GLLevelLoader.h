@@ -36,4 +36,5 @@ private:
     VerticesData<VertexWithTextureId> waterVerts;
     VerticesData<WallVertex> wallVerts;
     GLRenderer* glRenderer;
+    int mMotorFrame = 0;
 };

@@ -15,9 +15,6 @@
 #include <emscripten.h>
 #endif
 
-SDL_Window *sdlWindow = nullptr;
-SDL_Renderer *renderer = nullptr;
-SDL_Texture *texture = nullptr;
 SDL_Window *glWindow = nullptr;
 SDL_GLContext glContext = nullptr;
 MR_SDLGameApp *game = nullptr;
@@ -117,26 +114,6 @@ std::optional<std::string> GetTrack() {
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     MR_SoundServer::Init();
 
-#ifndef __EMSCRIPTEN__
-    sdlWindow = SDL_CreateWindow("HoverRace SDL",
-                                 gWindowWidth, gWindowHeight,
-                                 SDL_WINDOW_RESIZABLE);
-    if (!sdlWindow) {
-        SDL_Log("Couldn't create window =: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-    SDL_SetWindowMinimumSize(sdlWindow, gWindowWidth, gWindowHeight);
-    renderer = SDL_CreateRenderer(sdlWindow, NULL);
-    if (!renderer) {
-        SDL_Log("Couldn't create renderer =: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
-    texture = SDL_CreateTexture(renderer,
-                                SDL_PIXELFORMAT_ARGB8888,
-                                SDL_TEXTUREACCESS_STREAMING,
-                                gWindowWidth, gWindowHeight);
- //   SDL_HideWindow(sdlWindow);
-#endif
     #ifdef __EMSCRIPTEN__
     auto windowTitle = "HoverRace Web";
     SDL_SetHint(SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT, "#canvas");
@@ -256,16 +233,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
             }
         }
     } else if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-        if (event->window.windowID == SDL_GetWindowID(sdlWindow)) {
-            std::cout << "SDL Window resized " << event->window.data1 << " x " << event->window.data2 << std::endl;
-            SDL_DestroyTexture(texture);
-            texture = SDL_CreateTexture(renderer,
-                                        SDL_PIXELFORMAT_ARGB8888,
-                                        SDL_TEXTUREACCESS_STREAMING,
-                                        event->window.data1, event->window.data2);
-
-            game->SetResolution(event->window.data1, event->window.data2);
-        } else if (event->window.windowID == SDL_GetWindowID(glWindow)) {
+        if (event->window.windowID == SDL_GetWindowID(glWindow)) {
             std::cout << "GL Window resized " << event->window.data1 << " x " << event->window.data2 << std::endl;
             game->SetOpenGLResolution(event->window.data1, event->window.data2);
         }
@@ -279,9 +247,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     game->SetControlState(lControlState);
     if (game->Simulate())
     {
-        game->RefreshView(texture);
-        SDL_RenderTexture(renderer, texture, nullptr, nullptr);
-        SDL_RenderPresent(renderer);
+        game->RefreshView();
     }
 
     return SDL_APP_CONTINUE;
@@ -293,10 +259,6 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
 
     delete game;
     game = nullptr;
-
-    SDL_DestroyTexture(texture);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(sdlWindow);
 
     SDL_GL_DestroyContext(glContext);
     SDL_DestroyWindow(glWindow);

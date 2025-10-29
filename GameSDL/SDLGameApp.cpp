@@ -18,7 +18,6 @@ MR_SDLGameApp* MR_SDLGameApp::This;
 MR_SDLGameApp::MR_SDLGameApp(SDL_Window* glWindow, SDL_GLContext glContext)
 {
    This             = this;
-   mVideoBuffer     = NULL;
    mObserver1       = NULL;
    mCurrentSession  = NULL;
    mGLWindow = glWindow;
@@ -26,12 +25,6 @@ MR_SDLGameApp::MR_SDLGameApp(SDL_Window* glWindow, SDL_GLContext glContext)
    mGLRenderer = nullptr;
    mGLLevelLoader = nullptr;
    mClrScrTodo = 2;
-
-   // Screen
-   mGamma       = 1.2;
-   mContrast    = 0.95;
-   mBrightness  = 0.95;
-
 }
 
 MR_SDLGameApp::~MR_SDLGameApp()
@@ -39,8 +32,6 @@ MR_SDLGameApp::~MR_SDLGameApp()
    Clean();
    MR_DllObjectFactory::Clean( FALSE );
    DeleteObjFac1();
-   delete mVideoBuffer;
-   mVideoBuffer = nullptr;
 
 }
 
@@ -74,16 +65,6 @@ BOOL MR_SDLGameApp::InitGame()
    ObjFac1RegisterFactory();
    MR_MainCharacter::RegisterFactory();
 
-   if( lReturnValue )
-   {
-      mVideoBuffer = new MR_VideoBuffer( mGamma, mContrast, mBrightness );
-   }
-
-   if( lReturnValue )
-   {
-       mVideoBuffer->SetVideoMode(640, 400);
-   }
-
    return lReturnValue;
 }
 
@@ -96,50 +77,13 @@ bool MR_SDLGameApp::Simulate()
    throw std::runtime_error("Cannot simulate when no current session");
 }
 
-void MR_SDLGameApp::RefreshView(SDL_Texture* texture)
+void MR_SDLGameApp::RefreshView()
 {
-   // Game processing
-   if( mVideoBuffer != NULL )
+   if( mCurrentSession != NULL )
    {
-      if( mVideoBuffer->Lock() )
+      if( mObserver1 != NULL )
       {
-         if( mCurrentSession != NULL )
-         {
-            MR_SimulationTime lTime = mCurrentSession->GetSimulationTime();
-
-            if( !gKeyFilled && (lTime<20000) )
-            {
-               if( lTime > 100 )
-               {
-                  MR_MainCharacter* lCharacter = mCurrentSession->GetMainCharacter();
-
-                  if( lCharacter != NULL )
-                  {
-                     if( lCharacter->GetHoverModel() != 0 )
-                     {
-                        lCharacter->SetHoverModel( 0 );
-                        mCurrentSession->AddMessage( MR_LoadString( IDS_CAR_FOR_REG ) );
-                     }
-                  }
-               }
-            }
-
-            if( mClrScrTodo > 0 )
-            {
-               mClrScrTodo--;
-               DrawBackground();
-            }
-
-            if( mObserver1 != NULL )
-            {
-               mObserver1->RenderNormalDisplay( mVideoBuffer, mGLRenderer, mCurrentSession, mCurrentSession->GetMainCharacter(), lTime, mCurrentSession->GetBackImage() );
-            }
-         }
-         else
-         {
-            mVideoBuffer->Clear(0);
-         }
-         mVideoBuffer->Unlock(texture);
+         mObserver1->RenderNormalDisplay( mGLRenderer, mCurrentSession->GetMainCharacter(), mCurrentSession->GetSimulationTime() );
       }
    }
 
@@ -185,14 +129,11 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, const
 
    if( lSuccess )
    {
-      mGLRenderer = new GLRenderer(mGLWindow, mGLContext, mVideoBuffer);
-      mGLLevelLoader = new GLLevelLoader(mGLRenderer);
-      mObserver1 = MR_Observer::New();
-
       // Create the new session
       MR_NetworkSession* lCurrentSession = new MR_NetworkSession(playerId, peers);
       std::cout << "NetworkSession created " << std::endl;
 
+      VideoPalette* palette;
       const char* trackTitle;
       // Load the selected maze
       if( lSuccess )
@@ -201,9 +142,10 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, const
          lTrackFile->OpenForRead(trackFile);
          auto trackFileName = std::filesystem::path(trackFile).stem().string();
          trackTitle = trackFileName.c_str();
-         lSuccess = lCurrentSession->LoadNew(trackTitle, lTrackFile, lNbLap, lAllowWeapons, mVideoBuffer);
-         if (lSuccess) 
+         lSuccess = lCurrentSession->LoadNew(trackTitle, lTrackFile, lNbLap, lAllowWeapons);
+         if (lSuccess)
          {
+            palette = new VideoPalette(lTrackFile, 1.0, 1.0, 1.0);
             std::cout << "Track file loaded" << std::endl;
          }
          lCurrentSession->SetPlayerName(("Player " + std::to_string(playerId)).c_str());
@@ -211,8 +153,12 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, const
 
       if( lSuccess )
       {
+         mGLRenderer = new GLRenderer(mGLWindow, mGLContext, palette);
+         mGLLevelLoader = new GLLevelLoader(mGLRenderer);
+         mObserver1 = MR_Observer::New();
+
          auto level = lCurrentSession->GetCurrentLevel();
-         mGLLevelLoader->LoadLevel(level, lCurrentSession->GetBackImage());
+         mGLLevelLoader->LoadLevel(level, palette->GetBackImage());
          auto levelSize = mGLLevelLoader->GetLevelSize(level);
          mObserver1->SetMapSize(levelSize);
          bool hasConnectedPeers = std::any_of(peers.begin(), peers.end(), [](const auto& peer) { return peer.isConnected; });
@@ -241,36 +187,6 @@ void MR_SDLGameApp::LoadSelectedTrack(const char* trackFile, int playerId, const
    }
 }
 
-void MR_SDLGameApp::SetVideoMode(int width, int height)
-{
-   mVideoBuffer->SetVideoMode(width, height);
-}
-
-void MR_SDLGameApp::DrawBackground()
-{
-   MR_UInt8* lDest         = mVideoBuffer->GetBuffer();
-   int       lXRes         = mVideoBuffer->GetXRes();
-   int       lYRes         = mVideoBuffer->GetYRes();
-   int       lDestLineStep = mVideoBuffer->GetLineLen()-lXRes;
-
-   int lColorIndex;
-
-
-   for( int lY=0 ; lY<lYRes; lY++ )
-   {
-      lColorIndex = lY;
-      for( int lX = 0; lX<lXRes; lX++ )
-      {
-         *lDest = (lColorIndex&16)?11:39;
-
-         lColorIndex++;
-         lDest++;
-      }
-      lDest+= lDestLineStep;
-   }
-}
-
-
 void MR_SDLGameApp::SetControlState(int pState1)
 {
    if (mCurrentSession != nullptr)
@@ -285,11 +201,6 @@ void MR_SDLGameApp::SetCurrentWeapon(MR_MainCharacter::eWeapon pWeapon)
    {
       mCurrentSession->SetCurrentWeapon( pWeapon );
    }
-}
-
-void MR_SDLGameApp::SetResolution(int width, int height)
-{
-   mVideoBuffer->SetVideoMode(width, height);
 }
 
 void MR_SDLGameApp::SetOpenGLResolution(int width, int height)

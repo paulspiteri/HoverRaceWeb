@@ -31,6 +31,7 @@
 #include "../Model/GameSession.h"
 #include "../MainCharacter/MainCharacter.h"
 #include "../VideoServices/Sprite.h"
+#include "VideoPalette.h"
 
 #define MR_CHAT_MESSAGE_STACK   8
 
@@ -52,20 +53,9 @@ class MR_ClientSession
       MR_MainCharacter* mMainCharacter1;
       MR_MainCharacter* mMainCharacter2;
 
-      MR_UInt8*         mBackImage;
-
-      MR_Sprite*        mMap;
-      int               mX0Map;
-      int               mY0Map;
-      int               mWidthMap;
-      int               mHeightMap;
-      int               mWidthSprite;
-      int               mHeightSprite;
-
       int               mNbLap;
       BOOL              mAllowWeapons;
-
-      void ReadLevelAttrib( MR_RecordFile* pFile, MR_VideoBuffer* pVideo );
+      VideoPalette*     mVideoPalette = nullptr;
 
 
    public:
@@ -77,7 +67,7 @@ class MR_ClientSession
       virtual bool Process( int pSpeedFactor = 1 );    // Simulation, speed factor can be used to reduce processing speed to create AVI files
 
 
-      virtual BOOL LoadNew( const char* pTitle, MR_RecordFile* pMazeFile, int pNbLap, BOOL pAllowWeapons, MR_VideoBuffer* pVideo );
+      virtual BOOL LoadNew( const char* pTitle, MR_RecordFile* pMazeFile, int pNbLap, BOOL pAllowWeapons);
 
       // Main character controll and interogation
       BOOL CreateMainCharacter();
@@ -91,9 +81,6 @@ class MR_ClientSession
       void              SetControlState( int pState1, int pState2 );
       void              SetCurrentWeapon( MR_MainCharacter::eWeapon pWeapon );
 
-      const MR_UInt8*   GetBackImage()const;
-
-      void              SetMap( MR_Sprite* pMap, int pX0, int pY0, int pX1, int pY1 );
       const MR_Sprite*  GetMap()const;
       void              ConvertMapCoordinate( int& pX, int& pY, int pRatio )const;
 
@@ -113,7 +100,6 @@ class MR_ClientSession
 
       // Rendering access to level
       const   MR_Level* GetCurrentLevel()const;
-
 };
 
 #endif
