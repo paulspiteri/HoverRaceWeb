@@ -32,6 +32,8 @@
 #include "../MainCharacter/MainCharacter.h"
 #include "../VideoServices/Sprite.h"
 #include "VideoPalette.h"
+#include "GhostRecorder.h"
+#include "GhostPlayer.h"
 
 #define MR_CHAT_MESSAGE_STACK   8
 
@@ -52,15 +54,23 @@ class MR_ClientSession
       MR_GameSession    mSession;
       MR_MainCharacter* mMainCharacter1;
       MR_MainCharacter* mMainCharacter2;
+      MR_MainCharacter* mGhostCharacter;
+      MR_FreeElementHandle mGhostCharacterHandle;
 
       int               mNbLap;
       BOOL              mAllowWeapons;
       VideoPalette*     mVideoPalette = nullptr;
 
+      GhostRecorder*    mGhostRecorder;
+      GhostPlayer*      mGhostPlayer;
+      void OnLapChange(int newLap, MR_SimulationTime lapDuration);
+
+      void CreateGhostCharacter(int hoverId);
+      void DestroyGhostCharacter();
 
    public:
       // Creation and destruction
-      MR_ClientSession();
+      MR_ClientSession(int playerId = 0);
       virtual ~MR_ClientSession();
 
       // Simulation control
@@ -71,6 +81,7 @@ class MR_ClientSession
 
       // Main character controll and interogation
       BOOL CreateMainCharacter();
+      BOOL CreateMainCharacterAtPosition(int pPlayerIndex);
       BOOL CreateMainCharacter2();
       
       MR_MainCharacter*  GetMainCharacter()const;      

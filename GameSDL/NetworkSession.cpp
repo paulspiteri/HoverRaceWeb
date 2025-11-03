@@ -59,7 +59,7 @@ uint32_t timeGetTime() {
 }
 
 MR_NetworkSession::MR_NetworkSession(int playerId, const std::array<PeerStatus, WebPeerInterface::eMaxClient>& peers)
-                  :MR_ClientSession(), mNetInterface(playerId, peers)
+                  :MR_ClientSession(playerId), mNetInterface(playerId, peers)
 {
    mMasterMode = playerId == 0;
    mSended12SecClockUpdate = FALSE;
@@ -183,9 +183,11 @@ void MR_NetworkSession::GetHitResult( int pPosition, const char*& pPlayerName, i
 
 int MR_NetworkSession::GetNbPlayers()const
 {
+   return mNetInterface.GetClientCount() + 1;
+
    // Return the number of players still playing???
    // return mNetInterface.GetClientCount()+1;
-   return ResultAvaillable();
+   // return ResultAvaillable();
 }
 
 const MR_MainCharacter* MR_NetworkSession::GetPlayer( int pPlayerIndex )const
@@ -601,27 +603,8 @@ void MR_NetworkSession::SetSimulationTime( MR_SimulationTime pTime )
 
 BOOL MR_NetworkSession::CreateMainCharacter()
 {
-   // Add a main character on the track
-   
-   ASSERT( mMainCharacter1 == NULL ); // why creating it twice?
-   ASSERT( mSession.GetCurrentLevel() != NULL );
-
-   mMainCharacter1 = MR_MainCharacter::New( mNbLap, mAllowWeapons );
-
-   // Insert the character in the current level
-   MR_Level* lCurrentLevel = mSession.GetCurrentLevel();
-      
- 
-   mMainCharacter1->mPosition    = lCurrentLevel->GetStartingPos( mNetInterface.GetId() );
-   mMainCharacter1->SetOrientation( lCurrentLevel->GetStartingOrientation( mNetInterface.GetId() ));
-   mMainCharacter1->mRoom        = lCurrentLevel->GetStartingRoom( mNetInterface.GetId() );
-   mMainCharacter1->SetHoverId( mNetInterface.GetId() );
-
-   lCurrentLevel->InsertElement( mMainCharacter1, mMainCharacter1->mRoom );
-
-   // BroadcastMainElementCreation( mMainCharacter1->GetTypeId(), mMainCharacter1->GetNetState(), mMainCharacter1->mRoom, mMainCharacter1->GetHoverId() );
-
-   return TRUE;
+   // Use the base class implementation with network player ID
+   return CreateMainCharacterAtPosition(mNetInterface.GetId());
 }
 
 void MR_NetworkSession::BroadcastMainElementCreation( const MR_ObjectFromFactoryId& pId, const MR_ElementNetState& pState, int pRoom, int pHoverId )

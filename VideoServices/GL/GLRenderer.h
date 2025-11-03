@@ -125,6 +125,7 @@ struct FreeElementInstance
     int sequence;
     int frame;
     int variant;
+    float alpha;
 
     bool operator==(const FreeElementInstance& other) const = default;
 };

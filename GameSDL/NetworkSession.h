@@ -82,7 +82,6 @@ class MR_NetworkSession: public MR_ClientSession
       int mOpponendMajorID;
       int mOpponendMinorID;
 
-
       // Network functions
       void BroadcastMainElementCreation(    const MR_ObjectFromFactoryId& pId, const MR_ElementNetState& pState, int pRoom, int pHoverId ); // Must be called only once
       void BroadcastAutoElementCreation(    const MR_ObjectFromFactoryId& pId, const MR_ElementNetState& pState, int pRoom ); // Creation of autonomous elements

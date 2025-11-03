@@ -26,10 +26,12 @@
 
 
 #include "MainCharacterRenderer.h"
+#include "MainCharacterState.h"
 #include "../Model/MazeElement.h"
 #include "../Model/PhysicalCollision.h"
 #include "../Util/FastFifo.h"
 #include "../Util/BitPacking.h"
+#include <functional>
 
 
 #ifdef MR_MAIN_CHARACTER
@@ -38,10 +40,8 @@
    #define MR_DllDeclare //   __declspec( dllimport )
 #endif
 
-#define MR_MAIN_CHARACTER_DLL_ID     5000 
+#define MR_MAIN_CHARACTER_DLL_ID     5000
 #define MR_MAIN_CHARACTER_CLASS_ID      1
-
-
 
 class MR_MainCharacter:public MR_FreeElement
 {
@@ -84,6 +84,31 @@ class MR_MainCharacter:public MR_FreeElement
             MR_Int32 RayLen()const;
       };
 
+   class GhostShape: public MR_CylinderShape
+   {
+      public:
+         MR_Int32 AxisX() const override
+         {
+            return INT_MAX;
+         }
+         MR_Int32 AxisY() const override
+         {
+            return INT_MAX;
+         }
+         MR_Int32 RayLen() const override
+         {
+            return 0;
+         }
+         MR_Int32 ZMin() const override
+         {
+            return INT_MAX;
+         }
+         MR_Int32 ZMax() const override
+         {
+            return INT_MAX;
+         }
+   };
+
    public:
       // Position complement
       int  mRoom;
@@ -103,6 +128,7 @@ class MR_MainCharacter:public MR_FreeElement
    private:
 
       BOOL                      mMasterMode;
+      bool                      mIsGhost;
       unsigned                  mHoverModel;   // HoverRace model
       MR_MainCharacterRenderer* mRenderer; 
       unsigned int              mControlState;
@@ -134,6 +160,7 @@ class MR_MainCharacter:public MR_FreeElement
       MR_ContactEffectList      mContactEffectList;
       Cylinder                  mCollisionShape;                     
       Cylinder                  mContactShape;
+      GhostShape                mGhostShape;
 
       int                       mHoverId;
 
@@ -147,6 +174,9 @@ class MR_MainCharacter:public MR_FreeElement
 
       BOOL mCheckPoint1;
       BOOL mCheckPoint2;
+      bool mFirstLapStarted;
+
+      std::function<void(int newLap, MR_SimulationTime lapDuration)> mLapChangeCallback;
 
       MR_FixedFastFifo< int, 6 > mLastHits;
 
@@ -169,7 +199,7 @@ class MR_MainCharacter:public MR_FreeElement
       ~MR_MainCharacter();
 
       MR_DllDeclare void SetAsMaster();
-      MR_DllDeclare void SetAsSlave();
+      MR_DllDeclare void SetAsSlave(bool isGhost = false);
 
       MR_DllDeclare void SetHoverId( int pId );
       MR_DllDeclare int  GetHoverId()const;
@@ -216,12 +246,14 @@ class MR_MainCharacter:public MR_FreeElement
       MR_DllDeclare MR_SimulationTime  GetLastLapCompletion()const;
       MR_DllDeclare BOOL               HasFinish()const;
 
+      void SetLapChangeCallback(std::function<void(int newLap, MR_SimulationTime lapDuration)> callback);
 
       MR_DllDeclare int                HitQueueCount()const;
       MR_DllDeclare int                GetHitQueue();
 
       MR_MainCharacterRenderer* GetRenderer() const { return mRenderer; }
       int GetMotorDisplay() const {return mMotorDisplay; }
+      bool GetIsGhost() const { return mIsGhost; }
 
    protected:
       // Logic interface

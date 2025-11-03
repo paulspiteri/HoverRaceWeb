@@ -24,31 +24,74 @@
 #include "ClientSession.h"
 #include "TrackCommonStuff.h"
 #include <cstring>
+#include <iostream>
 
-MR_ClientSession::MR_ClientSession()
+MR_ClientSession::MR_ClientSession(int playerId)
                  :mSession( TRUE )
 {
    mMainCharacter1      = NULL;
    mMainCharacter2      = NULL;
+   mGhostCharacter      = NULL;
    mNbLap               = 1;
    mAllowWeapons        = TRUE;
+   mGhostRecorder       = new GhostRecorder(playerId);
+   mGhostPlayer         = new GhostPlayer();
 }
 
 MR_ClientSession::~MR_ClientSession()
 {
+   delete mGhostRecorder;
+   mGhostRecorder = nullptr;
+
+   delete mGhostPlayer;
+   mGhostPlayer = nullptr;
 }
 
 bool MR_ClientSession::Process( int pSpeedFactor )
 {
-   return mSession.Simulate();
+   bool result = mSession.Simulate();
+   if (result)
+   {
+      if (mGhostRecorder->IsRecording())
+         {
+         MR_ElementNetState netState = mMainCharacter1->GetNetState();
+         const MR_MainCharacterState* charState = reinterpret_cast<const MR_MainCharacterState*>(netState.mData);
+         mGhostRecorder->RecordFrame(*charState, GetSimulationTime());
+      }
+
+      if (mGhostCharacter != nullptr) {
+         auto result = mGhostPlayer->GetNextFrame(GetSimulationTime());
+         if (result.frame != nullptr) {
+            int lOldRoom = mGhostCharacter->mRoom;
+            mGhostCharacter->SetNetState(sizeof(MR_MainCharacterState), reinterpret_cast<const MR_UInt8*>(&result.frame->mState));
+            // Move element if needed
+            if(mGhostCharacter->mRoom != lOldRoom)
+            {
+               MR_Level* lCurrentLevel = mSession.GetCurrentLevel();
+               lCurrentLevel->MoveElement(mGhostCharacterHandle, mGhostCharacter->mRoom);
+            }
+         }
+         if (result.isCompleted) {
+            DestroyGhostCharacter();
+         }
+      }
+   }
+
+   return result;
 }
 
 BOOL MR_ClientSession::LoadNew( const char* pTitle, MR_RecordFile* pMazeFile, int pNbLap, BOOL pAllowWeapons)
 {
    BOOL lReturnValue;
    mNbLap        = pNbLap;
-   mAllowWeapons = pAllowWeapons; 
+   mAllowWeapons = pAllowWeapons;
    lReturnValue  = mSession.LoadNew( pTitle, pMazeFile );
+
+   // Try to load ghost file for this track (only in single player mode)
+   std::string ghostFilename = "ghosts/" + std::string(pTitle) + ".ghost";
+   if (lReturnValue && GetNbPlayers() == 1 && mGhostPlayer->LoadFromFile(ghostFilename)) {
+      std::cout << "Ghost loaded successfully for track: " << pTitle << std::endl;
+   }
 
    return lReturnValue;
 }
@@ -56,9 +99,14 @@ BOOL MR_ClientSession::LoadNew( const char* pTitle, MR_RecordFile* pMazeFile, in
 // Main character controll and interogation
 BOOL MR_ClientSession::CreateMainCharacter()
 {
+   return CreateMainCharacterAtPosition(0);
+}
 
-   // Add a main character in 
-   
+BOOL MR_ClientSession::CreateMainCharacterAtPosition(int pPlayerIndex)
+{
+
+   // Add a main character in
+
    ASSERT( mMainCharacter1 == NULL ); // why creating it twice?
    ASSERT( mSession.GetCurrentLevel() != NULL );
 
@@ -66,13 +114,18 @@ BOOL MR_ClientSession::CreateMainCharacter()
 
    // Insert the character in the current level
    MR_Level* lCurrentLevel = mSession.GetCurrentLevel();
-      
-   mMainCharacter1->mRoom        = lCurrentLevel->GetStartingRoom( 0 ); 
-   mMainCharacter1->mPosition    = lCurrentLevel->GetStartingPos( 0 );
-   mMainCharacter1->SetOrientation( lCurrentLevel->GetStartingOrientation( 0 ));
-   mMainCharacter1->SetHoverId( 0 );
 
-   lCurrentLevel->InsertElement( mMainCharacter1, lCurrentLevel->GetStartingRoom( 0 ) );
+   mMainCharacter1->mRoom        = lCurrentLevel->GetStartingRoom( pPlayerIndex );
+   mMainCharacter1->mPosition    = lCurrentLevel->GetStartingPos( pPlayerIndex );
+   mMainCharacter1->SetOrientation( lCurrentLevel->GetStartingOrientation( pPlayerIndex ));
+   mMainCharacter1->SetHoverId( pPlayerIndex );
+
+   lCurrentLevel->InsertElement( mMainCharacter1, lCurrentLevel->GetStartingRoom( pPlayerIndex ) );
+
+   // Set up lap change callback for ghost recording
+   mMainCharacter1->SetLapChangeCallback([this](int newLap, MR_SimulationTime lapDuration) {
+      this->OnLapChange(newLap, lapDuration);
+   });
 
    // Insert two dummy (TEST)
    /*
@@ -299,5 +352,54 @@ void MR_ClientSession::AddMessage( const char* pMessage )
    mMessageStack[0].mCreationTime = time(NULL);
 
    mMessageStack[0].mBuffer  = Ascii2Simple( pMessage );
+}
+
+void MR_ClientSession::OnLapChange(int newLap, MR_SimulationTime lapDuration)
+{
+   mGhostRecorder->StopRecording(lapDuration);
+   if (lapDuration > 0 && (lapDuration < mGhostPlayer->GetLapDuration() || !mGhostPlayer->IsLoaded()))
+   {
+      std::cout << "New lap record!" << std::endl;
+      mGhostRecorder->Save(mSession.GetTitle());
+
+      GhostFile ghostData = mGhostRecorder->GetGhostFile(mSession.GetTitle());
+      mGhostPlayer->LoadFromData(ghostData);
+   }
+   mGhostRecorder->StartRecording(GetSimulationTime());
+
+   // Restart ghost playback at the start of every lap
+   if (mGhostPlayer->IsLoaded())
+   {
+      mGhostPlayer->StartPlayback(GetSimulationTime());
+      CreateGhostCharacter(mGhostPlayer->GetPlayerId());
+   }
+}
+
+void MR_ClientSession::CreateGhostCharacter(int hoverId)
+{
+   // Only create if ghost is loaded and doesn't already exist
+   if (!mGhostPlayer->IsLoaded() || mGhostCharacter != nullptr) {
+      return;
+   }
+
+   mGhostCharacter = MR_MainCharacter::New(1, false);
+   mGhostCharacter->SetAsSlave(true);
+   mGhostCharacter->SetHoverId(hoverId);
+
+   MR_Level* lCurrentLevel = mSession.GetCurrentLevel();
+   if (lCurrentLevel != nullptr) {
+      mGhostCharacterHandle = lCurrentLevel->InsertElement(mGhostCharacter, mGhostCharacter->mRoom);
+   }
+}
+
+void MR_ClientSession::DestroyGhostCharacter()
+{
+   if (mGhostCharacter != nullptr) {
+      MR_Level* lCurrentLevel = mSession.GetCurrentLevel();
+      if (lCurrentLevel != NULL) {
+         lCurrentLevel->DeleteElement(mGhostCharacterHandle);
+      }
+      mGhostCharacter = nullptr;
+   }
 }
 

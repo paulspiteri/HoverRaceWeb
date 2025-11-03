@@ -6,6 +6,8 @@ add_executable(GameSDL
     GLLevelLoader.cpp
     WebPeerInterface.cpp
     NetworkSession.cpp
+    GhostRecorder.cpp
+    GhostPlayer.cpp
 )
 
 target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3-static sokol glm::glm imgui

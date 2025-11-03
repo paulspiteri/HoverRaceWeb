@@ -59,6 +59,7 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
             auto position = SwapYZ(glm::ivec3(actorPosition.mX, actorPosition.mY, actorPosition.mZ));
             const MR_ResActor* actor = nullptr;
             int type = 0, orientation = 0, sequence = 0, frame = 0, variant = 0;
+            float alpha = 1.0f;
             if (lElement->mId.mDllId == MR_MAIN_CHARACTER_DLL_ID && lElement->mId.mClassId ==
                 MR_MAIN_CHARACTER_CLASS_ID)
             {
@@ -84,6 +85,7 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
                 }
                 frame = mMotorFrame;
                 variant = mainCharacter->GetHoverId();
+                alpha = mainCharacter->GetIsGhost() ? 0.6f : 1.0f;
             }
             else
             {
@@ -101,7 +103,7 @@ std::unordered_map<int, std::vector<FreeElementInstance>> GLLevelLoader::GetFree
             if (actor != nullptr)
             {
                 FreeElementInstance instance = {
-                    .position = position, .type = type, .orientation = orientation, .sequence = sequence, .frame = frame, .variant = variant
+                    .position = position, .type = type, .orientation = orientation, .sequence = sequence, .frame = frame, .variant = variant, .alpha = alpha
                 };
                 freeElementInstances[type].push_back(instance);
             }

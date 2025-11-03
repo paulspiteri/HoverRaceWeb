@@ -140,6 +140,8 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, VideoPalet
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_frame].buffer_index = 1;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_variant].format = SG_VERTEXFORMAT_INT;
     free_element_pipeline_desc.layout.attrs[ATTR_free_element_instance_variant].buffer_index = 1;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_alpha].format = SG_VERTEXFORMAT_FLOAT;
+    free_element_pipeline_desc.layout.attrs[ATTR_free_element_alpha].buffer_index = 1;
     free_element_pipeline_desc.layout.buffers[0].step_func = SG_VERTEXSTEP_PER_VERTEX;
     free_element_pipeline_desc.layout.buffers[0].step_rate = 1;
     free_element_pipeline_desc.layout.buffers[1].step_func = SG_VERTEXSTEP_PER_INSTANCE;
@@ -148,6 +150,14 @@ GLRenderer::GLRenderer(SDL_Window* glWindow, SDL_GLContext glContext, VideoPalet
     free_element_pipeline_desc.cull_mode = SG_CULLMODE_BACK;
     free_element_pipeline_desc.depth.write_enabled = true;
     free_element_pipeline_desc.depth.compare = SG_COMPAREFUNC_LESS_EQUAL;
+
+    // Enable alpha blending for transparency
+    free_element_pipeline_desc.colors[0].blend.enabled = true;
+    free_element_pipeline_desc.colors[0].blend.src_factor_rgb = SG_BLENDFACTOR_SRC_ALPHA;
+    free_element_pipeline_desc.colors[0].blend.dst_factor_rgb = SG_BLENDFACTOR_ONE_MINUS_SRC_ALPHA;
+    free_element_pipeline_desc.colors[0].blend.src_factor_alpha = SG_BLENDFACTOR_ONE;
+    free_element_pipeline_desc.colors[0].blend.dst_factor_alpha = SG_BLENDFACTOR_ZERO;
+
     state.free_element_pipeline = sg_make_pipeline(&free_element_pipeline_desc);
     state.free_element_uniforms.scale = 1.0f;
     state.free_element_minimap_uniforms.scale = 10.0f;

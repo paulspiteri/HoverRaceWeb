@@ -25,9 +25,11 @@ in int orientation;
 in int instance_sequence;
 in int instance_frame;
 in int instance_variant;         // only used for vehicles, to index into player# texture
+in float alpha;
 
 out vec2 free_element_uv;
 flat out vec4 atlas_coord;
+out float free_element_alpha;
 
 vec3 rotateY(vec3 pos, float angleRadians) {
     float c = cos(angleRadians);
@@ -59,6 +61,7 @@ void main() {
     gl_Position = proj * view * worldPos;
     free_element_uv = texcoord0;
     atlas_coord = atlas_coords[textureIdx + (is_variant_texture == 0 ? 0 : instance_variant)];
+    free_element_alpha = alpha;
 }
 @end
 
@@ -67,12 +70,14 @@ layout(binding = 0) uniform texture2D atlas_tex;
 layout(binding = 0) uniform sampler wrap_sampler;
 in vec2 free_element_uv;
 flat in vec4 atlas_coord;
+in float free_element_alpha;
 out vec4 frag_color;
 
 void main() {
     vec2 uv = fract(free_element_uv);
     vec2 atlas_uv = mix(atlas_coord.xy, atlas_coord.zw, uv);
     frag_color = texture(sampler2D(atlas_tex, wrap_sampler), atlas_uv);
+    frag_color.a *= free_element_alpha;
 }
 @end
 

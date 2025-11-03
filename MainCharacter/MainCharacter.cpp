@@ -32,36 +32,6 @@
 
 #define MR_NB_HOVER_MODEL 8
 
-// Local types
-class MR_MainCharacterState: private MR_BitPack
-{
-   friend class MR_MainCharacter;
-
-   // Packing description
-   //                     Offset  len   Prec
-   #define  MC_POSX           0,   26,     5
-   #define  MC_POSY          26,   26,     5
-   #define  MC_POSZ          52,   15,     0
-   #define  MC_ROOM          67,   11,     0
-   #define  MC_ORIENTATION   78,    9,     3
-   #define  MC_SPEED_X_256   87,   13,     2
-   #define  MC_SPEED_Y_256  100,   13,     2
-   #define  MC_SPEED_Z_256  113,    9,     2
-   #define  MC_CONTROL_ST   122,   15,     0
-   #define  MC_ON_FLOOR     137,    1,     0
-   #define  MC_HOVER_MODEL  138,    3,     0
-   #define  MC_PADDING      141,   11,     0 
-   //   #define  MC_SOUNDFX      141,    5,     0 
-
-   // Total                 146  = 19 bytes
-   MR_UInt8  mFieldList[18];
-
-   public:
-
-};
-
-
-
 // Local constants
 #define TIME_SLICE                     5
 #define MINIMUM_SPLITTABLE_TIME_SLICE  6
@@ -152,6 +122,7 @@ MR_MainCharacter::MR_MainCharacter( const MR_ObjectFromFactoryId& pId )
                  :MR_FreeElement( pId )
 {
    mMasterMode           = TRUE;
+   mIsGhost              = false;
    mRoom                 = -1;
    mHoverModel           = 0;    // Basic model
    mNetPriority          = FALSE;
@@ -195,7 +166,7 @@ MR_MainCharacter::MR_MainCharacter( const MR_ObjectFromFactoryId& pId )
 
    mCheckPoint1 = FALSE;
    mCheckPoint2 = FALSE;
-
+   mFirstLapStarted = false;
 }
 
 MR_MainCharacter::~MR_MainCharacter()
@@ -208,9 +179,10 @@ void MR_MainCharacter::SetAsMaster()
    mMasterMode = TRUE;
 }
 
-void MR_MainCharacter::SetAsSlave()
+void MR_MainCharacter::SetAsSlave(bool isGhost)
 {
    mMasterMode = FALSE;
+   mIsGhost = isGhost;
 }
 
 void MR_MainCharacter::SetHoverId( int pId )
@@ -1078,6 +1050,14 @@ void MR_MainCharacter::ApplyEffect( const MR_ContactEffect* pEffect,  MR_Simulat
             break;
 
          case MR_CheckPoint::eFinishLine:
+            if (!mFirstLapStarted)
+            {
+               if (mLapChangeCallback) {
+                  mLapChangeCallback(1, 0);  // first lap starting, duration is 0
+               }
+               mFirstLapStarted = true;
+            }
+
             if( mCheckPoint2 )
             {
                mCheckPoint1 = FALSE;
@@ -1086,6 +1066,10 @@ void MR_MainCharacter::ApplyEffect( const MR_ContactEffect* pEffect,  MR_Simulat
                mLapCount++;
                mLastLapDuration     = pTime-mLastLapCompletion;
                mLastLapCompletion   = pTime;
+
+               if (mLapChangeCallback) {
+                  mLapChangeCallback(mLapCount + 1, mLastLapDuration);  // new lap with duration
+               }
 
                if( (mLastLapDuration < mBestLapDuration)||(mLapCount==1) )
                {
@@ -1106,6 +1090,7 @@ void MR_MainCharacter::ApplyEffect( const MR_ContactEffect* pEffect,  MR_Simulat
                   }
                }
             }
+
             break;
       }
    }
@@ -1123,12 +1108,22 @@ const MR_ContactEffectList* MR_MainCharacter::GetEffectList()
 
 const MR_ShapeInterface* MR_MainCharacter::GetReceivingContactEffectShape()
 {
+   if (mIsGhost)
+   {
+      return &mGhostShape;
+   }
+
    mCollisionShape.mPosition = mPosition;
    return &mCollisionShape;
 }
 
 const MR_ShapeInterface* MR_MainCharacter::GetGivingContactEffectShape()
 {
+   if (mIsGhost)
+   {
+      return &mGhostShape;
+   }
+
    mContactShape.mPosition = mPosition;
    return &mContactShape;
 }
@@ -1288,6 +1283,11 @@ MR_SimulationTime  MR_MainCharacter::GetLastLapCompletion()const
 BOOL MR_MainCharacter::HasFinish()const
 {
    return( mLapCount >= mNbLapForRace );
+}
+
+void MR_MainCharacter::SetLapChangeCallback(std::function<void(int newLap, MR_SimulationTime lapDuration)> callback)
+{
+   mLapChangeCallback = callback;
 }
 
 
