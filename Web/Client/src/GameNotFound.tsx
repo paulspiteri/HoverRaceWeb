@@ -2,10 +2,13 @@ import * as React from "react";
 import { Button, Alert, Card } from "@mantine/core";
 import { useCreateGame } from "@/hooks/useCreateGame";
 import { notifications } from "@mantine/notifications";
+import { useAtomValue } from "jotai";
+import { connectionIdAtom } from "@/atoms";
 import styles from "./GameNotFound.module.css";
 
 export const GameNotFound: React.FC = () => {
     const createGameMutation = useCreateGame();
+    const connectionId = useAtomValue(connectionIdAtom);
 
     return (
         <div className={styles.container}>
@@ -30,7 +33,7 @@ export const GameNotFound: React.FC = () => {
                             },
                         });
                     }}
-                    disabled={createGameMutation.isPending}
+                    disabled={createGameMutation.isPending || !connectionId}
                     variant="filled"
                     color="blue"
                 >

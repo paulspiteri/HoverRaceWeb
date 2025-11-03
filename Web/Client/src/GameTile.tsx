@@ -3,6 +3,8 @@ import { Button, Box, Text, Title, Stack } from "@mantine/core";
 import type { Game } from "@/types.ts";
 import { useJoinGame } from "@/hooks/useJoinGame";
 import { notifications } from "@mantine/notifications";
+import { useAtomValue } from "jotai";
+import { connectionIdAtom } from "@/atoms";
 import styles from "./GameTile.module.css";
 
 interface GameTileProps {
@@ -15,6 +17,7 @@ export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled }) 
     const isGameFull = game.playerCount >= game.maxPlayers;
     const isGameStarted = game.status === "playing";
     const joinGameMutation = useJoinGame();
+    const connectionId = useAtomValue(connectionIdAtom);
 
     const handleJoinGame = () => {
         const savedName = localStorage.getItem("hoverrace-player-name");
@@ -57,7 +60,7 @@ export const GameTile: React.FC<GameTileProps> = ({ game, isJoined, disabled }) 
                     variant="outline"
                     size="md"
                     onClick={handleJoinGame}
-                    disabled={isJoined || isGameFull || isGameStarted || disabled || joinGameMutation.isPending}
+                    disabled={isJoined || isGameFull || isGameStarted || disabled || joinGameMutation.isPending || !connectionId}
                     fullWidth={true}
                     className={styles.joinButton}
                 >

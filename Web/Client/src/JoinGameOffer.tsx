@@ -4,6 +4,8 @@ import { useParams } from "react-router-dom";
 import type { Game } from "./types";
 import { useJoinGame } from "@/hooks/useJoinGame";
 import { notifications } from "@mantine/notifications";
+import { useAtomValue } from "jotai";
+import { connectionIdAtom } from "@/atoms";
 import styles from "./JoinGameOffer.module.css";
 
 interface JoinGameInterfaceProps {
@@ -13,6 +15,7 @@ interface JoinGameInterfaceProps {
 export const JoinGameOffer: React.FC<JoinGameInterfaceProps> = ({ gameInfo }) => {
     const { gameId } = useParams();
     const joinGameMutation = useJoinGame();
+    const connectionId = useAtomValue(connectionIdAtom);
 
     const handleJoinGame = () => {
         if (!gameId) return;
@@ -65,7 +68,7 @@ export const JoinGameOffer: React.FC<JoinGameInterfaceProps> = ({ gameInfo }) =>
                 <Button
                     className={styles.joinButton}
                     onClick={handleJoinGame}
-                    disabled={gameInfo.status === "playing" || gameInfo.playerCount >= gameInfo.maxPlayers || joinGameMutation.isPending}
+                    disabled={gameInfo.status === "playing" || gameInfo.playerCount >= gameInfo.maxPlayers || joinGameMutation.isPending || !connectionId}
                 >
                     Join Game
                 </Button>

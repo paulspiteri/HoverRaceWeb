@@ -78,6 +78,7 @@ export const useGameData = (baseUrl: string, setActiveGame: (id: string | undefi
             console.log("Closing SSE connection");
             es.close();
             setEventSource(undefined);
+            setConnectionId(undefined);
         };
     }, [setActiveGame, url]);
 

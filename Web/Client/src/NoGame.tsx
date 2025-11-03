@@ -2,10 +2,13 @@ import * as React from "react";
 import { Button, Box } from "@mantine/core";
 import { useCreateGame } from "@/hooks/useCreateGame";
 import { notifications } from "@mantine/notifications";
+import { useAtomValue } from "jotai";
+import { connectionIdAtom } from "@/atoms";
 import styles from "./NoGame.module.css";
 
 export const NoGame: React.FC = () => {
     const createGameMutation = useCreateGame();
+    const connectionId = useAtomValue(connectionIdAtom);
 
     const handleCreateGame = () => {
         const savedName = localStorage.getItem("hoverrace-player-name");
@@ -25,7 +28,7 @@ export const NoGame: React.FC = () => {
         <Box className={styles.container}>
             <Button
                 onClick={handleCreateGame}
-                disabled={createGameMutation.isPending}
+                disabled={createGameMutation.isPending || !connectionId}
                 size="lg"
                 px="xl"
                 className={styles.newGameButton}

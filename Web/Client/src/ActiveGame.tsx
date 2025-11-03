@@ -127,7 +127,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
                         <ActionIcon
                             variant="subtle"
                             onClick={handleLeaveGame}
-                            disabled={leaveGameMutation.isPending}
+                            disabled={leaveGameMutation.isPending || !currentConnectionId}
                             size="lg"
                             title={isCreator ? "Cancel Game" : "Leave Game"}
                         >
@@ -168,7 +168,8 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
                                     !allPeersConnected ||
                                     !allPeersGameReady ||
                                     game.status === "playing" ||
-                                    startGameMutation.isPending
+                                    startGameMutation.isPending ||
+                                    !currentConnectionId
                                 }
                                 size="sm"
                             >
