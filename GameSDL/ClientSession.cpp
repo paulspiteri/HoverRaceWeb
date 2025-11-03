@@ -362,10 +362,12 @@ void MR_ClientSession::OnLapChange(int newLap, MR_SimulationTime lapDuration)
       std::cout << "New lap record!" << std::endl;
       mGhostRecorder->Save(mSession.GetTitle());
 
-      GhostFile ghostData = mGhostRecorder->GetGhostFile(mSession.GetTitle());
-      mGhostPlayer->LoadFromData(ghostData);
+      if (this->GetNbPlayers() == 1)
+      {
+         GhostFile ghostData = mGhostRecorder->GetGhostFile(mSession.GetTitle());
+         mGhostPlayer->LoadFromData(ghostData);
+      }
    }
-   mGhostRecorder->StartRecording(GetSimulationTime());
 
    // Restart ghost playback at the start of every lap
    if (mGhostPlayer->IsLoaded())
@@ -373,6 +375,9 @@ void MR_ClientSession::OnLapChange(int newLap, MR_SimulationTime lapDuration)
       mGhostPlayer->StartPlayback(GetSimulationTime());
       CreateGhostCharacter(mGhostPlayer->GetPlayerId());
    }
+
+   // start new lap recording
+   mGhostRecorder->StartRecording(GetSimulationTime());
 }
 
 void MR_ClientSession::CreateGhostCharacter(int hoverId)
