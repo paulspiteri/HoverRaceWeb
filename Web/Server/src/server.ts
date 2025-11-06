@@ -2,7 +2,12 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { v4 as uuidv4 } from "uuid";
+import path from "path";
+import fs from "fs";
 import { gameManager } from "./gameManager.ts";
+import { initializeDatabase } from "./database.ts";
+import { LeaderboardService } from "./leaderboardService.ts";
+import { registerLeaderboardRoutes } from "./leaderboardRoutes.ts";
 import type {
     CreateGameRequest,
     JoinGameRequest,
@@ -18,7 +23,11 @@ import type {
     GameDeletedMessage,
     SignalMessage,
     ChatMessageServerMessage,
-    ServerMessage, SignalRequest, UpdatePlayerRequest, SendChatMessageRequest, KeepAliveRequest,
+    ServerMessage,
+    SignalRequest,
+    UpdatePlayerRequest,
+    SendChatMessageRequest,
+    KeepAliveRequest,
 } from "./types";
 
 dotenv.config({ path: ".env" });
@@ -43,6 +52,27 @@ console.log(`   PORT: ${port}`);
 console.log(`   CLIENT_URL: ${clientUrl}`);
 console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
 console.log(`   CONNECTION_TIMEOUT_MS: ${connectionTimeout}ms`);
+
+// Database configuration - only initialize if DB_DIR is set
+let leaderboardService: LeaderboardService | null = null;
+
+if (process.env.DB_DIR) {
+    const dbDir = process.env.DB_DIR;
+    const dbPath = path.join(dbDir, "hoverrace.db");
+
+    console.log(`   DB_PATH: ${dbPath}`);
+
+    // Ensure database directory exists
+    if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+    }
+
+    // Initialize database and leaderboard service
+    const db = initializeDatabase(dbPath);
+    leaderboardService = new LeaderboardService(db);
+} else {
+    console.log(`   DB_PATH: Not configured (leaderboard disabled)`);
+}
 
 app.use(
     cors({
@@ -649,6 +679,11 @@ gameManager.on("gameUpdated", (game: ServerGame) => {
     console.log(`📡 Broadcasting gameUpdated for game ${game.id}`);
     broadcastGameUpdate(game);
 });
+
+// Register leaderboard routes (only if database is configured)
+if (leaderboardService) {
+    registerLeaderboardRoutes(app, leaderboardService);
+}
 
 app.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);
