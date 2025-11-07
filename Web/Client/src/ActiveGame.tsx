@@ -16,12 +16,20 @@ import { notifications } from "@mantine/notifications";
 import { IconArrowLeft, IconSettings } from "@tabler/icons-react";
 import styles from "./ActiveGame.module.css";
 
+function formatLapTime(milliseconds: number): string {
+    const minutes = Math.floor(milliseconds / 60000);
+    const seconds = Math.floor((milliseconds % 60000) / 1000);
+    const ms = milliseconds % 1000;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+}
+
 interface ActiveGameProps {
     game: JoinedGame;
     peerStatuses: ("connecting" | "connected" | "disconnected" | undefined)[] | undefined;
     peersActualStatuses?: (PeerConnectionStatusMessage | undefined)[];
     peerLatencies?: (PeerConnectionLatency | undefined)[];
     isLoadingGameData: boolean;
+    bestLapTime?: number;
 }
 
 export const ActiveGame: React.FC<ActiveGameProps> = ({
@@ -30,6 +38,7 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
     peersActualStatuses,
     peerLatencies,
     isLoadingGameData,
+    bestLapTime,
 }) => {
     const currentConnectionId = useAtomValue(connectionIdAtom);
     const gameToken = useAtomValue(gameTokenAtom);
@@ -136,7 +145,8 @@ export const ActiveGame: React.FC<ActiveGameProps> = ({
                         <Box>
                             <Title order={2}>{game.name}</Title>
                             <Text size="sm" c="dimmed">
-                                Game • {game.playerCount}/{game.maxPlayers} Players • ID: {game.id}
+                                Game • {game.playerCount}/{game.maxPlayers} Players
+                                {bestLapTime && ` • Best: ${formatLapTime(bestLapTime)}`}
                             </Text>
                         </Box>
                     </Group>

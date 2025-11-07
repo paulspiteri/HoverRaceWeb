@@ -8,6 +8,7 @@ import type { JoinedGame } from "./types";
 import { usePeers } from "@/usePeers.ts";
 import { useGameInstance } from "@/interop/gameInterop.ts";
 import { useGameWindowSize } from "@/interop/useGameWindowSize.ts";
+import { useLeaderboard } from "@/useLeaderboard.ts";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
     connectionIdAtom,
@@ -61,6 +62,9 @@ export const GamePage: React.FC = () => {
         onGamePlayerDisconnected,
     );
 
+    const { data: leaderboard } = useLeaderboard(joinedGame?.trackName.split('.trk')[0], 10);
+    const bestLapTime = leaderboard?.[0]?.lapTimeMs;
+
     useEffect(() => void (global.sendGameMessage = sendData), [sendData]);
 
     const isGameStarted = useRef(false) // to guarantee we only start once
@@ -102,6 +106,7 @@ export const GamePage: React.FC = () => {
                 peersActualStatuses={peersActualStatuses}
                 peerLatencies={peerLatencies}
                 isLoadingGameData={isLoadingGameData}
+                bestLapTime={bestLapTime}
             />
         );
     }
