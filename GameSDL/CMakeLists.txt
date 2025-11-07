@@ -8,6 +8,7 @@ add_executable(GameSDL
     NetworkSession.cpp
     GhostRecorder.cpp
     GhostPlayer.cpp
+    EmscriptenInterop.cpp
 )
 
 target_link_libraries(GameSDL PRIVATE MainCharacter Model ObjFacTools Util VideoServices ObjFac1 SDL3::SDL3-static sokol glm::glm imgui

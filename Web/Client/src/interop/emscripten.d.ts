@@ -1,5 +1,6 @@
 declare global {
-    function sendGameMessage(playerId: number, data: Uint8Array, reliable: boolean): boolean;
+    var sendGameMessage: ((playerId: number, data: Uint8Array, reliable: boolean) => boolean) | undefined;
+    var onLapComplete: ((newLap: number, lapTimeMs: number, ghostReplayData: Uint8Array) => void) | undefined;
 }
 
 export {};

@@ -1,15 +1,16 @@
 import * as React from "react";
 import {useCallback, useEffect, useRef} from "react";
-import { useParams } from "react-router-dom";
-import { ActiveGame } from "@/ActiveGame.tsx";
-import { JoinGameOffer } from "@/JoinGameOffer.tsx";
-import { GameNotFound } from "@/GameNotFound.tsx";
-import type { JoinedGame } from "./types";
-import { usePeers } from "@/usePeers.ts";
-import { useGameInstance } from "@/interop/gameInterop.ts";
-import { useGameWindowSize } from "@/interop/useGameWindowSize.ts";
-import { useLeaderboard } from "@/useLeaderboard.ts";
-import { useAtomValue, useSetAtom } from "jotai";
+import {useParams} from "react-router-dom";
+import {ActiveGame} from "@/ActiveGame.tsx";
+import {JoinGameOffer} from "@/JoinGameOffer.tsx";
+import {GameNotFound} from "@/GameNotFound.tsx";
+import type {JoinedGame} from "./types";
+import {usePeers} from "@/usePeers.ts";
+import {useGameInstance} from "@/interop/gameInterop.ts";
+import {useGameWindowSize} from "@/interop/useGameWindowSize.ts";
+import {useLeaderboard} from "@/useLeaderboard.ts";
+import {useSubmitLapTime} from "@/hooks/useSubmitLapTime.ts";
+import {useAtomValue, useSetAtom} from "jotai";
 import {
     connectionIdAtom,
     gameTokenAtom,
@@ -19,6 +20,7 @@ import {
     canvasAtom,
     gameScreenModeAtom, gameApiAtom,
 } from "@/atoms.ts";
+import {notifications} from "@mantine/notifications";
 
 export const GamePage: React.FC = () => {
     const { gameId } = useParams();
@@ -37,7 +39,7 @@ export const GamePage: React.FC = () => {
     const game = games.find((x) => x.id === gameId);
     const joinedGame = game && "players" in game ? (game as JoinedGame) : undefined;
     const playerIndex = joinedGame?.players.findIndex((p) => p?.connectionId === connectionId);
-
+    const playerName = playerIndex !== undefined ? joinedGame?.players[playerIndex]?.name : undefined;
     const isInGame = joinedGame && playerIndex !== undefined && playerIndex >= 0;
 
     const onGameData = useCallback(
@@ -62,40 +64,76 @@ export const GamePage: React.FC = () => {
         onGamePlayerDisconnected,
     );
 
-    const { data: leaderboard } = useLeaderboard(joinedGame?.trackName.split('.trk')[0], 10);
+    const trackName = joinedGame?.trackName.replace('.trk', '');
+    const { data: leaderboard } = useLeaderboard(trackName, 10);
     const bestLapTime = leaderboard?.[0]?.lapTimeMs;
 
-    useEffect(() => void (global.sendGameMessage = sendData), [sendData]);
+    useEffect(() => {
+        global.sendGameMessage = sendData;
+        return () => {
+            delete global.sendGameMessage;
+        };
+    }, [sendData]);
+
+    const submitLapTimeMutation = useSubmitLapTime();
+
+    useEffect(() => {
+        if (!trackName || !playerName) {
+            return;
+        }
+        global.onLapComplete = (newLap: number, lapTimeMs: number, ghostReplayData: Uint8Array) => {
+            if (newLap <= 1) return;
+            const ghostReplay = btoa(String.fromCharCode(...ghostReplayData));
+            const isMobile = window.matchMedia("(pointer: coarse)").matches;
+
+            submitLapTimeMutation.mutate({
+                playerName,
+                trackName,
+                lapTimeMs,
+                isMobile,
+                ghostReplay,
+            }, {
+                onSuccess: () => {
+                    notifications.show({
+                        title: 'Lap Submitted',
+                        message: `Lap time ${(lapTimeMs / 1000).toFixed(2)}s submitted to leaderboard!`,
+                        color: 'green',
+                    });
+                },
+            });
+        };
+
+        return () => {
+            delete global.onLapComplete;
+        };
+    }, [playerName, submitLapTimeMutation, trackName]);
 
     const isGameStarted = useRef(false) // to guarantee we only start once
     const isGamePlaying = joinedGame?.status === "playing" && playerIndex !== undefined;
-    const trackName = joinedGame?.trackName;
     const hasWeapons = joinedGame?.hasWeapons;
     const laps = joinedGame?.laps;
     useEffect(() => {
-        {
-            if (!isGameStarted.current && isGamePlaying && gameInstanceApi  && trackName && hasWeapons !== undefined && laps) {
-                isGameStarted.current = true;
-                const isMobile = window.matchMedia("(pointer: coarse)").matches;
-                setGameScreenMode(isMobile ? "maximized" : "mini");
-                peerStatuses?.forEach((x, idx) => {
-                    const latencies = peerLatencies?.[idx];
-                    gameInstanceApi.setPlayerStatus(
-                        idx,
-                        x === "connected",
-                        latencies?.minimumLatency ?? 0,
-                        latencies?.averageLatency ?? 0,
-                    );
-                });
-                gameInstanceApi.startGame(
-                    playerIndex,
-                    trackName,
-                    hasWeapons,
-                    laps
+        if (!isGameStarted.current && isGamePlaying && gameInstanceApi && trackName && hasWeapons !== undefined && laps) {
+            isGameStarted.current = true;
+            const isMobile = window.matchMedia("(pointer: coarse)").matches;
+            setGameScreenMode(isMobile ? "maximized" : "mini");
+            peerStatuses?.forEach((x, idx) => {
+                const latencies = peerLatencies?.[idx];
+                gameInstanceApi.setPlayerStatus(
+                    idx,
+                    x === "connected",
+                    latencies?.minimumLatency ?? 0,
+                    latencies?.averageLatency ?? 0,
                 );
-            }
+            });
+            gameInstanceApi.startGame(
+                playerIndex,
+                trackName + '.trk',
+                hasWeapons,
+                laps
+            );
         }
-    }, [peerStatuses, peerLatencies, isGamePlaying, gameInstanceApi, setGameScreenMode]);
+    }, [gameInstanceApi, hasWeapons, isGamePlaying, laps, peerLatencies, peerStatuses, playerIndex, setGameScreenMode, trackName]);
 
     // If we're already in the game, show the normal game interface
     if (isInGame && joinedGame) {
@@ -113,9 +151,9 @@ export const GamePage: React.FC = () => {
 
     // If game exists but we're not in it, show join interface
     if (game && !isInGame) {
-        return <JoinGameOffer gameInfo={game} />;
+        return <JoinGameOffer gameInfo={game}/>;
     }
 
     // Game not found
-    return <GameNotFound />;
+    return <GameNotFound/>;
 };

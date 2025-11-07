@@ -23,6 +23,7 @@
 
 #include "ClientSession.h"
 #include "TrackCommonStuff.h"
+#include "EmscriptenInterop.h"
 #include <cstring>
 #include <iostream>
 
@@ -357,6 +358,9 @@ void MR_ClientSession::AddMessage( const char* pMessage )
 void MR_ClientSession::OnLapChange(int newLap, MR_SimulationTime lapDuration)
 {
    mGhostRecorder->StopRecording(lapDuration);
+   GhostFile ghostData = mGhostRecorder->GetGhostFile(mSession.GetTitle());
+   EmscriptenInterop::OnLap(newLap, lapDuration, ghostData);
+
    if (lapDuration > 0 && (lapDuration < mGhostPlayer->GetLapDuration() || !mGhostPlayer->IsLoaded()))
    {
       std::cout << "New lap record!" << std::endl;
@@ -364,7 +368,6 @@ void MR_ClientSession::OnLapChange(int newLap, MR_SimulationTime lapDuration)
 
       if (this->GetNbPlayers() == 1)
       {
-         GhostFile ghostData = mGhostRecorder->GetGhostFile(mSession.GetTitle());
          mGhostPlayer->LoadFromData(ghostData);
       }
    }
