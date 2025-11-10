@@ -81,7 +81,7 @@ export const GamePage: React.FC = () => {
         if (!trackName || !playerName) {
             return;
         }
-        global.onLapComplete = (newLap: number, lapTimeMs: number, ghostReplayData: Uint8Array) => {
+        global.onLapComplete = (newLap: number, lapTimeMs: number, vehicleType: number, ghostReplayData: Uint8Array) => {
             if (newLap <= 1) return;
             const ghostReplay = btoa(String.fromCharCode(...ghostReplayData));
             const isMobile = window.matchMedia("(pointer: coarse)").matches;
@@ -91,6 +91,7 @@ export const GamePage: React.FC = () => {
                 trackName,
                 lapTimeMs,
                 isMobile,
+                vehicleType,
                 ghostReplay,
             }, {
                 onSuccess: () => {

@@ -22,6 +22,7 @@ export function initializeDatabase(dbPath: string): sqlite3.Database {
                 track_name TEXT NOT NULL,
                 lap_time_ms INTEGER NOT NULL,
                 is_mobile BOOLEAN NOT NULL,
+                vehicle_type INTEGER NOT NULL,
                 ghost_replay BLOB NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(player_name, track_name, lap_time_ms)

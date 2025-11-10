@@ -10,12 +10,12 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
     app.post("/api/leaderboard/submit", async (req, res) => {
         console.log("🏁 POST /api/leaderboard/submit - Submit lap time request");
         try {
-            const { playerName, trackName, lapTimeMs, isMobile, ghostReplay }: SubmitLapTimeRequest = req.body;
-            console.log(`🎯 Submitting lap time: ${playerName} - ${trackName} - ${lapTimeMs}ms - mobile: ${isMobile}`);
+            const { playerName, trackName, lapTimeMs, isMobile, vehicleType, ghostReplay }: SubmitLapTimeRequest = req.body;
+            console.log(`🎯 Submitting lap time: ${playerName} - ${trackName} - ${lapTimeMs}ms - mobile: ${isMobile} - vehicle: ${vehicleType}`);
 
-            if (!playerName || !trackName || lapTimeMs === undefined || isMobile === undefined || !ghostReplay) {
+            if (!playerName || !trackName || lapTimeMs === undefined || isMobile === undefined || vehicleType === undefined || !ghostReplay) {
                 console.log("❌ Missing required fields");
-                return res.status(400).json({ error: "Missing required fields: playerName, trackName, lapTimeMs, isMobile, ghostReplay" });
+                return res.status(400).json({ error: "Missing required fields: playerName, trackName, lapTimeMs, isMobile, vehicleType, ghostReplay" });
             }
 
             if (typeof lapTimeMs !== "number" || lapTimeMs <= 0) {
@@ -23,7 +23,12 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
                 return res.status(400).json({ error: "lapTimeMs must be a positive number" });
             }
 
-            const result = await leaderboardService.submitLapTime({ playerName, trackName, lapTimeMs, isMobile, ghostReplay });
+            if (typeof vehicleType !== "number" || vehicleType < 0 || vehicleType > 2) {
+                console.log("❌ Invalid vehicle type");
+                return res.status(400).json({ error: "vehicleType must be 0 (ELECTRO), 1 (HITECH), or 2 (BITURBO)" });
+            }
+
+            const result = await leaderboardService.submitLapTime({ playerName, trackName, lapTimeMs, isMobile, vehicleType, ghostReplay });
 
             console.log(`✅ Lap time submitted successfully`);
             res.status(201).json(result);

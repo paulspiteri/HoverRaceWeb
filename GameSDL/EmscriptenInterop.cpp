@@ -8,7 +8,7 @@
 
 namespace EmscriptenInterop {
 
-void OnLap(int newLap, MR_SimulationTime lapDuration, const GhostFile& ghostData) {
+void OnLap(int newLap, MR_SimulationTime lapDuration, int vehicleType, const GhostFile& ghostData) {
 #ifdef __EMSCRIPTEN__
     // Serialize ghost data to a contiguous buffer
     std::vector<unsigned char> binaryData;
@@ -26,17 +26,17 @@ void OnLap(int newLap, MR_SimulationTime lapDuration, const GhostFile& ghostData
     const unsigned char* dataPtr = binaryData.data();
     const size_t dataSize = binaryData.size();
 
-    // Call JavaScript with lap info and ghost data
+    // Call JavaScript with lap info, vehicle type, and ghost data
     EM_ASM({
         if (typeof onLapComplete === 'function') {
             // Create a new Uint8Array and copy the data
-            var dataArray = new Uint8Array($3);
-            for (var i = 0; i < $3; i++) {
-                dataArray[i] = HEAPU8[$2 + i];
+            var dataArray = new Uint8Array($4);
+            for (var i = 0; i < $4; i++) {
+                dataArray[i] = HEAPU8[$3 + i];
             }
-            onLapComplete($0, $1, dataArray);
+            onLapComplete($0, $1, $2, dataArray);
         }
-    }, newLap, lapDuration, dataPtr, dataSize);
+    }, newLap, lapDuration, vehicleType, dataPtr, dataSize);
 #endif
 }
 

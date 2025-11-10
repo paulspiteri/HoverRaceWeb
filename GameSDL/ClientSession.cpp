@@ -359,7 +359,8 @@ void MR_ClientSession::OnLapChange(int newLap, MR_SimulationTime lapDuration)
 {
    mGhostRecorder->StopRecording(lapDuration);
    GhostFile ghostData = mGhostRecorder->GetGhostFile(mSession.GetTitle());
-   EmscriptenInterop::OnLap(newLap, lapDuration, ghostData);
+   int vehicleType = mMainCharacter1->GetHoverModel();
+   EmscriptenInterop::OnLap(newLap, lapDuration, vehicleType, ghostData);
 
    if (lapDuration > 0 && (lapDuration < mGhostPlayer->GetLapDuration() || !mGhostPlayer->IsLoaded()))
    {

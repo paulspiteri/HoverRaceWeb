@@ -15,10 +15,10 @@ export class LeaderboardService {
 
             this.db.run(
                 `
-                INSERT INTO leaderboard (player_name, track_name, lap_time_ms, is_mobile, ghost_replay)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO leaderboard (player_name, track_name, lap_time_ms, is_mobile, vehicle_type, ghost_replay)
+                VALUES (?, ?, ?, ?, ?, ?)
             `,
-                [request.playerName, request.trackName, request.lapTimeMs, request.isMobile ? 1 : 0, ghostReplayBuffer],
+                [request.playerName, request.trackName, request.lapTimeMs, request.isMobile ? 1 : 0, request.vehicleType, ghostReplayBuffer],
                 (err: Error | null) => {
                     if (err) {
                         console.error("💥 Error submitting lap time:", err);
@@ -37,7 +37,7 @@ export class LeaderboardService {
         return new Promise((resolve, reject) => {
             this.db.all(
                 `
-                SELECT id, player_name, track_name, lap_time_ms, is_mobile, created_at
+                SELECT id, player_name, track_name, lap_time_ms, is_mobile, vehicle_type, created_at
                 FROM leaderboard
                 WHERE track_name = ? AND is_mobile = ?
                 ORDER BY lap_time_ms ASC
@@ -57,6 +57,7 @@ export class LeaderboardService {
                         trackName: row.track_name,
                         lapTimeMs: row.lap_time_ms,
                         isMobile: row.is_mobile === 1,
+                        vehicleType: row.vehicle_type,
                         createdAt: new Date(row.created_at),
                     }));
 
