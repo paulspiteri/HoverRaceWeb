@@ -4,7 +4,7 @@ import {useParams} from "react-router-dom";
 import {ActiveGame} from "@/ActiveGame.tsx";
 import {JoinGameOffer} from "@/JoinGameOffer.tsx";
 import {GameNotFound} from "@/GameNotFound.tsx";
-import type {JoinedGame} from "./types";
+import type {JoinedGame, VehicleType} from "./types";
 import {usePeers} from "@/usePeers.ts";
 import {useGameInstance} from "@/interop/gameInterop.ts";
 import {useGameWindowSize} from "@/interop/useGameWindowSize.ts";
@@ -66,7 +66,7 @@ export const GamePage: React.FC = () => {
     );
 
     const trackName = joinedGame?.trackName.replace('.trk', '');
-    const [currentVehicleType, setCurrentVehicleType] = useState<number>();
+    const [currentVehicleType, setCurrentVehicleType] = useState<VehicleType>();
     const { data: leaderboard } = useLeaderboard(trackName, 10);
     const { data: vehicleLeaderboard } = useLeaderboard(currentVehicleType !== undefined ? trackName : undefined, 1, currentVehicleType); // get best lap for vehicle once selected
     const bestVehicleLap = vehicleLeaderboard?.[0];
@@ -92,7 +92,7 @@ export const GamePage: React.FC = () => {
         if (!trackName || !playerName) {
             return;
         }
-        global.onLapComplete = (newLap: number, lapTimeMs: number, vehicleType: number, ghostReplayData: Uint8Array) => {
+        global.onLapComplete = (newLap: number, lapTimeMs: number, vehicleType: VehicleType, ghostReplayData: Uint8Array) => {
             // Update current vehicle type for leaderboard filtering
             setCurrentVehicleType(vehicleType);
 
