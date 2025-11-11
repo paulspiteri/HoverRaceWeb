@@ -1159,9 +1159,8 @@ MR_Int32 MR_MainCharacter::Cylinder::RayLen()const
 
 MR_Angle MR_MainCharacter::GetCabinOrientation()const
 {
-   return mOrientation;
+   return mCabinOrientation;
 }
-
 
 double MR_MainCharacter::GetFuelLevel()const
 {
