@@ -356,10 +356,10 @@ void MR_ClientSession::OnLapChange(int newLap, MR_SimulationTime lapDuration)
    int vehicleType = mMainCharacter1->GetHoverModel();
    EmscriptenInterop::OnLap(newLap, lapDuration, vehicleType, ghostData);
 
-   if (lapDuration > 0 && (lapDuration < mGhostPlayer->GetLapDuration() || !mGhostPlayer->IsLoaded()))
+   if (lapDuration > 0 && (!mGhostPlayer->IsLoaded() ||lapDuration < mGhostPlayer->GetLapDuration()))
    {
-      std::cout << "New lap record!" << std::endl;
       mGhostRecorder->Save(mSession.GetTitle());
+      mGhostPlayer->LoadFromData(mGhostRecorder->GetGhostFile(mSession.GetTitle()));   // reload ghost with new best
    }
 
    // Restart ghost playback at the start of every lap
