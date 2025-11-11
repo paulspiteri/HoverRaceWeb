@@ -1,5 +1,5 @@
 // Vehicle type enum based on MR_* constants
-export enum VehicleType {
+export const enum VehicleType {
     ELECTRO = 0,
     HITECH = 1,
     BITURBO = 2
