@@ -124,14 +124,13 @@ bool GhostPlayer::LoadFromData(const GhostFile& pGhostFile)
 	return true;
 }
 
-void GhostPlayer::StartPlayback(MR_SimulationTime pLapStartTime)
+void GhostPlayer::StartPlayback()
 {
 	mCurrentFrameIndex = 0;
-	mLapStartTime = pLapStartTime;
 	mPlaybackStarted = true;
 }
 
-GhostFrameResult GhostPlayer::GetNextFrame(MR_SimulationTime pSimulationTime)
+GhostFrameResult GhostPlayer::GetNextFrame(MR_SimulationTime pSimulationLapTime)
 {
 	GhostFrameResult result;
 	result.frame = nullptr;
@@ -142,9 +141,6 @@ GhostFrameResult GhostPlayer::GetNextFrame(MR_SimulationTime pSimulationTime)
 		return result;
 	}
 
-	// Calculate relative time since lap start
-	MR_SimulationTime relativeTime = pSimulationTime - mLapStartTime;
-
 	// Remember the starting index
 	size_t startIndex = mCurrentFrameIndex;
 
@@ -153,7 +149,7 @@ GhostFrameResult GhostPlayer::GetNextFrame(MR_SimulationTime pSimulationTime)
 		const GhostFrame& frame = mFrames[mCurrentFrameIndex];
 
 		// If this frame's time is in the future, stop
-		if (frame.mSimTime > relativeTime) {
+		if (frame.mSimTime > pSimulationLapTime) {
 			break;
 		}
 

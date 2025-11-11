@@ -77,16 +77,15 @@ public:
 	/**
 	 * Start playback from the beginning.
 	 * Call this when the lap starts.
-	 * @param pLapStartTime The simulation time when the lap started
 	 */
-	void StartPlayback(MR_SimulationTime pLapStartTime);
+	void StartPlayback();
 
 	/**
 	 * Get the next ghost frame for the given simulation time.
-	 * @param pSimulationTime Current absolute simulation time
+	 * @param pSimulationLapTime Current simulation time of lap
 	 * @return Result containing the frame (or nullptr) and completion status
 	 */
-	GhostFrameResult GetNextFrame(MR_SimulationTime pSimulationTime);
+	GhostFrameResult GetNextFrame(MR_SimulationTime pSimulationLapTime);
 
 private:
 	bool mLoaded = false;
@@ -97,5 +96,4 @@ private:
 	std::string mFilename;
 	std::vector<GhostFrame> mFrames;
 	size_t mCurrentFrameIndex = 0;
-	MR_SimulationTime mLapStartTime = 0;
 };

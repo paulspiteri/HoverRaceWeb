@@ -61,7 +61,7 @@ bool MR_ClientSession::Process( int pSpeedFactor )
       }
 
       if (mGhostCharacter != nullptr) {
-         auto result = mGhostPlayer->GetNextFrame(GetSimulationTime());
+         auto result = mGhostPlayer->GetNextFrame(GetSimulationTime() - mMainCharacter1->GetLastLapCompletion());
          if (result.frame != nullptr) {
             int lOldRoom = mGhostCharacter->mRoom;
             mGhostCharacter->SetNetState(sizeof(MR_MainCharacterState), reinterpret_cast<const MR_UInt8*>(&result.frame->mState));
@@ -365,7 +365,7 @@ void MR_ClientSession::OnLapChange(int newLap, MR_SimulationTime lapDuration)
    // Restart ghost playback at the start of every lap
    if (mGhostPlayer->IsLoaded())
    {
-      mGhostPlayer->StartPlayback(GetSimulationTime());
+      mGhostPlayer->StartPlayback();
       CreateGhostCharacter(mGhostPlayer->GetPlayerId());
    }
 
@@ -380,7 +380,7 @@ void MR_ClientSession::LoadBestLapGhost(const unsigned char* ghostData, int data
    if (GhostFile::FromBinaryData(ghostData, dataSize, ghostFile) &&
        mGhostPlayer->LoadFromData(ghostFile))
    {
-      mGhostPlayer->StartPlayback(mMainCharacter1->GetLastLapCompletion());
+      mGhostPlayer->StartPlayback();
       CreateGhostCharacter(mGhostPlayer->GetPlayerId());
       std::cout << "Best lap ghost loaded successfully!" << std::endl;
    }
