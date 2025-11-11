@@ -592,7 +592,7 @@ function broadcastPublicUpdate(data: ServerMessage, excludeConnectionIds?: strin
             try {
                 client.write(message);
                 sentCount++;
-            } catch (error) {
+            } catch {
                 console.log(`💔 Broadcast write failed for ${clientData.connectionId}, marking for removal`);
                 deadConnections.push(client);
             }
@@ -616,7 +616,7 @@ function broadcastPrivateUpdate(game: ServerGame, data: ServerMessage) {
         if (participantConnectionIds.includes(clientData.connectionId)) {
             try {
                 client.write(message);
-            } catch (error) {
+            } catch {
                 console.log(`💔 Private broadcast write failed for ${clientData.connectionId}, marking for removal`);
                 deadConnections.push(client);
             }
