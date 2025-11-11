@@ -20,6 +20,7 @@ interface InteropInterface {
     _SetPeerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
     _ReceivePeerMessage: (playerId: number, dataPtr: number, size: number, reliable: boolean) => void;
     _SetCurrentWeapon: (weaponType: number) => void;
+    _LoadBestLapGhost: (ghostDataPtr: number, dataSize: number) => void;
 }
 
 export interface GameInstanceAPI {
@@ -28,6 +29,7 @@ export interface GameInstanceAPI {
     setPlayerStatus: (playerId: number, isConnected: boolean, minLatency: number, avgLatency: number) => void;
     receiveGameData: (playerId: number, binaryData: Uint8Array, reliable: boolean) => void;
     setCurrentWeapon: (weaponType: number) => void;
+    loadBestLapGhost: (ghostData: Uint8Array) => void;
 }
 
 declare global {
@@ -146,6 +148,17 @@ export const useGameInstance = (canvas: HTMLCanvasElement | null) => {
                 },
                 setCurrentWeapon: (weaponType: number) => {
                     gameInstance._SetCurrentWeapon(weaponType);
+                },
+                loadBestLapGhost: (ghostData: Uint8Array) => {
+                    // Allocate memory in Emscripten heap
+                    const dataPtr = gameInstance._malloc(ghostData.length);
+                    gameInstance.HEAPU8.set(ghostData, dataPtr);
+
+                    // Call C++ function
+                    gameInstance._LoadBestLapGhost(dataPtr, ghostData.length);
+
+                    // Free the allocated memory
+                    gameInstance._free(dataPtr);
                 },
             } satisfies GameInstanceAPI;
         }

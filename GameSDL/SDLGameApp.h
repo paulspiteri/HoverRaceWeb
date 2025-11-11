@@ -38,4 +38,5 @@ class MR_SDLGameApp
       void SetCurrentWeapon(MR_MainCharacter::eWeapon pWeapon);
       void SetOpenGLResolution(int width, int height);
       void DisconnectPlayer(int playerId);
+      void LoadBestLapGhost(const unsigned char* ghostData, int dataSize);
 };

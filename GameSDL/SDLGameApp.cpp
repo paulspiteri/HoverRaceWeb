@@ -216,3 +216,11 @@ void MR_SDLGameApp::DisconnectPlayer(int playerId)
       mCurrentSession->DisconnectPlayer(playerId);
    }
 }
+
+void MR_SDLGameApp::LoadBestLapGhost(const unsigned char* ghostData, int dataSize)
+{
+   if (mCurrentSession != nullptr)
+   {
+      mCurrentSession->LoadBestLapGhost(ghostData, dataSize);
+   }
+}

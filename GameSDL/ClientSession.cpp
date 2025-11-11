@@ -88,12 +88,6 @@ BOOL MR_ClientSession::LoadNew( const char* pTitle, MR_RecordFile* pMazeFile, in
    mAllowWeapons = pAllowWeapons;
    lReturnValue  = mSession.LoadNew( pTitle, pMazeFile );
 
-   // Try to load ghost file for this track (only in single player mode)
-   std::string ghostFilename = "ghosts/" + std::string(pTitle) + ".ghost";
-   if (lReturnValue && GetNbPlayers() == 1 && mGhostPlayer->LoadFromFile(ghostFilename)) {
-      std::cout << "Ghost loaded successfully for track: " << pTitle << std::endl;
-   }
-
    return lReturnValue;
 }
 
@@ -366,11 +360,6 @@ void MR_ClientSession::OnLapChange(int newLap, MR_SimulationTime lapDuration)
    {
       std::cout << "New lap record!" << std::endl;
       mGhostRecorder->Save(mSession.GetTitle());
-
-      if (this->GetNbPlayers() == 1)
-      {
-         mGhostPlayer->LoadFromData(ghostData);
-      }
    }
 
    // Restart ghost playback at the start of every lap
@@ -382,6 +371,23 @@ void MR_ClientSession::OnLapChange(int newLap, MR_SimulationTime lapDuration)
 
    // start new lap recording
    mGhostRecorder->StartRecording(GetSimulationTime());
+}
+
+void MR_ClientSession::LoadBestLapGhost(const unsigned char* ghostData, int dataSize)
+{
+   GhostFile ghostFile;
+
+   if (GhostFile::FromBinaryData(ghostData, dataSize, ghostFile) &&
+       mGhostPlayer->LoadFromData(ghostFile))
+   {
+      mGhostPlayer->StartPlayback(mMainCharacter1->GetLastLapCompletion());
+      CreateGhostCharacter(mGhostPlayer->GetPlayerId());
+      std::cout << "Best lap ghost loaded successfully!" << std::endl;
+   }
+   else
+   {
+      std::cout << "Failed to load best lap ghost" << std::endl;
+   }
 }
 
 void MR_ClientSession::CreateGhostCharacter(int hoverId)

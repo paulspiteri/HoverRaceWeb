@@ -64,6 +64,55 @@ struct GhostFile
 		return sizeof(GhostFileHeader) +           // Header (fixed size)
 		       (frames.size() * sizeof(GhostFrame)); // All frames
 	}
+
+	/**
+	 * Deserialize a GhostFile from raw binary data.
+	 * @param pGhostData Pointer to the binary ghost data
+	 * @param pDataSize Size of the binary data in bytes
+	 * @param outGhostFile Output parameter - the deserialized GhostFile
+	 * @return true if deserialization succeeded, false otherwise
+	 */
+	static bool FromBinaryData(const unsigned char* pGhostData, int pDataSize, GhostFile& outGhostFile)
+	{
+		// Validate input
+		if (!pGhostData || pDataSize <= 0) {
+			std::cout << "Ghost deserialization: Invalid ghost data" << std::endl;
+			return false;
+		}
+
+		// Check if we have enough data for the header
+		if (pDataSize < static_cast<int>(sizeof(GhostFileHeader))) {
+			std::cout << "Ghost deserialization: Data too small for header (" << pDataSize << " bytes)" << std::endl;
+			return false;
+		}
+
+		// Read header
+		memcpy(&outGhostFile.header, pGhostData, sizeof(GhostFileHeader));
+
+		// Calculate frame data
+		const unsigned char* frameData = pGhostData + sizeof(GhostFileHeader);
+		int remainingBytes = pDataSize - sizeof(GhostFileHeader);
+		int frameSize = sizeof(GhostFrame);
+		int frameCount = remainingBytes / frameSize;
+
+		// Validate frame count
+		if (frameCount != static_cast<int>(outGhostFile.header.frameCount)) {
+			std::cout << "Ghost deserialization: Frame count mismatch - header says " << outGhostFile.header.frameCount
+			          << " but data contains " << frameCount << std::endl;
+			return false;
+		}
+
+		// Read frames
+		outGhostFile.frames.clear();
+		outGhostFile.frames.reserve(frameCount);
+		for (int i = 0; i < frameCount; i++) {
+			GhostFrame frame;
+			memcpy(&frame, frameData + (i * frameSize), frameSize);
+			outGhostFile.frames.push_back(frame);
+		}
+
+		return true;
+	}
 };
 
 /**

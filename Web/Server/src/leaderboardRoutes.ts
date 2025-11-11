@@ -28,9 +28,20 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
                 return res.status(400).json({ error: "vehicleType must be 0 (ELECTRO), 1 (HITECH), or 2 (BITURBO)" });
             }
 
+            // Check if this lap time is better than the current best for this track/mobile/vehicle combination
+            const currentBestTime = await leaderboardService.getBestLapTime(trackName, isMobile, vehicleType);
+            if (currentBestTime !== null && lapTimeMs >= currentBestTime) {
+                console.log(`⚠️ Lap time ${lapTimeMs}ms is not faster than current best ${currentBestTime}ms`);
+                return res.status(400).json({
+                    error: "Lap time is not faster than the current best",
+                    currentBest: currentBestTime,
+                    submitted: lapTimeMs
+                });
+            }
+
             const result = await leaderboardService.submitLapTime({ playerName, trackName, lapTimeMs, isMobile, vehicleType, ghostReplay });
 
-            console.log(`✅ Lap time submitted successfully`);
+            console.log(`✅ Lap time submitted successfully (beat best time of ${currentBestTime}ms)`);
             res.status(201).json(result);
         } catch (error) {
             console.log("💥 Error submitting lap time:", error);
@@ -45,7 +56,8 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
             const { trackName } = req.params;
             const isMobile = req.query.isMobile === "true";
             const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
-            console.log(`🎯 Getting leaderboard for ${trackName} - mobile: ${isMobile} - limit: ${limit}`);
+            const vehicleType = req.query.vehicleType !== undefined ? parseInt(req.query.vehicleType as string, 10) : undefined;
+            console.log(`🎯 Getting leaderboard for ${trackName} - mobile: ${isMobile} - limit: ${limit} - vehicleType: ${vehicleType}`);
 
             if (!trackName) {
                 console.log("❌ Missing track name");
@@ -57,7 +69,12 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
                 return res.status(400).json({ error: "Limit must be between 1 and 100" });
             }
 
-            const entries = await leaderboardService.getTopLapTimes(trackName, isMobile, limit);
+            if (vehicleType !== undefined && (isNaN(vehicleType) || vehicleType < 0 || vehicleType > 2)) {
+                console.log("❌ Invalid vehicle type");
+                return res.status(400).json({ error: "vehicleType must be 0 (ELECTRO), 1 (HITECH), or 2 (BITURBO)" });
+            }
+
+            const entries = await leaderboardService.getTopLapTimes(trackName, isMobile, limit, vehicleType);
 
             console.log(`✅ Retrieved ${entries.length} leaderboard entries`);
             res.status(200).json({ entries });

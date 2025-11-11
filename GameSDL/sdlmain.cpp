@@ -27,6 +27,7 @@ int gWindowWidth = 640;
 int gWindowHeight = 400;
 
 std::array<PeerStatus, WebPeerInterface::eMaxClient> gPeerStatus; // load here default values before game starts
+std::vector<unsigned char> gPendingGhostData; // ghost data to load when game starts
 
 extern "C" {
     void Quit()
@@ -83,6 +84,24 @@ extern "C" {
             // Convert int to weapon enum: 0=Missile, 1=Mine, 2=PowerUp
             auto weapon = static_cast<MR_MainCharacter::eWeapon>(weaponType);
             game->SetCurrentWeapon(weapon);
+        }
+    }
+
+    void LoadBestLapGhost(const unsigned char* ghostData, int dataSize) {
+        if (ghostData == nullptr || dataSize <= 0) {
+            return;
+        }
+
+        // If game is already running, load it immediately
+        if (game != nullptr) {
+            game->LoadBestLapGhost(ghostData, dataSize);
+        }
+        else
+        {
+            // Store ghost data for later if game hasn't started yet
+            gPendingGhostData.clear();
+            gPendingGhostData.assign(ghostData, ghostData + dataSize);
+            std::cout << "Stored pending ghost data (" << dataSize << " bytes)" << std::endl;
         }
     }
 }
@@ -157,6 +176,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     }
     ASSERT(gPlayerId >= 0);
     game->LoadSelectedTrack(track.value().c_str(), gPlayerId, gPeerStatus, gHasWeapons, gLaps);
+
+    // Load pending ghost data if any was set before game started
+    if (!gPendingGhostData.empty()) {
+        std::cout << "Loading pending ghost data (" << gPendingGhostData.size() << " bytes)" << std::endl;
+        game->LoadBestLapGhost(gPendingGhostData.data(), static_cast<int>(gPendingGhostData.size()));
+        gPendingGhostData.clear();
+    }
+
     ImGui_ImplSDL3_InitForOther(glWindow);
     return SDL_APP_CONTINUE;
 

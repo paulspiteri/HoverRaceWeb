@@ -1,5 +1,5 @@
 import * as React from "react";
-import {useCallback, useEffect, useRef} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {useParams} from "react-router-dom";
 import {ActiveGame} from "@/ActiveGame.tsx";
 import {JoinGameOffer} from "@/JoinGameOffer.tsx";
@@ -8,8 +8,9 @@ import type {JoinedGame} from "./types";
 import {usePeers} from "@/usePeers.ts";
 import {useGameInstance} from "@/interop/gameInterop.ts";
 import {useGameWindowSize} from "@/interop/useGameWindowSize.ts";
-import {useLeaderboard} from "@/useLeaderboard.ts";
+import {useLeaderboard} from "@/hooks/useLeaderboard.ts";
 import {useSubmitLapTime} from "@/hooks/useSubmitLapTime.ts";
+import {useGhostReplay} from "@/hooks/useGhostReplay.ts";
 import {useAtomValue, useSetAtom} from "jotai";
 import {
     connectionIdAtom,
@@ -65,8 +66,18 @@ export const GamePage: React.FC = () => {
     );
 
     const trackName = joinedGame?.trackName.replace('.trk', '');
+    const [currentVehicleType, setCurrentVehicleType] = useState<number>();
     const { data: leaderboard } = useLeaderboard(trackName, 10);
-    const bestLapTime = leaderboard?.[0]?.lapTimeMs;
+    const { data: vehicleLeaderboard } = useLeaderboard(currentVehicleType !== undefined ? trackName : undefined, 1, currentVehicleType); // get best lap for vehicle once selected
+    const bestVehicleLap = vehicleLeaderboard?.[0];
+    const { data: ghostReplayData } = useGhostReplay(bestVehicleLap?.id);
+
+    useEffect(() => {
+        if (ghostReplayData && gameInstanceApi) {
+            console.log('Loading best lap ghost replay:', ghostReplayData.length, 'bytes');
+            gameInstanceApi.loadBestLapGhost(ghostReplayData);
+        }
+    }, [ghostReplayData, gameInstanceApi]);
 
     useEffect(() => {
         global.sendGameMessage = sendData;
@@ -82,7 +93,12 @@ export const GamePage: React.FC = () => {
             return;
         }
         global.onLapComplete = (newLap: number, lapTimeMs: number, vehicleType: number, ghostReplayData: Uint8Array) => {
+            // Update current vehicle type for leaderboard filtering
+            setCurrentVehicleType(vehicleType);
+
             if (newLap <= 1) return;
+            if (bestVehicleLap !== undefined && lapTimeMs >= bestVehicleLap?.lapTimeMs) return;
+
             const ghostReplay = btoa(String.fromCharCode(...ghostReplayData));
             const isMobile = window.matchMedia("(pointer: coarse)").matches;
 
@@ -96,7 +112,7 @@ export const GamePage: React.FC = () => {
             }, {
                 onSuccess: () => {
                     notifications.show({
-                        title: 'Lap Submitted',
+                        title: 'Lap Record',
                         message: `Lap time ${(lapTimeMs / 1000).toFixed(2)}s submitted to leaderboard!`,
                         color: 'green',
                     });
@@ -107,7 +123,7 @@ export const GamePage: React.FC = () => {
         return () => {
             delete global.onLapComplete;
         };
-    }, [playerName, submitLapTimeMutation, trackName]);
+    }, [bestVehicleLap, playerName, submitLapTimeMutation, trackName]);
 
     const isGameStarted = useRef(false) // to guarantee we only start once
     const isGamePlaying = joinedGame?.status === "playing" && playerIndex !== undefined;
@@ -145,7 +161,7 @@ export const GamePage: React.FC = () => {
                 peersActualStatuses={peersActualStatuses}
                 peerLatencies={peerLatencies}
                 isLoadingGameData={isLoadingGameData}
-                bestLapTime={bestLapTime}
+                bestLapTime={leaderboard?.[0]?.lapTimeMs}
             />
         );
     }

@@ -111,6 +111,8 @@ class MR_ClientSession
 
       // Rendering access to level
       const   MR_Level* GetCurrentLevel()const;
+
+      void LoadBestLapGhost(const unsigned char* ghostData, int dataSize);
 };
 
 #endif

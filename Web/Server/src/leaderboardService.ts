@@ -32,18 +32,54 @@ export class LeaderboardService {
         });
     }
 
-    // Get top N lap times for a specific track and mobile configuration
-    async getTopLapTimes(trackName: string, isMobile: boolean, limit: number = 10): Promise<LeaderboardEntry[]> {
+    // Get the best (fastest) lap time for a specific track, mobile, and vehicle configuration
+    async getBestLapTime(trackName: string, isMobile: boolean, vehicleType: number): Promise<number | null> {
         return new Promise((resolve, reject) => {
-            this.db.all(
+            this.db.get(
                 `
+                SELECT lap_time_ms
+                FROM leaderboard
+                WHERE track_name = ? AND is_mobile = ? AND vehicle_type = ?
+                ORDER BY lap_time_ms ASC
+                LIMIT 1
+            `,
+                [trackName, isMobile ? 1 : 0, vehicleType],
+                (err, row: any) => {
+                    if (err) {
+                        console.error("💥 Error getting best lap time:", err);
+                        reject(err);
+                        return;
+                    }
+
+                    resolve(row ? row.lap_time_ms : null);
+                },
+            );
+        });
+    }
+
+    // Get top N lap times for a specific track and mobile configuration, optionally filtered by vehicle type
+    async getTopLapTimes(trackName: string, isMobile: boolean, limit: number = 10, vehicleType?: number): Promise<LeaderboardEntry[]> {
+        return new Promise((resolve, reject) => {
+            let query = `
                 SELECT id, player_name, track_name, lap_time_ms, is_mobile, vehicle_type, created_at
                 FROM leaderboard
                 WHERE track_name = ? AND is_mobile = ?
+            `;
+            const params: any[] = [trackName, isMobile ? 1 : 0];
+
+            // Add vehicle type filter if specified
+            if (vehicleType !== undefined) {
+                query += ` AND vehicle_type = ?`;
+                params.push(vehicleType);
+            }
+
+            query += `
                 ORDER BY lap_time_ms ASC
                 LIMIT ?
-            `,
-                [trackName, isMobile ? 1 : 0, limit],
+            `;
+            params.push(limit);
+
+            this.db.all(query, params,
                 (err, rows: any[]) => {
                     if (err) {
                         console.error("💥 Error getting top lap times:", err);

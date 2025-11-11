@@ -1052,6 +1052,7 @@ void MR_MainCharacter::ApplyEffect( const MR_ContactEffect* pEffect,  MR_Simulat
          case MR_CheckPoint::eFinishLine:
             if (!mFirstLapStarted)
             {
+               mLastLapCompletion = pTime;
                if (mLapChangeCallback) {
                   mLapChangeCallback(1, 0);  // first lap starting, duration is 0
                }
