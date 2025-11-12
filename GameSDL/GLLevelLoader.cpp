@@ -120,9 +120,9 @@ void GLLevelLoader::LoadBackground(const MR_UInt8* backImage)
 
     const int segments = 24; // Number of segments around the cylinder
     const float radius = 200000.0f;
-    const float height = 160000.0f;
+    const float height = 200000.0f;
     const float centerX = 0.0f;
-    const float centerY = 0.0f;
+    const float centerY = -30000.0f;
     const float centerZ = 0.0f;
 
     const float startAngleOffset = -(std::numbers::pi / 2.0f); // -90 degrees
