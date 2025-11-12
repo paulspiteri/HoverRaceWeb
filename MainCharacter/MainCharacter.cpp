@@ -158,6 +158,7 @@ MR_MainCharacter::MR_MainCharacter( const MR_ObjectFromFactoryId& pId )
 
    mNbLapForRace       = 5; // Hard coded default
    mLapCount           = 0;
+   mCurrentLapStartTime = 0;
    mLastLapCompletion  = 0;
    mLastLapDuration    = 0;
    mBestLapDuration    = 0;
@@ -1050,9 +1051,9 @@ void MR_MainCharacter::ApplyEffect( const MR_ContactEffect* pEffect,  MR_Simulat
             break;
 
          case MR_CheckPoint::eFinishLine:
-            if (!mFirstLapStarted)
+            if (!mFirstLapStarted)  // special case for tracks where the start line is after the starting position (most tracks)
             {
-               mLastLapCompletion = pTime;
+               mCurrentLapStartTime = pTime;
                if (mLapChangeCallback) {
                   mLapChangeCallback(1, 0);  // first lap starting, duration is 0
                }
@@ -1067,6 +1068,7 @@ void MR_MainCharacter::ApplyEffect( const MR_ContactEffect* pEffect,  MR_Simulat
                mLapCount++;
                mLastLapDuration     = pTime-mLastLapCompletion;
                mLastLapCompletion   = pTime;
+               mCurrentLapStartTime = pTime;
 
                if (mLapChangeCallback) {
                   mLapChangeCallback(mLapCount + 1, mLastLapDuration);  // new lap with duration
@@ -1279,6 +1281,11 @@ MR_SimulationTime  MR_MainCharacter::GetLastLapCompletion()const
 {
    return mLastLapCompletion;
 }
+MR_SimulationTime  MR_MainCharacter::GetCurrentLapStartTime()const
+{
+   return mCurrentLapStartTime;
+}
+
 
 BOOL MR_MainCharacter::HasFinish()const
 {

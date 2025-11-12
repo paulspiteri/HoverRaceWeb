@@ -168,6 +168,7 @@ class MR_MainCharacter:public MR_FreeElement
       // Race stats
       int                       mNbLapForRace;
       int                       mLapCount;
+      MR_SimulationTime         mCurrentLapStartTime; // used for ghost - can't use lastLapCompletion due to inconsistent start/finish line placements
       MR_SimulationTime         mLastLapCompletion;
       MR_SimulationTime         mLastLapDuration;
       MR_SimulationTime         mBestLapDuration;
@@ -244,6 +245,7 @@ class MR_MainCharacter:public MR_FreeElement
       MR_DllDeclare MR_SimulationTime  GetBestLapDuration()const;
       MR_DllDeclare MR_SimulationTime  GetLastLapDuration()const;
       MR_DllDeclare MR_SimulationTime  GetLastLapCompletion()const;
+                    MR_SimulationTime  GetCurrentLapStartTime()const;
       MR_DllDeclare BOOL               HasFinish()const;
 
       void SetLapChangeCallback(std::function<void(int newLap, MR_SimulationTime lapDuration)> callback);
