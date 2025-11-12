@@ -36,15 +36,15 @@ class MR_MainCharacterState: private MR_BitPack
 	#define  MC_POSZ          52,   15,     0
 	#define  MC_ROOM          67,   11,     0
 	#define  MC_ORIENTATION   78,    9,     3
-	#define  MC_SPEED_X_256   87,   13,     2
-	#define  MC_SPEED_Y_256  100,   13,     2
-	#define  MC_SPEED_Z_256  113,    9,     2
-	#define  MC_CONTROL_ST   122,   15,     0
-	#define  MC_ON_FLOOR     137,    1,     0
-	#define  MC_HOVER_MODEL  138,    3,     0
-	#define  MC_PADDING      141,   11,     0
+	#define  MC_SPEED_X_256   87,   14,     2
+	#define  MC_SPEED_Y_256  101,   14,     2
+	#define  MC_SPEED_Z_256  115,    9,     2
+	#define  MC_CONTROL_ST   124,   15,     0
+	#define  MC_ON_FLOOR     139,    1,     0
+	#define  MC_HOVER_MODEL  140,    3,     0
+	#define  MC_PADDING      143,    1,     0
 
-	// Total                 146  = 18 bytes
+	// Total                 144  = 18 bytes
 	MR_UInt8  mFieldList[18];
 
 public:
