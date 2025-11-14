@@ -92,11 +92,11 @@ export const GamePage: React.FC = () => {
         if (!trackName || !playerName) {
             return;
         }
-        global.onLapComplete = (newLap: number, lapTimeMs: number, vehicleType: VehicleType, ghostReplayData: Uint8Array) => {
+        global.onLapComplete = (newLap: number, lapTimeMs: number, vehicleType: VehicleType, ghostReplayData: Uint8Array | null) => {
             // Update current vehicle type for leaderboard filtering
             setCurrentVehicleType(vehicleType);
 
-            if (newLap <= 1) return;
+            if (newLap <= 1 || !ghostReplayData) return;
             if (bestVehicleLap !== undefined && lapTimeMs >= bestVehicleLap?.lapTimeMs) return;
 
             const ghostReplay = btoa(String.fromCharCode(...ghostReplayData));

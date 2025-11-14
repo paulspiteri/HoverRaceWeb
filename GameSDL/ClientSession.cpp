@@ -61,7 +61,7 @@ bool MR_ClientSession::Process( int pSpeedFactor )
       }
 
       if (mGhostCharacter != nullptr) {
-         auto result = mGhostPlayer->GetNextFrame(GetSimulationTime() - mMainCharacter1->GetLastLapCompletion());
+         auto result = mGhostPlayer->GetNextFrame(GetSimulationTime() - mMainCharacter1->GetCurrentLapStartTime());
          if (result.frame != nullptr) {
             int lOldRoom = mGhostCharacter->mRoom;
             mGhostCharacter->SetNetState(sizeof(MR_MainCharacterState), reinterpret_cast<const MR_UInt8*>(&result.frame->mState));
@@ -352,14 +352,19 @@ void MR_ClientSession::AddMessage( const char* pMessage )
 void MR_ClientSession::OnLapChange(int newLap, MR_SimulationTime lapDuration)
 {
    mGhostRecorder->StopRecording(lapDuration);
-   GhostFile ghostData = mGhostRecorder->GetGhostFile(mSession.GetTitle());
    int vehicleType = mMainCharacter1->GetHoverModel();
-   EmscriptenInterop::OnLap(newLap, lapDuration, vehicleType, ghostData);
 
-   if (lapDuration > 0 && (!mGhostPlayer->IsLoaded() ||lapDuration < mGhostPlayer->GetLapDuration()))
+   GhostFile ghostData;
+   const GhostFile* ghostDataPtr = nullptr;
+   if (mGhostRecorder->HasRecording()) {
+      ghostData = mGhostRecorder->GetGhostFile(mSession.GetTitle());
+      ghostDataPtr = &ghostData;
+   }
+   EmscriptenInterop::OnLap(newLap, lapDuration, vehicleType, ghostDataPtr);
+
+   if (ghostDataPtr != nullptr && (!mGhostPlayer->IsLoaded() ||lapDuration < mGhostPlayer->GetLapDuration()))
    {
-      mGhostRecorder->Save(mSession.GetTitle());
-      mGhostPlayer->LoadFromData(mGhostRecorder->GetGhostFile(mSession.GetTitle()));   // reload ghost with new best
+      mGhostPlayer->LoadFromData(*ghostDataPtr);   // reload ghost with new best
    }
 
    // Restart ghost playback at the start of every lap

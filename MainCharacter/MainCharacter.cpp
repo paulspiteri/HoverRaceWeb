@@ -1051,7 +1051,7 @@ void MR_MainCharacter::ApplyEffect( const MR_ContactEffect* pEffect,  MR_Simulat
             break;
 
          case MR_CheckPoint::eFinishLine:
-            if (!mFirstLapStarted)  // special case for tracks where the start line is after the starting position (most tracks)
+            if (!mFirstLapStarted && !mCheckPoint2 && mLapCount == 0)  // special case for tracks where the start line is after the starting position (most tracks)
             {
                mCurrentLapStartTime = pTime;
                if (mLapChangeCallback) {

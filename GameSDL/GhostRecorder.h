@@ -58,17 +58,16 @@ public:
 	GhostFile GetGhostFile(const std::string& pTrackName) const;
 
 	/**
-	 * Save the recorded data to disk.
-	 * @param pTrackName The name of the track being raced
-	 * @return true if save was successful, false otherwise
-	 */
-	bool Save(const std::string& pTrackName);
-
-	/**
 	 * Check if currently recording.
 	 * @return true if recording is active
 	 */
 	bool IsRecording() const { return mIsRecording; }
+
+	/**
+	 * Check if there is a recording available.
+	 * @return true if there are recorded frames
+	 */
+	bool HasRecording() const { return !mRecordedFrames.empty(); }
 
 private:
 	bool mIsRecording;
@@ -79,11 +78,4 @@ private:
 	// Store frames with timing information
 	std::vector<GhostFrame> mRecordedFrames;
 	int mPlayerId;
-
-	/**
-	 * Generate the filename for the ghost recording.
-	 * @param pTrackName The name of the track
-	 * @return The full path to the ghost file
-	 */
-	std::string GenerateFilename(const std::string& pTrackName) const;
 };
