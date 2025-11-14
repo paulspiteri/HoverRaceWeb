@@ -6,6 +6,7 @@
 
 #define MR_MAX_SOUND_COPY 6
 
+#pragma pack(push, 1)
 typedef struct WAVEFORMATEX
 {
     WORD    wFormatTag;        /* format type */
@@ -18,6 +19,7 @@ typedef struct WAVEFORMATEX
                                     extra information (after cbSize) */
 
 } WAVEFORMATEX;
+#pragma pack(pop)
 
 class MR_SoundBuffer;
 
@@ -30,7 +32,7 @@ struct StreamHungryCallbackData
 class MR_SoundBuffer
 {
     private:
-        StreamHungryCallbackData callbackData;
+        StreamHungryCallbackData callbackData[MR_MAX_SOUND_COPY];
 
     protected:
         uint32_t mSoundDataLen;
@@ -52,7 +54,7 @@ class MR_SoundBuffer
             }
             mNbCopy = pNbCopy;
 
-            mSoundDataLen = (*(uint32_t*)pData) - 4;    /* I cannot explain this -4 but otherwise there is some corrupt popping up at the end of the continuous sound */
+            mSoundDataLen = *(uint32_t*)pData;
             WAVEFORMATEX* lWaveFormat = (WAVEFORMATEX*)(pData + sizeof(mSoundDataLen));
             mSoundData = const_cast<char*>(pData + sizeof(uint32_t) + sizeof(WAVEFORMATEX));
             if (lWaveFormat->wBitsPerSample != 8)
@@ -67,9 +69,9 @@ class MR_SoundBuffer
 
             for(int lCounter = 0; lCounter < mNbCopy; lCounter++)
             {
-                callbackData.soundBuffer = this;
-                callbackData.copyIndex = lCounter;
-                mSoundBuffer[lCounter] = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &sdlAudioSpec, isHungry ? StreamHungryCallback : nullptr, &callbackData);
+                callbackData[lCounter].soundBuffer = this;
+                callbackData[lCounter].copyIndex = lCounter;
+                mSoundBuffer[lCounter] = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &sdlAudioSpec, isHungry ? StreamHungryCallback : nullptr, &callbackData[lCounter]);
                 if (!mSoundBuffer[lCounter]) {
                     SDL_LogError(SDL_LOG_CATEGORY_AUDIO, "SDL_OpenAudioDeviceStream failed: %s", SDL_GetError());
                 }
@@ -155,10 +157,15 @@ class MR_ContinuousSound : public MR_SoundBuffer
 
                 // set volume
                 // convert decibel value used by old DirectSound to linear value expected by SDL
-                float attenuation_db = pDB / 100.0f;
-                float gain = powf(10.0f, attenuation_db / 20.0f);
-                gain = (gain < 0.0f) ? 0.0f : (gain > 1.0f) ? 1.0f : gain;
-                SDL_SetAudioStreamGain(mSoundBuffer[pCopy], gain);
+                // DirectSound uses centibels: -10000 (silence) to 0 (full volume)
+                if (pDB <= -10000) {
+                    SDL_SetAudioStreamGain(mSoundBuffer[pCopy], 0.0f);
+                } else {
+                    float attenuation_db = pDB / 100.0f;
+                    float gain = powf(10.0f, attenuation_db / 20.0f);
+                    gain = std::min(gain, 1.0f);  // clamp to max 1.0
+                    SDL_SetAudioStreamGain(mSoundBuffer[pCopy], gain);
+                }
             }
         }
 
@@ -166,13 +173,27 @@ class MR_ContinuousSound : public MR_SoundBuffer
     protected:
         void OnStreamHungry(SDL_AudioStream* stream, int copyIndex, int bytesNeeded) override
         {
-            // loop the sound
-            const char* pos = this->mSoundData + this->mLooping[copyIndex];
-            auto sizeput = std::min(this->mSoundDataLen - this->mLooping[copyIndex], static_cast<uint32_t>(bytesNeeded));
-            SDL_PutAudioStreamData(stream, pos, sizeput);
-            this->mLooping[copyIndex] += sizeput;
-            if (this->mLooping[copyIndex] >= this->mSoundDataLen) {
-                this->mLooping[copyIndex] = 0;
+            // loop the sound, filling the entire buffer by wrapping around as needed
+            int bytesRemaining = bytesNeeded;
+
+            while (bytesRemaining > 0) {
+                // Safety check: ensure loop position is valid
+                if (this->mLooping[copyIndex] >= this->mSoundDataLen) {
+                    this->mLooping[copyIndex] = 0;
+                }
+
+                const char* pos = this->mSoundData + this->mLooping[copyIndex];
+                uint32_t bytesAvailable = this->mSoundDataLen - this->mLooping[copyIndex];
+                uint32_t bytesToCopy = std::min(bytesAvailable, static_cast<uint32_t>(bytesRemaining));
+
+                SDL_PutAudioStreamData(stream, pos, bytesToCopy);
+
+                this->mLooping[copyIndex] += bytesToCopy;
+                bytesRemaining -= bytesToCopy;
+
+                if (this->mLooping[copyIndex] >= this->mSoundDataLen) {
+                    this->mLooping[copyIndex] = 0;
+                }
             }
         }
 
