@@ -18,9 +18,8 @@ async function fetchLeaderboard(trackName: string, isMobile: boolean, limit: num
     return data.entries;
 }
 
-export function useLeaderboard(trackName: string | undefined, limit: number = 10, vehicleType?: number) {
-    // Detect if device is mobile
-    const isMobile = window.matchMedia("(pointer: coarse)").matches;
+export function useLeaderboard(trackName: string | undefined, limit: number = 10, vehicleType?: number | undefined, isMobileOverride?: boolean | undefined) {
+    const isMobile = isMobileOverride !== undefined ? isMobileOverride : window.matchMedia("(pointer: coarse)").matches;
 
     return useQuery({
         queryKey: ['useLeaderboard', trackName, isMobile, limit, vehicleType],

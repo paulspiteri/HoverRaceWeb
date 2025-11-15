@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Root } from "@/Root.tsx";
 import { NoGame } from "@/NoGame.tsx";
 import { GamePage } from "@/GamePage.tsx";
+import { TrackRecordsPage } from "@/TrackRecordsPage.tsx";
 import { ErrorBoundary } from "@/ErrorBoundary.tsx";
 
 const router = createBrowserRouter([
@@ -17,6 +18,10 @@ const router = createBrowserRouter([
             {
                 path: "game/:gameId",
                 element: <GamePage />,
+            },
+            {
+                path: "records/:trackname",
+                element: <TrackRecordsPage />,
             },
         ],
     },
