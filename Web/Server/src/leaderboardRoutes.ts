@@ -54,7 +54,8 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
         console.log("🏆 GET /api/leaderboard/:trackName - Get leaderboard request");
         try {
             const { trackName } = req.params;
-            const isMobile = req.query.isMobile === "true";
+            // If isMobile is not provided, fetch all platforms (undefined means all)
+            const isMobile = req.query.isMobile !== undefined ? req.query.isMobile === "true" : undefined;
             const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
             const vehicleType = req.query.vehicleType !== undefined ? parseInt(req.query.vehicleType as string, 10) : undefined;
             console.log(`🎯 Getting leaderboard for ${trackName} - mobile: ${isMobile} - limit: ${limit} - vehicleType: ${vehicleType}`);

@@ -60,10 +60,12 @@ export const TrackRecordsPage: React.FC = () => {
             : undefined)
         : undefined;
 
-    // Convert platform param to boolean or undefined
-    const platformFilter: boolean | undefined = platformParam
-        ? platformParam === 'mobile'
-        : undefined;
+    // Convert platform param to boolean, null (for 'all'), or undefined (for device detection fallback)
+    const platformFilter: boolean | null | undefined = platformParam === 'mobile'
+        ? true
+        : platformParam === 'desktop'
+        ? false
+        : null; // null means 'all platforms'
 
     const { data: records, isLoading, error } = useLeaderboard(trackname, 10, vehicleFilter, platformFilter);
 

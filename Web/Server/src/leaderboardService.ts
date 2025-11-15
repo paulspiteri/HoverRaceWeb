@@ -58,14 +58,20 @@ export class LeaderboardService {
     }
 
     // Get top N lap times for a specific track and mobile configuration, optionally filtered by vehicle type
-    async getTopLapTimes(trackName: string, isMobile: boolean, limit: number = 10, vehicleType?: number): Promise<LeaderboardEntry[]> {
+    async getTopLapTimes(trackName: string, isMobile: boolean | undefined, limit: number = 10, vehicleType?: number): Promise<LeaderboardEntry[]> {
         return new Promise((resolve, reject) => {
             let query = `
                 SELECT id, player_name, track_name, lap_time_ms, is_mobile, vehicle_type, created_at
                 FROM leaderboard
-                WHERE track_name = ? AND is_mobile = ?
+                WHERE track_name = ?
             `;
-            const params: any[] = [trackName, isMobile ? 1 : 0];
+            const params: any[] = [trackName];
+
+            // Add mobile filter if specified (undefined means fetch all platforms)
+            if (isMobile !== undefined) {
+                query += ` AND is_mobile = ?`;
+                params.push(isMobile ? 1 : 0);
+            }
 
             // Add vehicle type filter if specified
             if (vehicleType !== undefined) {
