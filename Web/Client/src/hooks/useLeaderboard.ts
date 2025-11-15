@@ -24,19 +24,15 @@ async function fetchLeaderboard(trackName: string, isMobile: boolean | null, lim
     return data.entries;
 }
 
-export function useLeaderboard(trackName: string | undefined, limit: number = 10, vehicleType?: number | undefined, isMobileOverride?: boolean | null | undefined) {
-    // If isMobileOverride is null, fetch all platforms
-    // If isMobileOverride is a boolean, use that value
-    // If isMobileOverride is undefined, fall back to device detection
-    const isMobile = isMobileOverride === null
-        ? null
-        : isMobileOverride !== undefined
-            ? isMobileOverride
-            : window.matchMedia("(pointer: coarse)").matches;
-
+export function useLeaderboard(
+    trackName: string | undefined,
+    limit: number = 10,
+    vehicleType?: number,
+    isMobile?: boolean | null
+) {
     return useQuery({
         queryKey: ['useLeaderboard', trackName, isMobile, limit, vehicleType],
-        queryFn: () => fetchLeaderboard(trackName!, isMobile, limit, vehicleType),
+        queryFn: () => fetchLeaderboard(trackName!, isMobile ?? null, limit, vehicleType),
         enabled: Boolean(trackName),
     });
 }

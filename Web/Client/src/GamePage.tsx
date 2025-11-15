@@ -11,6 +11,7 @@ import {useGameWindowSize} from "@/interop/useGameWindowSize.ts";
 import {useLeaderboard} from "@/hooks/useLeaderboard.ts";
 import {useSubmitLapTime} from "@/hooks/useSubmitLapTime.ts";
 import {useGhostReplay} from "@/hooks/useGhostReplay.ts";
+import {isMobileDevice} from "@/utils/deviceDetection.ts";
 import {useAtomValue, useSetAtom} from "jotai";
 import {
     connectionIdAtom,
@@ -67,8 +68,9 @@ export const GamePage: React.FC = () => {
 
     const trackName = joinedGame?.trackName.replace('.trk', '');
     const [currentVehicleType, setCurrentVehicleType] = useState<VehicleType>();
-    const { data: leaderboard } = useLeaderboard(trackName, 10);
-    const { data: vehicleLeaderboard } = useLeaderboard(currentVehicleType !== undefined ? trackName : undefined, 1, currentVehicleType); // get best lap for vehicle once selected
+    const isMobile = isMobileDevice();
+    const { data: leaderboard } = useLeaderboard(trackName, 10, undefined, isMobile);
+    const { data: vehicleLeaderboard } = useLeaderboard(currentVehicleType !== undefined ? trackName : undefined, 1, currentVehicleType, isMobile); // get best lap for vehicle once selected
     const bestVehicleLap = vehicleLeaderboard?.[0];
     const { data: ghostReplayData } = useGhostReplay(bestVehicleLap?.id);
 
