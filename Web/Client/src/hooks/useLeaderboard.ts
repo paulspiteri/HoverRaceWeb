@@ -5,11 +5,11 @@ interface LeaderboardResponse {
     entries: LeaderboardEntry[];
 }
 
-async function fetchLeaderboard(trackName: string, isMobile: boolean | null, limit: number = 10, vehicleType?: number): Promise<LeaderboardEntry[]> {
+async function fetchLeaderboard(trackName: string, isMobile: boolean | undefined, limit: number = 10, vehicleType?: number): Promise<LeaderboardEntry[]> {
     let url = `${import.meta.env.VITE_SERVER_URL}/api/leaderboard/${encodeURIComponent(trackName)}?limit=${limit}`;
 
-    // Only add isMobile parameter if it's not null (null means fetch all platforms)
-    if (isMobile !== null) {
+    // Only add isMobile parameter if it's defined (undefined means fetch all platforms)
+    if (isMobile !== undefined) {
         url += `&isMobile=${isMobile}`;
     }
 
@@ -28,11 +28,11 @@ export function useLeaderboard(
     trackName: string | undefined,
     limit: number = 10,
     vehicleType?: number,
-    isMobile?: boolean | null
+    isMobile?: boolean
 ) {
     return useQuery({
         queryKey: ['useLeaderboard', trackName, isMobile, limit, vehicleType],
-        queryFn: () => fetchLeaderboard(trackName!, isMobile ?? null, limit, vehicleType),
+        queryFn: () => fetchLeaderboard(trackName!, isMobile, limit, vehicleType),
         enabled: Boolean(trackName),
     });
 }
