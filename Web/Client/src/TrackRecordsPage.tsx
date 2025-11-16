@@ -53,19 +53,25 @@ export const TrackRecordsPage: React.FC = () => {
     const platformParam = searchParams.get('platform');
 
     // Convert vehicle param to VehicleType number or undefined
-    const vehicleFilter: number | undefined = vehicleParam
-        ? (vehicleParam === 'electro' ? VehicleType.ELECTRO
-            : vehicleParam === 'hitech' ? VehicleType.HITECH
-            : vehicleParam === 'biturbo' ? VehicleType.BITURBO
-            : undefined)
-        : undefined;
+    let vehicleFilter: number | undefined;
+    if (vehicleParam === 'electro') {
+        vehicleFilter = VehicleType.ELECTRO;
+    } else if (vehicleParam === 'hitech') {
+        vehicleFilter = VehicleType.HITECH;
+    } else if (vehicleParam === 'biturbo') {
+        vehicleFilter = VehicleType.BITURBO;
+    }
 
     // Convert platform param to boolean or undefined
-    const platformFilter: boolean | undefined = platformParam
-        ? platformParam === 'mobile'
-        : undefined;
+    // true = mobile only, false = desktop only, undefined = all platforms
+    let isMobile: boolean | undefined;
+    if (platformParam === 'mobile') {
+        isMobile = true;
+    } else if (platformParam === 'desktop') {
+        isMobile = false;
+    }
 
-    const { data: records, isLoading, error } = useLeaderboard(trackname, 10, vehicleFilter, platformFilter);
+    const { data: records, isLoading, error } = useLeaderboard(trackname, 10, vehicleFilter, isMobile);
 
     const handleVehicleChange = (value: string) => {
         const params = new URLSearchParams(searchParams);
