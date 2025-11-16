@@ -64,14 +64,14 @@ export const TrackRecordsPage: React.FC = () => {
 
     // Convert platform param to boolean or undefined
     // true = mobile only, false = desktop only, undefined = all platforms
-    let platformFilter: boolean | undefined;
+    let isMobile: boolean | undefined;
     if (platformParam === 'mobile') {
-        platformFilter = true;
+        isMobile = true;
     } else if (platformParam === 'desktop') {
-        platformFilter = false;
+        isMobile = false;
     }
 
-    const { data: records, isLoading, error } = useLeaderboard(trackname, 10, vehicleFilter, platformFilter);
+    const { data: records, isLoading, error } = useLeaderboard(trackname, 10, vehicleFilter, isMobile);
 
     const handleVehicleChange = (value: string) => {
         const params = new URLSearchParams(searchParams);
