@@ -91,7 +91,7 @@ export const GamePage: React.FC = () => {
     const submitLapTimeMutation = useSubmitLapTime();
 
     useEffect(() => {
-        if (!trackName || !playerName) {
+        if (!trackName) {
             return;
         }
         global.onLapComplete = (newLap: number, lapTimeMs: number, vehicleType: VehicleType, ghostReplayData: Uint8Array | null) => {

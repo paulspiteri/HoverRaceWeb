@@ -9,7 +9,7 @@ export type VehicleType = typeof VehicleType[keyof typeof VehicleType];
 
 export type LeaderboardEntry = {
     id: number;
-    playerName: string;
+    playerName: string | null;
     trackName: string;
     lapTimeMs: number;
     isMobile: boolean;
@@ -18,7 +18,7 @@ export type LeaderboardEntry = {
 };
 
 export type SubmitLapTimeRequest = {
-    playerName: string;
+    playerName?: string;
     trackName: string;
     lapTimeMs: number;
     isMobile: boolean;

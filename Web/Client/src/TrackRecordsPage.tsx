@@ -189,7 +189,9 @@ export const TrackRecordsPage: React.FC = () => {
                                             </Text>
                                         </Table.Td>
                                         <Table.Td>
-                                            <Text fw={index < 3 ? 600 : 400}>{record.playerName}</Text>
+                                            <Text fw={index < 3 ? 600 : 400} c={record.playerName ? undefined : 'dimmed'}>
+                                                {record.playerName || 'Anonymous'}
+                                            </Text>
                                         </Table.Td>
                                         <Table.Td>
                                             <Badge color={vehicleColors[record.vehicleType]} variant="light">

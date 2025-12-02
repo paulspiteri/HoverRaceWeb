@@ -18,7 +18,7 @@ export class LeaderboardService {
                 INSERT INTO leaderboard (player_name, track_name, lap_time_ms, is_mobile, vehicle_type, ghost_replay)
                 VALUES (?, ?, ?, ?, ?, ?)
             `,
-                [request.playerName, request.trackName, request.lapTimeMs, request.isMobile ? 1 : 0, request.vehicleType, ghostReplayBuffer],
+                [request.playerName ?? null, request.trackName, request.lapTimeMs, request.isMobile ? 1 : 0, request.vehicleType, ghostReplayBuffer],
                 (err: Error | null) => {
                     if (err) {
                         console.error("💥 Error submitting lap time:", err);

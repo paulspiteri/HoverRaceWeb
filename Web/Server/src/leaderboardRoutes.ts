@@ -11,11 +11,11 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
         console.log("🏁 POST /api/leaderboard/submit - Submit lap time request");
         try {
             const { playerName, trackName, lapTimeMs, isMobile, vehicleType, ghostReplay }: SubmitLapTimeRequest = req.body;
-            console.log(`🎯 Submitting lap time: ${playerName} - ${trackName} - ${lapTimeMs}ms - mobile: ${isMobile} - vehicle: ${vehicleType}`);
+            console.log(`🎯 Submitting lap time: ${playerName ?? 'Anonymous'} - ${trackName} - ${lapTimeMs}ms - mobile: ${isMobile} - vehicle: ${vehicleType}`);
 
-            if (!playerName || !trackName || lapTimeMs === undefined || isMobile === undefined || vehicleType === undefined || !ghostReplay) {
+            if (!trackName || lapTimeMs === undefined || isMobile === undefined || vehicleType === undefined || !ghostReplay) {
                 console.log("❌ Missing required fields");
-                return res.status(400).json({ error: "Missing required fields: playerName, trackName, lapTimeMs, isMobile, vehicleType, ghostReplay" });
+                return res.status(400).json({ error: "Missing required fields: trackName, lapTimeMs, isMobile, vehicleType, ghostReplay" });
             }
 
             if (typeof lapTimeMs !== "number" || lapTimeMs <= 0) {
