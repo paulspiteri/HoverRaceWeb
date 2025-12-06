@@ -1,7 +1,7 @@
 import { ConnectionStatus } from "./ConnectionStatus";
 import { ElectroIntro } from "./ElectroIntro.tsx";
 import { ActionIcon, Group } from "@mantine/core";
-import { IconTrophy, IconHome } from "@tabler/icons-react";
+import { IconTrophy, IconHome, IconInfoCircle } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Header.module.css";
 
@@ -27,6 +27,14 @@ export const Header: React.FC = () => {
                         title="View Records"
                     >
                         <IconTrophy size={24} />
+                    </ActionIcon>
+                    <ActionIcon
+                        onClick={() => navigate('/about')}
+                        variant="subtle"
+                        size="lg"
+                        title="About"
+                    >
+                        <IconInfoCircle size={24} />
                     </ActionIcon>
                 </Group>
             </div>

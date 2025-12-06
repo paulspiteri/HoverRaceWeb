@@ -3,6 +3,7 @@ import { Root } from "@/Root.tsx";
 import { NoGame } from "@/NoGame.tsx";
 import { GamePage } from "@/GamePage.tsx";
 import { TrackRecordsPage } from "@/TrackRecordsPage.tsx";
+import { About } from "@/About.tsx";
 import { ErrorBoundary } from "@/ErrorBoundary.tsx";
 
 const router = createBrowserRouter([
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
             {
                 path: "records/:trackname",
                 element: <TrackRecordsPage />,
+            },
+            {
+                path: "about",
+                element: <About />,
             },
         ],
     },
