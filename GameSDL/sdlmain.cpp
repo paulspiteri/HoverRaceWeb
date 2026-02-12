@@ -126,6 +126,10 @@ std::optional<std::string> GetTrack() {
             }
         }, &dialogPromise, NULL, NULL, 0, NULL, FALSE);
 
+        // Pump events while waiting — the portal callback is delivered via the event loop
+        while (dialogFuture.wait_for(std::chrono::milliseconds(10)) != std::future_status::ready) {
+            SDL_PumpEvents();
+        }
         return dialogFuture.get();
     }
 }
@@ -156,12 +160,27 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #else
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 #endif
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
     glContext = SDL_GL_CreateContext(glWindow);
+    if (!glContext) {
+        SDL_Log("Failed to create GL context with 16x MSAA: %s. Trying 4x.", SDL_GetError());
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+        glContext = SDL_GL_CreateContext(glWindow);
+    }
+    if (!glContext) {
+        SDL_Log("Failed to create GL context with 4x MSAA: %s. Trying without MSAA.", SDL_GetError());
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+        SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+        glContext = SDL_GL_CreateContext(glWindow);
+    }
+    if (!glContext) {
+        SDL_Log("Failed to create GL context: %s", SDL_GetError());
+        return SDL_APP_FAILURE;
+    }
     SDL_GL_SetSwapInterval(1); // VSync
     SDL_GL_MakeCurrent(glWindow, glContext);
 

@@ -413,7 +413,7 @@ CTestTestfile.cmake
 _deps
 CMakeUserPresets.json
 
-build/
-buildweb/
+build-*/
+cmake-build-*/
 .vscode/
 .idea/
