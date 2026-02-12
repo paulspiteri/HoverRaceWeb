@@ -40,6 +40,9 @@
               pkgs.gcc
               pkgs.gnumake
               pkgs.pkg-config
+
+              # Emscripten (web/WASM build)
+              pkgs.emscripten
             ] ++ linuxLibs;
 
             LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath linuxLibs;
