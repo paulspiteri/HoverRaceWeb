@@ -108,7 +108,7 @@ BOOL MR_GameSession::LoadNew( const char* pTitle, MR_RecordFile* pMazeFile )
    return lReturnValue;
 }
 
-inline long long timeGetTime()
+static long long timeGetTime()
 {
     using namespace std::chrono;
     return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
