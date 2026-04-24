@@ -51,7 +51,7 @@ public:
 };
 
 // mimics the Windows mmsystem timeGetTime() which is ms since system started
-uint32_t timeGetTime() {
+static uint32_t timeGetTime() {
    static auto start = std::chrono::steady_clock::now();
    auto now = std::chrono::steady_clock::now();
    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
