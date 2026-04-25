@@ -1056,7 +1056,7 @@ uint32_t* GLRenderer::ConvertBackgroundToRGBA8(const MR_UInt8* backImage)
             int srcIdx = y * srcWidth + x;
             MR_UInt8 pixelColorPaletteIdx = backImage[srcIdx];
             NoMFC::PALETTEENTRY& paletteEntry = palette[pixelColorPaletteIdx];
-            uint32_t color = (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
+            uint32_t color = (0xFF << 24) | (paletteEntry.peBlue << 16) | (paletteEntry.peGreen << 8) | paletteEntry.peRed;
 
             // Apply 90-degree clockwise rotation
             int destX = y;
