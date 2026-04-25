@@ -57,12 +57,12 @@ class MR_DllDeclare MR_BitmapSurface:public MR_SurfaceElement
 
 
       // Rendering stuff
-      void RenderWallSurface( MR_3DViewPort* pDest, const MR_3DCoordinate& pUpperLeft, const MR_3DCoordinate& pLowerRight, MR_Int32 pLen, MR_SimulationTime pTime );
-      void RenderHorizontalSurface( MR_3DViewPort* pDest, int pNbVertex, const MR_2DCoordinate* pVertexList, MR_Int32 pLevel, BOOL pTop, MR_SimulationTime pTime );
+      void RenderWallSurface( MR_3DViewPort* pDest, const MR_3DCoordinate& pUpperLeft, const MR_3DCoordinate& pLowerRight, MR_Int32 pLen, MR_SimulationTime pTime ) override;
+      void RenderHorizontalSurface( MR_3DViewPort* pDest, int pNbVertex, const MR_2DCoordinate* pVertexList, MR_Int32 pLevel, BOOL pTop, MR_SimulationTime pTime ) override;
 
 
       // Logic stuff
-      const MR_ContactEffectList* GetEffectList();
+      const MR_ContactEffectList* GetEffectList() override;
 
       MR_ResBitmap* GetResBitmap()const override
       {

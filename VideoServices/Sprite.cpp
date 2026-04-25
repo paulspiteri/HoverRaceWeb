@@ -103,6 +103,9 @@ void MR_Sprite::Blt( int pX, int pY, MR_2DViewPort* pDest, eAlignment pHAlign, e
          case eCenter:
             pX -= lScaledWidth/2;
             break;
+
+         default:
+            break;
       }
 
       switch( pVAlign )
@@ -113,6 +116,9 @@ void MR_Sprite::Blt( int pX, int pY, MR_2DViewPort* pDest, eAlignment pHAlign, e
 
          case eCenter:
             pY -= lScaledHeight/2;
+            break;
+
+         default:
             break;
       }
 
@@ -198,6 +204,9 @@ void MR_Sprite::StrBlt( int pX, int pY, const char* pStr, MR_2DViewPort* pDest, 
          case eCenter:
             pX -= lStrLen*lStep/2;
             break;
+
+         default:
+            break;
       }
 
       switch( pVAlign )
@@ -208,6 +217,9 @@ void MR_Sprite::StrBlt( int pX, int pY, const char* pStr, MR_2DViewPort* pDest, 
 
          case eCenter:
             pY -= mItemHeight/(2*pScaling);
+            break;
+
+         default:
             break;
       }
 

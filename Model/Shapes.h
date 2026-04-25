@@ -121,6 +121,7 @@ class MR_DllDeclare MR_LineSegmentShape: public MR_ShapeInterface
 class MR_DllDeclare MR_PolygonShape: public MR_ShapeInterface
 {
    public:
+      virtual ~MR_PolygonShape() = default;
       virtual int       VertexCount()const =0;
       virtual MR_Int32  X( int pIndex )const =0;
       virtual MR_Int32  Y( int pIndex )const =0;

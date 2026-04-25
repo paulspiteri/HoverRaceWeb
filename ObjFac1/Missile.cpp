@@ -306,7 +306,7 @@ void MR_Missile::ApplyEffect( const MR_ContactEffect* pEffect,  MR_SimulationTim
    if( (lPhysCollision != NULL)&&pValidDirection )
    {
 
-      if( lPhysCollision->mWeight < MR_PhysicalCollision::eInfiniteWeight )
+      if( lPhysCollision->mWeight < static_cast<double>(MR_PhysicalCollision::eInfiniteWeight) )
       {
          if( mLived >= cIgnitionTime )
          {
