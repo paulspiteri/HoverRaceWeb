@@ -33,6 +33,13 @@ else()
     find_package(OpenGL REQUIRED)
     target_link_libraries(GameSDL PRIVATE OpenGL::GL)
 
+    file(COPY
+        "${CMAKE_SOURCE_DIR}/Assets/ObjFac1.dat"
+        "${CMAKE_SOURCE_DIR}/Assets/Fonts/Roboto-MediumItalic.ttf"
+        "${CMAKE_SOURCE_DIR}/Assets/Tracks/"
+        DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+    )
+
     if(WIN32)
         if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
             target_link_options(GameSDL PRIVATE "/subsystem:windows")
