@@ -63,6 +63,23 @@ npm install
 npm run dev
 ```
 
+### Nix Docker Image
+
+The flake can also build a Docker/OCI image without a Dockerfile:
+
+```sh
+nix build .#dockerImage
+./result | docker load
+```
+
+Run the loaded image:
+
+```sh
+docker run --rm -p 3001:3001 -v "$PWD/data:/data" hoverraceweb:nix
+```
+
+The Nix-built image contains nginx, the React/WASM frontend, and the Node backend. nginx listens on port `3001`, serves static assets directly, and proxies `/api/*` plus `/health` to Node on the internal port `3000`. SQLite data is written to `/data/hoverrace.db`.
+
 ### Native Build
 
 ```sh
