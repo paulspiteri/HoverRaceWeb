@@ -9,7 +9,9 @@ shutdown() {
 
 trap shutdown INT TERM
 
-su -s /bin/sh node -c 'node Web/Server/src/server.ts' &
+chown node:node /data
+
+su-exec node node Web/Server/src/server.ts &
 server_pid="$!"
 
 nginx -g 'daemon off;'

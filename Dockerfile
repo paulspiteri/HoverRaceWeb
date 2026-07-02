@@ -15,7 +15,7 @@ COPY VideoServices ./VideoServices
 RUN mkdir -p Web/Client/public
 RUN ./build-web.sh
 
-FROM node:24-bookworm-slim AS client-builder
+FROM node:24-alpine AS client-builder
 WORKDIR /app/Web/Client
 COPY Web/Client/package*.json ./
 RUN npm ci
@@ -26,24 +26,32 @@ ENV VITE_SERVER_URL=""
 ENV VITE_GAME_URL=""
 RUN npm run build
 
-FROM node:24-bookworm-slim AS server-deps
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 make g++ pkg-config \
-    && rm -rf /var/lib/apt/lists/*
+FROM node:24-alpine AS server-deps
+RUN apk add --no-cache python3 make g++ pkgconfig
 WORKDIR /app/Web/Server
 COPY Web/Server/package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev \
+    && sqlite3_binary="$(mktemp)" \
+    && cp node_modules/sqlite3/build/Release/node_sqlite3.node "$sqlite3_binary" \
+    && rm -rf \
+        node_modules/.bin \
+        node_modules/node-gyp \
+        node_modules/prebuild-install \
+        node_modules/sqlite3/build \
+        node_modules/sqlite3/deps \
+        node_modules/sqlite3/src \
+        node_modules/sqlite3/node-addon-api \
+    && mkdir -p node_modules/sqlite3/build/Release \
+    && cp "$sqlite3_binary" node_modules/sqlite3/build/Release/node_sqlite3.node
 
-FROM node:24-bookworm-slim AS runtime
+FROM node:24-alpine AS runtime
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV CLIENT_URL=http://localhost:3001
 ENV DB_DIR=/data
 WORKDIR /app
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends nginx \
-    && rm -rf /var/lib/apt/lists/* \
+RUN apk add --no-cache nginx su-exec \
     && mkdir -p /data /run/nginx \
     && chown node:node /data
 
