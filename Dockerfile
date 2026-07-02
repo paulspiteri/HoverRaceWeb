@@ -2,7 +2,17 @@
 
 FROM emscripten/emsdk:4.0.23 AS wasm-builder
 WORKDIR /src
-COPY . .
+COPY build-web.sh CMakeLists.txt ./
+COPY Assets ./Assets
+COPY ColorTools ./ColorTools
+COPY GameSDL ./GameSDL
+COPY MainCharacter ./MainCharacter
+COPY Model ./Model
+COPY ObjFac1 ./ObjFac1
+COPY ObjFacTools ./ObjFacTools
+COPY Util ./Util
+COPY VideoServices ./VideoServices
+RUN mkdir -p Web/Client/public
 RUN ./build-web.sh
 
 FROM node:24-bookworm-slim AS client-builder
@@ -26,20 +36,25 @@ RUN npm ci --omit=dev
 
 FROM node:24-bookworm-slim AS runtime
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=3000
 ENV CLIENT_URL=http://localhost:3001
-ENV CLIENT_DIST_DIR=/app/Web/Client/dist
 ENV DB_DIR=/data
 WORKDIR /app
 
-RUN mkdir -p /data && chown node:node /data
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nginx \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /data /run/nginx \
+    && chown node:node /data
 
 COPY --from=server-deps --chown=node:node /app/Web/Server/node_modules /app/Web/Server/node_modules
 COPY --chown=node:node Web/Server /app/Web/Server
-COPY --from=client-builder --chown=node:node /app/Web/Client/dist /app/Web/Client/dist
+COPY --from=client-builder /app/Web/Client/dist /app/Web/Client/dist
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-USER node
 VOLUME ["/data"]
 EXPOSE 3001
 
-CMD ["node", "Web/Server/src/server.ts"]
+ENTRYPOINT ["/entrypoint.sh"]

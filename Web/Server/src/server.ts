@@ -41,13 +41,11 @@ if (!process.env.PORT) {
 const app = express();
 const port = Number(process.env.PORT);
 const clientUrl = process.env.CLIENT_URL || `http://localhost:${port}`;
-const clientDistDir = process.env.CLIENT_DIST_DIR;
 const connectionTimeout = Number(process.env.CONNECTION_TIMEOUT_MS) || 30000;
 
 console.log(`🔧 Server configuration:`);
 console.log(`   PORT: ${port}`);
 console.log(`   CLIENT_URL: ${clientUrl}`);
-console.log(`   CLIENT_DIST_DIR: ${clientDistDir || "Not configured"}`);
 console.log(`   NODE_ENV: ${process.env.NODE_ENV}`);
 console.log(`   CONNECTION_TIMEOUT_MS: ${connectionTimeout}ms`);
 
@@ -681,24 +679,6 @@ gameManager.on("gameUpdated", (game: ServerGame) => {
 // Register leaderboard routes (only if database is configured)
 if (leaderboardService) {
     registerLeaderboardRoutes(app, leaderboardService);
-}
-
-if (clientDistDir) {
-    const indexHtml = path.join(clientDistDir, "index.html");
-
-    if (!fs.existsSync(indexHtml)) {
-        console.error(`❌ FATAL: CLIENT_DIST_DIR does not contain index.html: ${clientDistDir}`);
-        process.exit(1);
-    }
-
-    app.use(express.static(clientDistDir));
-    app.use((req, res, next) => {
-        if (req.method !== "GET" || req.path.startsWith("/api/") || req.path === "/health") {
-            return next();
-        }
-
-        res.sendFile(indexHtml);
-    });
 }
 
 app.listen(port, "0.0.0.0", () => {

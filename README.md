@@ -65,7 +65,7 @@ npm run dev
 
 ### Docker
 
-Build a production image containing the WebAssembly game build, React frontend, Node backend, and SQLite support:
+Build a production image containing the WebAssembly game build, React frontend, nginx, Node backend, and SQLite support:
 
 ```sh
 docker build -t hoverraceweb .
@@ -77,7 +77,7 @@ Run it locally:
 docker run --rm -p 3001:3001 -v hoverrace-data:/data hoverraceweb
 ```
 
-The app is served from the Node backend at `http://localhost:3001`. SQLite leaderboard data is stored in `/data/hoverrace.db` inside the container, so mount `/data` to persist it.
+nginx serves the React/WASM static content at `http://localhost:3001` and proxies `/api/*` plus `/health` to the Node backend inside the container. SQLite leaderboard data is stored in `/data/hoverrace.db` inside the container, so mount `/data` to persist it.
 
 ### Native Build
 
