@@ -27,7 +27,6 @@ ENV VITE_GAME_URL=""
 RUN npm run build
 
 FROM node:24-alpine AS server-deps
-RUN apk add --no-cache python3 make g++ pkgconfig
 WORKDIR /app/Web/Server
 COPY Web/Server/package*.json ./
 RUN npm ci --omit=dev \
