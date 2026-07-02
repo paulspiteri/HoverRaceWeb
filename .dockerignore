@@ -1,0 +1,9 @@
+.git
+build
+build-web
+**/node_modules
+Web/Client/dist
+Web/Client/public/hoverrace.*
+Web/Server/dist
+.env.local
+npm-debug.log*

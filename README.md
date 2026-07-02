@@ -63,6 +63,22 @@ npm install
 npm run dev
 ```
 
+### Docker
+
+Build a production image containing the WebAssembly game build, React frontend, Node backend, and SQLite support:
+
+```sh
+docker build -t hoverraceweb .
+```
+
+Run it locally:
+
+```sh
+docker run --rm -p 3001:3001 -v hoverrace-data:/data hoverraceweb
+```
+
+The app is served from the Node backend at `http://localhost:3001`. SQLite leaderboard data is stored in `/data/hoverrace.db` inside the container, so mount `/data` to persist it.
+
 ### Native Build
 
 ```sh
