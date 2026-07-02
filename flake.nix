@@ -94,6 +94,8 @@
               pkgs.cmake
               pkgs.emscripten
               pkgs.git
+              pkgs.removeReferencesTo
+              pkgs.wabt
             ];
 
             cmakeFlags = wasmCmakeFlags;
@@ -110,7 +112,14 @@
             installPhase = ''
               runHook preInstall
               mkdir -p $out
-              cp Web/Client/public/hoverrace.* $out/
+              cp Web/Client/public/hoverrace.data Web/Client/public/hoverrace.js $out/
+              wasm-strip Web/Client/public/hoverrace.wasm -o $out/hoverrace.wasm
+              remove-references-to \
+                -t ${sdlSrc} \
+                -t ${sokolSrc} \
+                -t ${glmSrc} \
+                -t ${imguiSrc} \
+                $out/hoverrace.wasm
               runHook postInstall
             '';
           };
@@ -154,6 +163,27 @@
 
             installPhase = ''
               runHook preInstall
+
+              npm prune --omit=dev
+
+              sqlite3_binary="$(mktemp)"
+              cp node_modules/sqlite3/build/Release/node_sqlite3.node "$sqlite3_binary"
+
+              rm -rf \
+                node_modules/.bin \
+                node_modules/node-gyp \
+                node_modules/prebuild-install \
+                node_modules/sqlite3/build \
+                node_modules/sqlite3/deps \
+                node_modules/sqlite3/src \
+                node_modules/sqlite3/node-addon-api
+
+              mkdir -p node_modules/sqlite3/build/Release
+              cp "$sqlite3_binary" node_modules/sqlite3/build/Release/node_sqlite3.node
+
+              grep -rl '${pkgs.nodejs}/bin/node' node_modules \
+                | xargs --no-run-if-empty sed -i 's|${pkgs.nodejs}/bin/node|${pkgs.nodejs-slim}/bin/node|g'
+
               mkdir -p $out
               cp -r . $out/
               runHook postInstall
