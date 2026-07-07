@@ -1,6 +1,11 @@
 # Assembles the single OCI image: Caddy fronts the static client + WASM on :80
-# and reverse-proxies /api (SSE) to the Node server on 127.0.0.1:3001, which the
-# entrypoint starts in the background.
+# and reverse-proxies /api (SSE) to the Node server on 127.0.0.1:3001.
+#
+# A small bash supervisor runs both as PID 1: it starts each in the background,
+# forwards SIGTERM for a clean `docker stop`, and uses `wait -n` so that if
+# EITHER process exits the container exits too — letting your restart policy
+# (e.g. `docker run --restart=on-failure`) relaunch it. Pair with
+# `docker run --init` for zombie reaping.
 { pkgs, nodejs, client, server }:
 let
   # Generated here so `root` points straight at the client bundle's store path
@@ -28,11 +33,27 @@ let
     }
   '';
 
+  # writeShellScriptBin uses bash, so `wait -n` is available.
   entrypoint = pkgs.writeShellScriptBin "start-hoverrace" ''
-    set -eu
+    set -u
+
+    node_pid=""
+    caddy_pid=""
+    shutdown() { kill -TERM "$node_pid" "$caddy_pid" 2>/dev/null || true; }
+    trap shutdown TERM INT
+
     cd ${server}/app
     ${nodejs}/bin/node ${server}/app/src/server.ts &
-    exec ${pkgs.caddy}/bin/caddy run --config ${caddyfile} --adapter caddyfile
+    node_pid=$!
+    ${pkgs.caddy}/bin/caddy run --config ${caddyfile} --adapter caddyfile &
+    caddy_pid=$!
+
+    # Wake as soon as either process exits, then bring the other down cleanly.
+    wait -n
+    status=$?
+    shutdown
+    wait
+    exit $status
   '';
 in
 pkgs.dockerTools.buildLayeredImage {
