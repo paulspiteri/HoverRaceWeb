@@ -7,7 +7,7 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
         return; // Skip registration if service not available
     }
     // REST endpoint to submit a lap time to the leaderboard
-    app.post("/api/leaderboard/submit", async (req, res) => {
+    app.post("/api/leaderboard/submit", (req, res) => {
         console.log("🏁 POST /api/leaderboard/submit - Submit lap time request");
         try {
             const { playerName, trackName, lapTimeMs, isMobile, vehicleType, ghostReplay }: SubmitLapTimeRequest = req.body;
@@ -29,7 +29,7 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
             }
 
             // Check if this lap time is better than the current best for this track/mobile/vehicle combination
-            const currentBestTime = await leaderboardService.getBestLapTime(trackName, isMobile, vehicleType);
+            const currentBestTime = leaderboardService.getBestLapTime(trackName, isMobile, vehicleType);
             if (currentBestTime !== null && lapTimeMs >= currentBestTime) {
                 console.log(`⚠️ Lap time ${lapTimeMs}ms is not faster than current best ${currentBestTime}ms`);
                 return res.status(400).json({
@@ -39,7 +39,7 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
                 });
             }
 
-            const result = await leaderboardService.submitLapTime({ playerName, trackName, lapTimeMs, isMobile, vehicleType, ghostReplay });
+            const result = leaderboardService.submitLapTime({ playerName, trackName, lapTimeMs, isMobile, vehicleType, ghostReplay });
 
             console.log(`✅ Lap time submitted successfully (beat best time of ${currentBestTime}ms)`);
             res.status(201).json(result);
@@ -50,7 +50,7 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
     });
 
     // REST endpoint to get leaderboard for a track
-    app.get("/api/leaderboard/:trackName", async (req, res) => {
+    app.get("/api/leaderboard/:trackName", (req, res) => {
         console.log("🏆 GET /api/leaderboard/:trackName - Get leaderboard request");
         try {
             const { trackName } = req.params;
@@ -75,7 +75,7 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
                 return res.status(400).json({ error: "vehicleType must be 0 (ELECTRO), 1 (HITECH), or 2 (BITURBO)" });
             }
 
-            const entries = await leaderboardService.getTopLapTimes(trackName, isMobile, limit, vehicleType);
+            const entries = leaderboardService.getTopLapTimes(trackName, isMobile, limit, vehicleType);
 
             console.log(`✅ Retrieved ${entries.length} leaderboard entries`);
             res.status(200).json({ entries });
@@ -86,7 +86,7 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
     });
 
     // REST endpoint to get ghost replay by leaderboard entry ID
-    app.get("/api/leaderboard/ghost/:id", async (req, res) => {
+    app.get("/api/leaderboard/ghost/:id", (req, res) => {
         console.log("👻 GET /api/leaderboard/ghost/:id - Get ghost replay request");
         try {
             const id = parseInt(req.params.id, 10);
@@ -97,7 +97,7 @@ export function registerLeaderboardRoutes(app: express.Application, leaderboardS
                 return res.status(400).json({ error: "Invalid ID" });
             }
 
-            const ghostReplay = await leaderboardService.getGhostReplay(id);
+            const ghostReplay = leaderboardService.getGhostReplay(id);
 
             if (!ghostReplay) {
                 console.log(`⚠️ No ghost replay found for entry ${id}`);

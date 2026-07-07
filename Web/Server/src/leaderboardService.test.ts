@@ -1,39 +1,31 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import sqlite3 from 'sqlite3';
+import type { DatabaseSync } from 'node:sqlite';
 import { LeaderboardService } from './leaderboardService.js';
 import { initializeDatabase } from './database.js';
 
 describe('LeaderboardService - getTopLapTimes', () => {
-    let db: sqlite3.Database;
+    let db: DatabaseSync;
     let service: LeaderboardService;
 
-    beforeEach(async () => {
-        // Use the actual initializeDatabase function
+    beforeEach(() => {
+        // Use the actual initializeDatabase function (synchronous with node:sqlite)
         db = initializeDatabase(':memory:');
         service = new LeaderboardService(db);
-
-        // Wait for schema initialization to complete
-        await new Promise<void>((resolve) => {
-            setTimeout(resolve, 50);
-        });
     });
 
-    afterEach(async () => {
-        // Close database connection
-        await new Promise<void>((resolve) => {
-            db.close(() => resolve());
-        });
+    afterEach(() => {
+        db.close();
     });
 
-    async function insertLapTime(
+    function insertLapTime(
         playerName: string | null,
         trackName: string,
         lapTimeMs: number,
         isMobile: boolean,
         vehicleType: number
-    ): Promise<void> {
+    ): void {
         // Use the actual service method
-        await service.submitLapTime({
+        service.submitLapTime({
             playerName: playerName ?? undefined,
             trackName,
             lapTimeMs,
@@ -43,14 +35,14 @@ describe('LeaderboardService - getTopLapTimes', () => {
         });
     }
 
-    it('returns only one result per player (their best time)', async () => {
+    it('returns only one result per player (their best time)', () => {
         // Insert multiple times for the same player
-        await insertLapTime('Alice', 'track1', 50000, false, 1);
-        await insertLapTime('Alice', 'track1', 45000, false, 1); // Better time
-        await insertLapTime('Alice', 'track1', 55000, false, 1);
-        await insertLapTime('Bob', 'track1', 48000, false, 1);
+        insertLapTime('Alice', 'track1', 50000, false, 1);
+        insertLapTime('Alice', 'track1', 45000, false, 1); // Better time
+        insertLapTime('Alice', 'track1', 55000, false, 1);
+        insertLapTime('Bob', 'track1', 48000, false, 1);
 
-        const results = await service.getTopLapTimes('track1', false, 10);
+        const results = service.getTopLapTimes('track1', false, 10);
 
         // Should return only 2 results (one per player)
         expect(results).toHaveLength(2);
@@ -64,25 +56,25 @@ describe('LeaderboardService - getTopLapTimes', () => {
         expect(bob?.lapTimeMs).toBe(48000);
     });
 
-    it('treats anonymous players separately (does not group them)', async () => {
+    it('treats anonymous players separately (does not group them)', () => {
         // Insert multiple anonymous times
-        await insertLapTime(null, 'track1', 40000, false, 1);
-        await insertLapTime(null, 'track1', 41000, false, 1);
-        await insertLapTime(null, 'track1', 42000, false, 1);
+        insertLapTime(null, 'track1', 40000, false, 1);
+        insertLapTime(null, 'track1', 41000, false, 1);
+        insertLapTime(null, 'track1', 42000, false, 1);
 
-        const results = await service.getTopLapTimes('track1', false, 10);
+        const results = service.getTopLapTimes('track1', false, 10);
 
         // All 3 anonymous entries should be returned separately
         expect(results).toHaveLength(3);
         expect(results.every((r) => r.playerName === null)).toBe(true);
     });
 
-    it('orders results by lap time (fastest first)', async () => {
-        await insertLapTime('Alice', 'track1', 50000, false, 1);
-        await insertLapTime('Bob', 'track1', 45000, false, 1);
-        await insertLapTime('Charlie', 'track1', 55000, false, 1);
+    it('orders results by lap time (fastest first)', () => {
+        insertLapTime('Alice', 'track1', 50000, false, 1);
+        insertLapTime('Bob', 'track1', 45000, false, 1);
+        insertLapTime('Charlie', 'track1', 55000, false, 1);
 
-        const results = await service.getTopLapTimes('track1', false, 10);
+        const results = service.getTopLapTimes('track1', false, 10);
 
         expect(results).toHaveLength(3);
         expect(results[0].playerName).toBe('Bob'); // 45000
@@ -90,56 +82,56 @@ describe('LeaderboardService - getTopLapTimes', () => {
         expect(results[2].playerName).toBe('Charlie'); // 55000
     });
 
-    it('respects mobile filter when true', async () => {
-        await insertLapTime('Alice', 'track1', 45000, true, 1); // mobile
-        await insertLapTime('Bob', 'track1', 40000, false, 1); // desktop
+    it('respects mobile filter when true', () => {
+        insertLapTime('Alice', 'track1', 45000, true, 1); // mobile
+        insertLapTime('Bob', 'track1', 40000, false, 1); // desktop
 
-        const results = await service.getTopLapTimes('track1', true, 10);
+        const results = service.getTopLapTimes('track1', true, 10);
 
         expect(results).toHaveLength(1);
         expect(results[0].playerName).toBe('Alice');
         expect(results[0].isMobile).toBe(true);
     });
 
-    it('respects mobile filter when false', async () => {
-        await insertLapTime('Alice', 'track1', 45000, true, 1); // mobile
-        await insertLapTime('Bob', 'track1', 40000, false, 1); // desktop
+    it('respects mobile filter when false', () => {
+        insertLapTime('Alice', 'track1', 45000, true, 1); // mobile
+        insertLapTime('Bob', 'track1', 40000, false, 1); // desktop
 
-        const results = await service.getTopLapTimes('track1', false, 10);
+        const results = service.getTopLapTimes('track1', false, 10);
 
         expect(results).toHaveLength(1);
         expect(results[0].playerName).toBe('Bob');
         expect(results[0].isMobile).toBe(false);
     });
 
-    it('returns all platforms when mobile filter is undefined', async () => {
-        await insertLapTime('Alice', 'track1', 45000, true, 1); // mobile
-        await insertLapTime('Bob', 'track1', 40000, false, 1); // desktop
+    it('returns all platforms when mobile filter is undefined', () => {
+        insertLapTime('Alice', 'track1', 45000, true, 1); // mobile
+        insertLapTime('Bob', 'track1', 40000, false, 1); // desktop
 
-        const results = await service.getTopLapTimes('track1', undefined, 10);
+        const results = service.getTopLapTimes('track1', undefined, 10);
 
         expect(results).toHaveLength(2);
     });
 
-    it('respects vehicle type filter', async () => {
-        await insertLapTime('Alice', 'track1', 45000, false, 1);
-        await insertLapTime('Bob', 'track1', 40000, false, 2);
+    it('respects vehicle type filter', () => {
+        insertLapTime('Alice', 'track1', 45000, false, 1);
+        insertLapTime('Bob', 'track1', 40000, false, 2);
 
-        const results = await service.getTopLapTimes('track1', false, 10, 2);
+        const results = service.getTopLapTimes('track1', false, 10, 2);
 
         expect(results).toHaveLength(1);
         expect(results[0].playerName).toBe('Bob');
         expect(results[0].vehicleType).toBe(2);
     });
 
-    it('respects limit parameter', async () => {
-        await insertLapTime('Alice', 'track1', 45000, false, 1);
-        await insertLapTime('Bob', 'track1', 46000, false, 1);
-        await insertLapTime('Charlie', 'track1', 47000, false, 1);
-        await insertLapTime('Dave', 'track1', 48000, false, 1);
-        await insertLapTime('Eve', 'track1', 49000, false, 1);
+    it('respects limit parameter', () => {
+        insertLapTime('Alice', 'track1', 45000, false, 1);
+        insertLapTime('Bob', 'track1', 46000, false, 1);
+        insertLapTime('Charlie', 'track1', 47000, false, 1);
+        insertLapTime('Dave', 'track1', 48000, false, 1);
+        insertLapTime('Eve', 'track1', 49000, false, 1);
 
-        const results = await service.getTopLapTimes('track1', false, 3);
+        const results = service.getTopLapTimes('track1', false, 3);
 
         expect(results).toHaveLength(3);
         expect(results[0].playerName).toBe('Alice');
@@ -147,13 +139,13 @@ describe('LeaderboardService - getTopLapTimes', () => {
         expect(results[2].playerName).toBe('Charlie');
     });
 
-    it('handles mix of named and anonymous players', async () => {
-        await insertLapTime('Alice', 'track1', 45000, false, 1);
-        await insertLapTime(null, 'track1', 40000, false, 1);
-        await insertLapTime('Bob', 'track1', 50000, false, 1);
-        await insertLapTime(null, 'track1', 42000, false, 1);
+    it('handles mix of named and anonymous players', () => {
+        insertLapTime('Alice', 'track1', 45000, false, 1);
+        insertLapTime(null, 'track1', 40000, false, 1);
+        insertLapTime('Bob', 'track1', 50000, false, 1);
+        insertLapTime(null, 'track1', 42000, false, 1);
 
-        const results = await service.getTopLapTimes('track1', false, 10);
+        const results = service.getTopLapTimes('track1', false, 10);
 
         expect(results).toHaveLength(4);
         // Check mix includes both named and anonymous
@@ -163,13 +155,13 @@ describe('LeaderboardService - getTopLapTimes', () => {
         expect(anonymousPlayers).toHaveLength(2);
     });
 
-    it('groups players correctly across different tracks', async () => {
+    it('groups players correctly across different tracks', () => {
         // Alice has times on both tracks
-        await insertLapTime('Alice', 'track1', 45000, false, 1);
-        await insertLapTime('Alice', 'track2', 50000, false, 1);
+        insertLapTime('Alice', 'track1', 45000, false, 1);
+        insertLapTime('Alice', 'track2', 50000, false, 1);
 
-        const track1Results = await service.getTopLapTimes('track1', false, 10);
-        const track2Results = await service.getTopLapTimes('track2', false, 10);
+        const track1Results = service.getTopLapTimes('track1', false, 10);
+        const track2Results = service.getTopLapTimes('track2', false, 10);
 
         expect(track1Results).toHaveLength(1);
         expect(track2Results).toHaveLength(1);
@@ -177,10 +169,10 @@ describe('LeaderboardService - getTopLapTimes', () => {
         expect(track2Results[0].lapTimeMs).toBe(50000);
     });
 
-    it('returns correct data structure', async () => {
-        await insertLapTime('Alice', 'track1', 45000, true, 2);
+    it('returns correct data structure', () => {
+        insertLapTime('Alice', 'track1', 45000, true, 2);
 
-        const results = await service.getTopLapTimes('track1', true, 10);
+        const results = service.getTopLapTimes('track1', true, 10);
 
         expect(results[0]).toEqual({
             id: expect.any(Number),
