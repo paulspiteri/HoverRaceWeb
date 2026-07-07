@@ -9,8 +9,20 @@
     let
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
+
+      # The container image (and the emscripten/dockerTools toolchain it needs)
+      # is Linux-only.
+      linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
+      forLinuxSystems = nixpkgs.lib.genAttrs linuxSystems;
     in
     {
+      packages = forLinuxSystems (system:
+        import ./nix {
+          pkgs = nixpkgs.legacyPackages.${system};
+          # A path (not `self`, which is string-like) so lib.fileset can filter it.
+          src = ./.;
+        });
+
       devShells = forAllSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};

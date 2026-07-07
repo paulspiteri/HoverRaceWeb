@@ -1,41 +1,40 @@
-import type sqlite3 from "sqlite3";
-import type { LeaderboardEntry, SubmitLapTimeRequest, SubmitLapTimeResult } from "./leaderboardTypes";
+import type { DatabaseSync } from "node:sqlite";
+import type { LeaderboardEntry, SubmitLapTimeRequest, SubmitLapTimeResult, VehicleType } from "./leaderboardTypes";
 
 export class LeaderboardService {
-    private db: sqlite3.Database;
+    private db: DatabaseSync;
 
-    constructor(db: sqlite3.Database) {
+    constructor(db: DatabaseSync) {
         this.db = db;
     }
 
-    async submitLapTime(request: SubmitLapTimeRequest): Promise<SubmitLapTimeResult> {
-        return new Promise((resolve, reject) => {
-            // Convert base64 ghost replay to buffer
-            const ghostReplayBuffer = Buffer.from(request.ghostReplay, 'base64');
+    submitLapTime(request: SubmitLapTimeRequest): SubmitLapTimeResult {
+        // Convert base64 ghost replay to buffer
+        const ghostReplayBuffer = Buffer.from(request.ghostReplay, "base64");
 
-            this.db.run(
+        this.db
+            .prepare(
                 `
                 INSERT INTO leaderboard (player_name, track_name, lap_time_ms, is_mobile, vehicle_type, ghost_replay)
                 VALUES (?, ?, ?, ?, ?, ?)
             `,
-                [request.playerName ?? null, request.trackName, request.lapTimeMs, request.isMobile ? 1 : 0, request.vehicleType, ghostReplayBuffer],
-                (err: Error | null) => {
-                    if (err) {
-                        console.error("💥 Error submitting lap time:", err);
-                        reject(err);
-                        return;
-                    }
-
-                    resolve({ success: true });
-                },
+            )
+            .run(
+                request.playerName ?? null,
+                request.trackName,
+                request.lapTimeMs,
+                request.isMobile ? 1 : 0,
+                request.vehicleType,
+                ghostReplayBuffer,
             );
-        });
+
+        return { success: true };
     }
 
     // Get the best (fastest) lap time for a specific track, mobile, and vehicle configuration
-    async getBestLapTime(trackName: string, isMobile: boolean, vehicleType: number): Promise<number | null> {
-        return new Promise((resolve, reject) => {
-            this.db.get(
+    getBestLapTime(trackName: string, isMobile: boolean, vehicleType: number): number | null {
+        const row = this.db
+            .prepare(
                 `
                 SELECT lap_time_ms
                 FROM leaderboard
@@ -43,116 +42,95 @@ export class LeaderboardService {
                 ORDER BY lap_time_ms ASC
                 LIMIT 1
             `,
-                [trackName, isMobile ? 1 : 0, vehicleType],
-                (err, row: any) => {
-                    if (err) {
-                        console.error("💥 Error getting best lap time:", err);
-                        reject(err);
-                        return;
-                    }
+            )
+            .get(trackName, isMobile ? 1 : 0, vehicleType) as { lap_time_ms: number } | undefined;
 
-                    resolve(row ? row.lap_time_ms : null);
-                },
-            );
-        });
+        return row ? row.lap_time_ms : null;
     }
 
     // Get top N lap times for a specific track and mobile configuration, optionally filtered by vehicle type
     // Returns only one lap time per player (their best/fastest time)
-    async getTopLapTimes(trackName: string, isMobile: boolean | undefined, limit: number = 10, vehicleType?: number): Promise<LeaderboardEntry[]> {
-        return new Promise((resolve, reject) => {
-            // Build WHERE clause conditions
-            let whereConditions = `track_name = ?`;
-            const params: any[] = [trackName];
+    getTopLapTimes(trackName: string, isMobile: boolean | undefined, limit: number = 10, vehicleType?: number): LeaderboardEntry[] {
+        // Build WHERE clause conditions
+        let whereConditions = `track_name = ?`;
+        const params: (string | number)[] = [trackName];
 
-            // Add mobile filter if specified (undefined means fetch all platforms)
-            if (isMobile !== undefined) {
-                whereConditions += ` AND is_mobile = ?`;
-                params.push(isMobile ? 1 : 0);
-            }
+        // Add mobile filter if specified (undefined means fetch all platforms)
+        if (isMobile !== undefined) {
+            whereConditions += ` AND is_mobile = ?`;
+            params.push(isMobile ? 1 : 0);
+        }
 
-            // Add vehicle type filter if specified
-            if (vehicleType !== undefined) {
-                whereConditions += ` AND vehicle_type = ?`;
-                params.push(vehicleType);
-            }
+        // Add vehicle type filter if specified
+        if (vehicleType !== undefined) {
+            whereConditions += ` AND vehicle_type = ?`;
+            params.push(vehicleType);
+        }
 
-            // Use CTE with window function to get only the best time per player
-            // Anonymous players are treated separately using their unique id
-            const query = `
-                WITH RankedTimes AS (
-                    SELECT
-                        id, player_name, track_name, lap_time_ms, is_mobile, vehicle_type, created_at,
-                        ROW_NUMBER() OVER (
-                            PARTITION BY COALESCE(player_name, 'anonymous_' || id)
-                            ORDER BY lap_time_ms ASC
-                        ) as rank
-                    FROM leaderboard
-                    WHERE ${whereConditions}
-                )
-                SELECT id, player_name, track_name, lap_time_ms, is_mobile, vehicle_type, created_at
-                FROM RankedTimes
-                WHERE rank = 1
-                ORDER BY lap_time_ms ASC
-                LIMIT ?
-            `;
-            params.push(limit);
+        // Use CTE with window function to get only the best time per player
+        // Anonymous players are treated separately using their unique id
+        const query = `
+            WITH RankedTimes AS (
+                SELECT
+                    id, player_name, track_name, lap_time_ms, is_mobile, vehicle_type, created_at,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY COALESCE(player_name, 'anonymous_' || id)
+                        ORDER BY lap_time_ms ASC
+                    ) as rank
+                FROM leaderboard
+                WHERE ${whereConditions}
+            )
+            SELECT id, player_name, track_name, lap_time_ms, is_mobile, vehicle_type, created_at
+            FROM RankedTimes
+            WHERE rank = 1
+            ORDER BY lap_time_ms ASC
+            LIMIT ?
+        `;
+        params.push(limit);
 
-            this.db.all(query, params,
-                (err, rows: any[]) => {
-                    if (err) {
-                        console.error("💥 Error getting top lap times:", err);
-                        reject(err);
-                        return;
-                    }
+        const rows = this.db.prepare(query).all(...params) as Array<{
+            id: number;
+            player_name: string | null;
+            track_name: string;
+            lap_time_ms: number;
+            is_mobile: number;
+            vehicle_type: number;
+            created_at: string;
+        }>;
 
-                    const entries = rows.map((row) => ({
-                        id: row.id,
-                        playerName: row.player_name,
-                        trackName: row.track_name,
-                        lapTimeMs: row.lap_time_ms,
-                        isMobile: row.is_mobile === 1,
-                        vehicleType: row.vehicle_type,
-                        createdAt: new Date(row.created_at),
-                    }));
-
-                    resolve(entries);
-                },
-            );
-        });
+        return rows.map((row) => ({
+            id: row.id,
+            playerName: row.player_name,
+            trackName: row.track_name,
+            lapTimeMs: row.lap_time_ms,
+            isMobile: row.is_mobile === 1,
+            vehicleType: row.vehicle_type as VehicleType,
+            createdAt: new Date(row.created_at),
+        }));
     }
 
     // Get ghost replay by leaderboard entry ID
-    async getGhostReplay(id: number): Promise<Buffer | null> {
-        return new Promise((resolve, reject) => {
-            this.db.get(
+    getGhostReplay(id: number): Buffer | null {
+        const row = this.db
+            .prepare(
                 `
                 SELECT ghost_replay
                 FROM leaderboard
                 WHERE id = ?
             `,
-                [id],
-                (err, row: any) => {
-                    if (err) {
-                        console.error("💥 Error getting ghost replay:", err);
-                        reject(err);
-                        return;
-                    }
+            )
+            .get(id) as { ghost_replay: Uint8Array } | undefined;
 
-                    if (!row) {
-                        resolve(null);
-                        return;
-                    }
+        if (!row) {
+            return null;
+        }
 
-                    if (!row.ghost_replay) {
-                        console.error("💥 Ghost replay missing for entry (database inconsistency)");
-                        reject(new Error("Ghost replay missing for entry"));
-                        return;
-                    }
+        if (!row.ghost_replay) {
+            console.error("💥 Ghost replay missing for entry (database inconsistency)");
+            throw new Error("Ghost replay missing for entry");
+        }
 
-                    resolve(row.ghost_replay);
-                },
-            );
-        });
+        // node:sqlite returns BLOBs as Uint8Array; wrap so callers get Buffer helpers.
+        return Buffer.from(row.ghost_replay);
     }
 }
