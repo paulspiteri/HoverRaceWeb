@@ -63,6 +63,15 @@ npm install
 npm run dev
 ```
 
+### Container public URL
+
+Set `CLIENT_URL` to the public origin when starting the container, for example
+`CLIENT_URL=https://hover.paulspiteri.com`. The API uses it for CORS, and the
+container renders the page's social-preview URL and image URL from it at startup.
+No client rebuild or separate environment variable is needed when moving domains.
+If `CLIENT_URL` lists multiple comma-separated origins, the first is used for
+social previews. The default remains `http://localhost:8080`.
+
 ### Native Build
 
 ```sh

@@ -8,8 +8,8 @@
 # `docker run --init` for zombie reaping.
 { pkgs, nodejs, client, server }:
 let
-  # Generated here so `root` points straight at the client bundle's store path
-  # (no /srv symlink needed). Caddy serves application/wasm and SPA-falls-back.
+  # The runtime client root contains rendered HTML and symlinks to immutable
+  # assets. Caddy serves application/wasm and SPA-falls-back.
   # `handle` blocks are mutually exclusive and evaluated in source order, so
   # /api/* is proxied and excluded from the SPA fallback. (A bare `try_files`
   # would otherwise rewrite /api/* to /index.html before reverse_proxy runs,
@@ -26,7 +26,7 @@ let
     	}
 
     	handle {
-    		root * ${client}
+        root * {$HOVERRACE_CLIENT_ROOT}
     		try_files {path} /index.html
     		file_server
     	}
@@ -36,6 +36,11 @@ let
   # writeShellScriptBin uses bash, so `wait -n` is available.
   entrypoint = pkgs.writeShellScriptBin "start-hoverrace" ''
     set -u
+
+    # Render metadata from the same CLIENT_URL used by the API for CORS.
+    export HOVERRACE_CLIENT_ROOT
+    HOVERRACE_CLIENT_ROOT=$(${pkgs.coreutils}/bin/mktemp -d /tmp/hoverrace-client.XXXXXX)
+    ${nodejs}/bin/node ${./render-client.mjs} ${client} "$HOVERRACE_CLIENT_ROOT" || exit 1
 
     node_pid=""
     caddy_pid=""
